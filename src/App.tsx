@@ -12,6 +12,8 @@ import PassengerChat from "./pages/PassengerChat";
 import PassengerRating from "./pages/PassengerRating";
 import PassengerHistory from "./pages/PassengerHistory";
 import PassengerProfile from "./pages/PassengerProfile";
+import DriverAuth from "./pages/DriverAuth";
+import DriverDashboard from "./pages/DriverDashboard";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
           <Route path="/passenger/rate/:rideId" element={<PassengerRating />} />
           <Route path="/passenger/history" element={<PassengerHistory />} />
           <Route path="/passenger/profile" element={<PassengerProfile />} />
+          <Route path="/driver/auth" element={<DriverAuth />} />
+          <Route path="/driver/dashboard" element={<DriverDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

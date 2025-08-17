@@ -305,7 +305,6 @@ const PassengerDashboard = () => {
             <Button 
               onClick={handleBookRide}
               className="w-full"
-              variant="hero"
               size="lg"
               disabled={!rideData.pickupAddress || !rideData.dropoffAddress}
             >

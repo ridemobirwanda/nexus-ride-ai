@@ -110,28 +110,18 @@ const Map: React.FC<MapProps> = ({
     return (
       <div className={`${className} flex items-center justify-center bg-muted rounded-lg`}>
         <div className="text-center p-6 max-w-md">
-          <h3 className="text-lg font-semibold mb-4">Mapbox Integration</h3>
+          <h3 className="text-lg font-semibold mb-4">Connect Mapbox</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            To use the map, please enter your Mapbox public token. Get it from{' '}
-            <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">
-              mapbox.com
-            </a>
+            Add your Mapbox token in Supabase Edge Function Secrets to enable maps.
           </p>
-          <div className="space-y-3">
-            <Input
-              placeholder="Enter Mapbox public token"
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              type="password"
-            />
-            <Button 
-              onClick={() => setShowTokenInput(false)}
-              disabled={!mapboxToken}
-              className="w-full"
-            >
-              Load Map
-            </Button>
+          <div className="bg-background/50 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-center h-32 text-muted-foreground">
+              <MapPin className="h-8 w-8" />
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Demo mode: Map functionality requires Mapbox integration
+          </p>
         </div>
       </div>
     );
