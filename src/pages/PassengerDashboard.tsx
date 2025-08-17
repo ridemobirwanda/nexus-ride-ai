@@ -17,6 +17,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import Map from '@/components/Map';
 
 interface Passenger {
   id: string;
@@ -45,7 +46,9 @@ const PassengerDashboard = () => {
   const [rideData, setRideData] = useState({
     pickupAddress: '',
     dropoffAddress: '',
-    estimatedFare: 0
+    estimatedFare: 0,
+    pickupLocation: null as { lat: number; lng: number; address: string } | null,
+    dropoffLocation: null as { lat: number; lng: number; address: string } | null
   });
 
   // Auth state listener
@@ -217,6 +220,38 @@ const PassengerDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Map */}
+        <Card>
+          <CardContent className="p-0">
+            <Map
+              onLocationSelect={(location, type) => {
+                if (type === 'pickup') {
+                  setRideData({ 
+                    ...rideData, 
+                    pickupLocation: location, 
+                    pickupAddress: location.address 
+                  });
+                } else {
+                  setRideData({ 
+                    ...rideData, 
+                    dropoffLocation: location, 
+                    dropoffAddress: location.address 
+                  });
+                }
+              }}
+              pickupLocation={rideData.pickupLocation}
+              dropoffLocation={rideData.dropoffLocation}
+              drivers={nearbyDrivers.map(driver => ({
+                id: driver.id,
+                lat: 40.7128 + (Math.random() - 0.5) * 0.1, // Mock coordinates around NYC
+                lng: -74.0060 + (Math.random() - 0.5) * 0.1,
+                name: driver.name
+              }))}
+              className="h-80"
+            />
+          </CardContent>
+        </Card>
+
         {/* Booking Card */}
         <Card className="gradient-card card-shadow">
           <CardHeader>
@@ -232,7 +267,7 @@ const PassengerDashboard = () => {
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="pickup"
-                  placeholder="Enter pickup location"
+                  placeholder="Select on map or enter pickup location"
                   className="pl-10"
                   value={rideData.pickupAddress}
                   onChange={(e) => setRideData({ ...rideData, pickupAddress: e.target.value })}
@@ -246,15 +281,11 @@ const PassengerDashboard = () => {
                 <Navigation className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="dropoff"
-                  placeholder="Enter destination"
+                  placeholder="Select on map or enter destination"
                   className="pl-10"
                   value={rideData.dropoffAddress}
                   onChange={(e) => {
                     setRideData({ ...rideData, dropoffAddress: e.target.value });
-                    // Calculate fare when both addresses are filled
-                    if (rideData.pickupAddress && e.target.value) {
-                      setRideData(prev => ({ ...prev, dropoffAddress: e.target.value, estimatedFare: calculateEstimatedFare() }));
-                    }
                   }}
                 />
               </div>

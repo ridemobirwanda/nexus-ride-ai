@@ -7,6 +7,11 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PassengerAuth from "./pages/PassengerAuth";
 import PassengerDashboard from "./pages/PassengerDashboard";
+import PassengerRideStatus from "./pages/PassengerRideStatus";
+import PassengerChat from "./pages/PassengerChat";
+import PassengerRating from "./pages/PassengerRating";
+import PassengerHistory from "./pages/PassengerHistory";
+import PassengerProfile from "./pages/PassengerProfile";
 
 const queryClient = new QueryClient();
 
