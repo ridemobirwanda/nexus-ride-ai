@@ -166,8 +166,8 @@ const PassengerRideStatus = () => {
   }
 
   // Parse location coordinates (simplified)
-  const parseLocation = (locationStr: string) => {
-    if (!locationStr) return null;
+  const parseLocation = (locationStr: unknown) => {
+    if (!locationStr || typeof locationStr !== 'string') return null;
     const coords = locationStr.match(/POINT\(([^)]+)\)/);
     if (!coords) return null;
     const [lng, lat] = coords[1].split(' ').map(Number);
