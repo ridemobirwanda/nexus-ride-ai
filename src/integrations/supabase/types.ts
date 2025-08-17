@@ -14,7 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          ride_id: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          ride_id: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          ride_id?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drivers: {
+        Row: {
+          car_model: string | null
+          car_plate: string | null
+          created_at: string
+          current_location: unknown | null
+          id: string
+          is_available: boolean | null
+          name: string
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          car_model?: string | null
+          car_plate?: string | null
+          created_at?: string
+          current_location?: unknown | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          car_model?: string | null
+          car_plate?: string | null
+          created_at?: string
+          current_location?: unknown | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          phone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      passengers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          profile_pic: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          profile_pic?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          profile_pic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rides: {
+        Row: {
+          created_at: string
+          distance_km: number | null
+          driver_id: string | null
+          dropoff_address: string
+          dropoff_location: unknown
+          duration_minutes: number | null
+          estimated_fare: number | null
+          feedback: string | null
+          final_fare: number | null
+          id: string
+          passenger_id: string
+          pickup_address: string
+          pickup_location: unknown
+          rating: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          distance_km?: number | null
+          driver_id?: string | null
+          dropoff_address: string
+          dropoff_location: unknown
+          duration_minutes?: number | null
+          estimated_fare?: number | null
+          feedback?: string | null
+          final_fare?: number | null
+          id?: string
+          passenger_id: string
+          pickup_address: string
+          pickup_location: unknown
+          rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          distance_km?: number | null
+          driver_id?: string | null
+          dropoff_address?: string
+          dropoff_location?: unknown
+          duration_minutes?: number | null
+          estimated_fare?: number | null
+          feedback?: string | null
+          final_fare?: number | null
+          id?: string
+          passenger_id?: string
+          pickup_address?: string
+          pickup_location?: unknown
+          rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rides_passenger_id_fkey"
+            columns: ["passenger_id"]
+            isOneToOne: false
+            referencedRelation: "passengers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
