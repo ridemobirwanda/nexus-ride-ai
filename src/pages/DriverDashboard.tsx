@@ -261,11 +261,11 @@ const DriverDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen rider-bg">
       {/* Header */}
-      <header className="bg-card border-b px-4 py-3">
+      <header className="bg-card/80 backdrop-blur-lg border-b px-4 py-3 sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold">Driver Dashboard</h1>
+          <h1 className="text-xl font-bold gradient-hero bg-clip-text text-transparent">Driver Dashboard</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
               {driver?.name || user?.email}

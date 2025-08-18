@@ -30,11 +30,11 @@ const Navigation = () => {
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-smooth">
               Pricing
             </a>
-            <Button variant="ghost" className="gap-2">
+            <Button variant="ghost" className="gap-2" onClick={() => window.location.href = '/passenger/auth'}>
               <User className="h-4 w-4" />
-              Passenger
+              Passenger Login
             </Button>
-            <Button variant="hero" className="gap-2">
+            <Button variant="hero" className="gap-2" onClick={() => window.location.href = '/driver/auth'}>
               <Car className="h-4 w-4" />
               Drive with us
             </Button>
@@ -64,11 +64,11 @@ const Navigation = () => {
               Pricing
             </a>
             <div className="flex flex-col gap-2">
-              <Button variant="ghost" className="gap-2 justify-start">
+              <Button variant="ghost" className="gap-2 justify-start" onClick={() => window.location.href = '/passenger/auth'}>
                 <User className="h-4 w-4" />
                 Passenger Login
               </Button>
-              <Button variant="hero" className="gap-2 justify-start">
+              <Button variant="hero" className="gap-2 justify-start" onClick={() => window.location.href = '/driver/auth'}>
                 <Car className="h-4 w-4" />
                 Drive with us
               </Button>

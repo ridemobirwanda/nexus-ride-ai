@@ -6,11 +6,13 @@ import Footer from '@/components/Footer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen rider-bg">
       <Navigation />
       <main>
         <HeroSection />
-        <FeaturesSection />
+        <section id="features">
+          <FeaturesSection />
+        </section>
         <AppPreviewSection />
       </main>
       <Footer />

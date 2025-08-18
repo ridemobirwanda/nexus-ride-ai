@@ -73,10 +73,21 @@ const HeroSection = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" variant="hero" className="text-lg px-8 py-6">
+              <Button 
+                size="lg" 
+                variant="hero" 
+                className="text-lg px-8 py-6"
+                onClick={() => window.location.href = '/passenger/auth'}
+              >
+                <MapPin className="h-5 w-5" />
                 Book a Ride
               </Button>
-              <Button size="lg" variant="ghost" className="text-lg px-8 py-6">
+              <Button 
+                size="lg" 
+                variant="ghost" 
+                className="text-lg px-8 py-6"
+                onClick={() => window.location.href = '/driver/auth'}
+              >
                 Become a Driver
               </Button>
             </div>
