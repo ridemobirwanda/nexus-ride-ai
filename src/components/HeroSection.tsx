@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Shield, Smartphone } from 'lucide-react';
-import heroCarImage from '@/assets/hero-car.jpg';
+import heroCarImage from '@/assets/taxi-cab-hero.jpg';
 import appMockupImage from '@/assets/app-mockup.jpg';
 
 const HeroSection = () => {
@@ -10,7 +10,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-0">
         <img 
           src={heroCarImage} 
-          alt="Futuristic ride-hailing vehicle"
+          alt="Professional taxi cab for ride-hailing service"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
