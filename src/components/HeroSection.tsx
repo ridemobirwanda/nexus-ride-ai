@@ -77,7 +77,7 @@ const HeroSection = () => {
                 size="lg" 
                 variant="hero" 
                 className="text-lg px-8 py-6"
-                onClick={() => window.location.href = '/passenger/auth'}
+                onClick={() => window.location.href = '/passenger'}
               >
                 <MapPin className="h-5 w-5" />
                 Book a Ride
