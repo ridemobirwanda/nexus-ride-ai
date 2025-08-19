@@ -34,6 +34,7 @@ interface Ride {
   distance_km?: number;
   duration_minutes?: number;
   rating?: number;
+  payment_method?: string;
   created_at: string;
   driver?: {
     id: string;
@@ -274,6 +275,11 @@ const PassengerHistory = () => {
                       <Navigation className="h-4 w-4 text-red-500 mt-1 flex-shrink-0" />
                       <p className="text-sm line-clamp-1">{ride.dropoff_address}</p>
                     </div>
+                    {ride.payment_method && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Payment: {ride.payment_method.replace('_', ' ')}</span>
+                      </div>
+                    )}
                   </div>
 
                   {ride.driver && (

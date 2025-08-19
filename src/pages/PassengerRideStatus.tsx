@@ -28,6 +28,7 @@ interface Ride {
   status: string;
   estimated_fare: number;
   final_fare?: number;
+  payment_method?: string;
   created_at: string;
   driver?: {
     id: string;
@@ -48,8 +49,8 @@ const PassengerRideStatus = () => {
   useEffect(() => {
     fetchRideDetails();
     
-    // Set up real-time updates
-    const channel = supabase
+    // Set up real-time updates for both rides and driver location
+    const rideChannel = supabase
       .channel('ride-updates')
       .on(
         'postgres_changes',
@@ -65,8 +66,36 @@ const PassengerRideStatus = () => {
       )
       .subscribe();
 
+    // Set up real-time driver location updates
+    const driverChannel = supabase
+      .channel('driver-location-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'drivers'
+        },
+        (payload) => {
+          setRide(prev => {
+            if (prev?.driver?.id === payload.new.id) {
+              return {
+                ...prev,
+                driver: {
+                  ...prev.driver,
+                  current_location: payload.new.current_location
+                }
+              };
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(rideChannel);
+      supabase.removeChannel(driverChannel);
     };
   }, [rideId]);
 
@@ -244,6 +273,12 @@ const PassengerRideStatus = () => {
                 ${ride.final_fare || ride.estimated_fare}
               </span>
             </div>
+            {ride.payment_method && (
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Payment Method</span>
+                <span className="capitalize">{ride.payment_method.replace('_', ' ')}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 

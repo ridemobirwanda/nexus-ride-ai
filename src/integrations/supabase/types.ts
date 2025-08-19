@@ -125,6 +125,7 @@ export type Database = {
           final_fare: number | null
           id: string
           passenger_id: string
+          payment_method: string | null
           pickup_address: string
           pickup_location: unknown
           rating: number | null
@@ -143,6 +144,7 @@ export type Database = {
           final_fare?: number | null
           id?: string
           passenger_id: string
+          payment_method?: string | null
           pickup_address: string
           pickup_location: unknown
           rating?: number | null
@@ -161,6 +163,7 @@ export type Database = {
           final_fare?: number | null
           id?: string
           passenger_id?: string
+          payment_method?: string | null
           pickup_address?: string
           pickup_location?: unknown
           rating?: number | null
