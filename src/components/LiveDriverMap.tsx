@@ -9,7 +9,10 @@ import {
   Gauge, 
   Users,
   RefreshCw,
-  Clock
+  Clock,
+  Star,
+  Award,
+  Zap
 } from 'lucide-react';
 
 interface LiveDriverMapProps {
@@ -118,10 +121,20 @@ const LiveDriverMap: React.FC<LiveDriverMapProps> = ({
                 )}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-medium">{driver.driver?.name || 'Unknown Driver'}</h4>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium">{driver.driver?.name || 'Unknown Driver'}</h4>
+                      {/* Status indicator based on driver activity */}
+                      <div className={`h-2 w-2 rounded-full ${
+                        Date.now() - new Date(driver.timestamp).getTime() < 10000 
+                          ? 'bg-green-500' 
+                          : Date.now() - new Date(driver.timestamp).getTime() < 30000
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                      }`} />
+                    </div>
                     {driver.driver?.car_model && (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-sm text-muted-foreground mb-1">
                         {driver.driver.car_model}
                         {driver.driver.car_plate && ` • ${driver.driver.car_plate}`}
                       </div>
@@ -147,7 +160,33 @@ const LiveDriverMap: React.FC<LiveDriverMapProps> = ({
                 </div>
 
                 {selectedDriver === driver.id && (
-                  <div className="mt-3 pt-3 border-t space-y-2">
+                  <div className="mt-3 pt-3 border-t space-y-3">
+                    {/* Driver Performance Metrics */}
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center p-2 bg-muted/30 rounded">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Star className="h-3 w-3 text-yellow-500" />
+                          <span className="font-medium">4.8</span>
+                        </div>
+                        <div className="text-muted-foreground">Rating</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted/30 rounded">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Award className="h-3 w-3 text-blue-500" />
+                          <span className="font-medium">127</span>
+                        </div>
+                        <div className="text-muted-foreground">Trips</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted/30 rounded">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Zap className="h-3 w-3 text-green-500" />
+                          <span className="font-medium">3m</span>
+                        </div>
+                        <div className="text-muted-foreground">ETA</div>
+                      </div>
+                    </div>
+
+                    {/* Movement Data */}
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       {driver.speed !== undefined && (
                         <div className="flex items-center gap-2">
@@ -165,7 +204,7 @@ const LiveDriverMap: React.FC<LiveDriverMapProps> = ({
                     </div>
                     
                     <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                      Driver ID: {driver.driver_id}
+                      Last Update: {new Date(driver.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                 )}

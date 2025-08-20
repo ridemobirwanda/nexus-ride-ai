@@ -192,6 +192,39 @@ const PassengerDashboard = () => {
     try {
       const estimatedFare = calculateEstimatedFare();
       
+      // First, use smart matching to find best driver
+      toast({
+        title: "Finding Drivers",
+        description: "Using smart matching to find the best driver for you...",
+      });
+
+      const { data: matchingResult, error: matchingError } = await supabase.functions.invoke(
+        'smart-driver-matching',
+        {
+          body: {
+            pickup_lat: rideData.pickupLocation.lat,
+            pickup_lng: rideData.pickupLocation.lng,
+            max_distance_km: 10,
+            max_drivers: 5
+          }
+        }
+      );
+
+      if (matchingError) {
+        console.error('Smart matching failed:', matchingError);
+        // Continue with normal booking even if smart matching fails
+      } else {
+        console.log('Smart matching result:', matchingResult);
+        if (matchingResult.drivers.length === 0) {
+          toast({
+            title: "No Drivers Available",
+            description: "No drivers found in your area. Please try again later.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+      
       // Create a ride request with actual coordinates
       const { data, error } = await supabase
         .from('rides')
@@ -210,9 +243,10 @@ const PassengerDashboard = () => {
 
       if (error) throw error;
 
+      const driversFound = matchingResult?.drivers?.length || 0;
       toast({
         title: "Ride Booked!",
-        description: `Looking for nearby drivers... Estimated fare: $${estimatedFare.toFixed(2)}`,
+        description: `Found ${driversFound} drivers nearby. Estimated fare: $${estimatedFare.toFixed(2)}`,
       });
 
       // Navigate to ride status page
