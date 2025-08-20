@@ -231,11 +231,8 @@ const PassengerRideStatus = () => {
             <Map
               pickupLocation={pickupCoords ? { ...pickupCoords, address: ride.pickup_address } : undefined}
               dropoffLocation={dropoffCoords ? { ...dropoffCoords, address: ride.dropoff_address } : undefined}
-              drivers={driverCoords && ride.driver ? [{ 
-                id: ride.driver.id, 
-                ...driverCoords, 
-                name: ride.driver.name 
-              }] : []}
+              assignedDriverId={ride.driver?.id}
+              showAllDrivers={false}
               className="h-80"
             />
           </CardContent>

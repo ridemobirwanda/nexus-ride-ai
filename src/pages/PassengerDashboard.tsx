@@ -44,7 +44,7 @@ const PassengerDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [passenger, setPassenger] = useState<Passenger | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [nearbyDrivers, setNearbyDrivers] = useState<Driver[]>([]);
+  const [currentRide, setCurrentRide] = useState<any>(null);
   const navigate = useNavigate();
 
   const [rideData, setRideData] = useState({
@@ -110,36 +110,30 @@ const PassengerDashboard = () => {
     fetchPassengerProfile();
   }, [user]);
 
-  // Fetch nearby drivers using the safe function via SQL query
+  // Check for active rides
   useEffect(() => {
-    const fetchNearbyDrivers = async () => {
+    const fetchActiveRide = async () => {
+      if (!passenger) return;
+
       try {
-        // Since we can't access the safe function directly from the client, 
-        // we'll just show placeholders for available drivers
-        const mockDrivers = [
-          { id: '1', display_name: 'Driver 1', is_available: true },
-          { id: '2', display_name: 'Driver 2', is_available: true },
-          { id: '3', display_name: 'Driver 3', is_available: true }
-        ];
-        
-        // Transform the data to match the expected interface
-        const transformedDrivers = mockDrivers.map((driver: any) => ({
-          id: driver.id,
-          name: driver.display_name,
-          phone: 'Protected', // Phone is no longer exposed for security
-          car_model: 'Vehicle Info Protected', // Car model is no longer exposed
-          car_plate: 'Protected', // Plate is no longer exposed
-          is_available: driver.is_available
-        }));
-        
-        setNearbyDrivers(transformedDrivers);
+        const { data, error } = await supabase
+          .from('rides')
+          .select('*')
+          .eq('passenger_id', passenger.id)
+          .in('status', ['pending', 'accepted', 'in_progress'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+        setCurrentRide(data);
       } catch (error: any) {
-        console.error('Error fetching drivers:', error);
+        console.error('Error fetching active ride:', error);
       }
     };
 
-    fetchNearbyDrivers();
-  }, []);
+    fetchActiveRide();
+  }, [passenger]);
 
   const handleSignOut = async () => {
     try {
@@ -258,11 +252,11 @@ const PassengerDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Map */}
+        {/* Live Driver Map */}
         <Card>
           <CardContent className="p-0">
             <Map
-              onLocationSelect={(location, type) => {
+              onLocationSelect={!currentRide ? (location, type) => {
                 if (type === 'pickup') {
                   setRideData({ 
                     ...rideData, 
@@ -276,15 +270,11 @@ const PassengerDashboard = () => {
                     dropoffAddress: location.address 
                   });
                 }
-              }}
+              } : undefined}
               pickupLocation={rideData.pickupLocation}
               dropoffLocation={rideData.dropoffLocation}
-              drivers={nearbyDrivers.map(driver => ({
-                id: driver.id,
-                lat: 40.7128 + (Math.random() - 0.5) * 0.1, // Mock coordinates around NYC
-                lng: -74.0060 + (Math.random() - 0.5) * 0.1,
-                name: driver.name
-              }))}
+              assignedDriverId={currentRide?.driver_id}
+              showAllDrivers={!currentRide}
               className="h-80"
             />
           </CardContent>
@@ -295,7 +285,11 @@ const PassengerDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Car className="h-5 w-5" />
-              Book a Ride
+              {currentRide ? (
+                currentRide.status === 'pending' ? 'Finding Driver...' :
+                currentRide.status === 'accepted' ? 'Driver En Route' :
+                'Ride In Progress'
+              ) : 'Book a Ride'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -377,15 +371,37 @@ const PassengerDashboard = () => {
               </div>
             )}
 
-            <Button 
-              onClick={handleBookRide}
-              className="w-full"
-              size="lg"
-              disabled={!rideData.pickupLocation || !rideData.dropoffLocation}
-            >
-              <Search className="h-4 w-4 mr-2" />
-              Book Ride - ${rideData.pickupLocation && rideData.dropoffLocation ? calculateEstimatedFare().toFixed(2) : '0.00'}
-            </Button>
+            {!currentRide ? (
+              <Button 
+                onClick={handleBookRide}
+                className="w-full"
+                size="lg"
+                disabled={!rideData.pickupLocation || !rideData.dropoffLocation}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Book Ride - ${rideData.pickupLocation && rideData.dropoffLocation ? calculateEstimatedFare().toFixed(2) : '0.00'}
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-4 bg-primary/10 rounded-lg text-center">
+                  <div className="font-medium text-primary">
+                    {currentRide.status === 'pending' && '🔍 Searching for drivers...'}
+                    {currentRide.status === 'accepted' && '🚗 Driver assigned and en route'}
+                    {currentRide.status === 'in_progress' && '🏁 Ride in progress'}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Ride ID: {currentRide.id}
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate(`/passenger/ride/${currentRide.id}`)}
+                  className="w-full"
+                  size="lg"
+                >
+                  View Ride Details
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
