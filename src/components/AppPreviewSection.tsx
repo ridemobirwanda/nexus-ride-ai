@@ -138,12 +138,14 @@ const AppPreviewSection = () => {
                           <span className="text-sm text-muted-foreground">Where to?</span>
                         </div>
                         <div className="h-8 bg-muted/50 rounded" />
-                        <div className="flex gap-2">
-                          <div className="h-12 bg-primary/20 rounded flex-1 flex items-center justify-center">
-                            <Car className="h-6 w-6 text-primary" />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="h-12 bg-primary/20 rounded-lg flex items-center justify-center gap-2 border border-primary/30">
+                            <Car className="h-4 w-4 text-primary" />
+                            <span className="text-xs font-medium text-primary">Standard</span>
                           </div>
-                          <div className="h-12 bg-accent/20 rounded flex-1 flex items-center justify-center">
-                            <User className="h-6 w-6 text-accent" />
+                          <div className="h-12 bg-accent/20 rounded-lg flex items-center justify-center gap-2 border border-accent/30">
+                            <User className="h-4 w-4 text-accent" />
+                            <span className="text-xs font-medium text-accent">Premium</span>
                           </div>
                         </div>
                       </div>
