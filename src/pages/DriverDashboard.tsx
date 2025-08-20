@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import LocationTracker from '@/components/LocationTracker';
 import { 
   Car, 
   DollarSign, 
@@ -278,47 +279,53 @@ const DriverDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Driver Status */}
-        <Card className="gradient-card card-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="h-5 w-5" />
-                Driver Status
-              </div>
-              <Badge variant={driver?.is_available ? "default" : "secondary"}>
-                {driver?.is_available ? "Online" : "Offline"}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Availability</p>
-                <p className="text-sm text-muted-foreground">
-                  {driver?.is_available ? "You're receiving ride requests" : "You're not receiving requests"}
-                </p>
-              </div>
-              <Switch
-                checked={driver?.is_available || false}
-                onCheckedChange={toggleAvailability}
-              />
-            </div>
-            
-            {driver && (
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                <div>
-                  <p className="text-sm text-muted-foreground">Vehicle</p>
-                  <p className="font-medium">{driver.car_model}</p>
+        {/* Driver Status and Location Tracking */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Driver Status */}
+          <Card className="gradient-card card-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  Driver Status
                 </div>
+                <Badge variant={driver?.is_available ? "default" : "secondary"}>
+                  {driver?.is_available ? "Online" : "Offline"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Plate</p>
-                  <p className="font-medium">{driver.car_plate}</p>
+                  <p className="font-medium">Availability</p>
+                  <p className="text-sm text-muted-foreground">
+                    {driver?.is_available ? "You're receiving ride requests" : "You're not receiving requests"}
+                  </p>
                 </div>
+                <Switch
+                  checked={driver?.is_available || false}
+                  onCheckedChange={toggleAvailability}
+                />
               </div>
-            )}
-          </CardContent>
-        </Card>
+              
+              {driver && (
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Vehicle</p>
+                    <p className="font-medium">{driver.car_model}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Plate</p>
+                    <p className="font-medium">{driver.car_plate}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Location Tracking */}
+          <LocationTracker />
+        </div>
 
         {/* Active Ride */}
         {activeRide && (

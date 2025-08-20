@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import LiveDriverMap from '@/components/LiveDriverMap';
 import { 
   MapPin, 
   Navigation, 
@@ -388,45 +389,8 @@ const PassengerDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Nearby Drivers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Nearby Drivers ({nearbyDrivers.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {nearbyDrivers.length > 0 ? (
-              <div className="space-y-3">
-                {nearbyDrivers.map((driver) => (
-                  <div key={driver.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{driver.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Available Driver
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-accent rounded-full animate-pulse"></div>
-                      <span className="text-sm text-muted-foreground">Available</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Car className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No drivers available in your area</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Live Drivers Map */}
+        <LiveDriverMap className="mb-6" />
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">

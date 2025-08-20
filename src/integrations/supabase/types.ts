@@ -49,6 +49,54 @@ export type Database = {
           },
         ]
       }
+      driver_locations: {
+        Row: {
+          accuracy: number | null
+          driver_id: string
+          heading: number | null
+          id: string
+          is_active: boolean
+          location: unknown
+          speed: number | null
+          timestamp: string
+        }
+        Insert: {
+          accuracy?: number | null
+          driver_id: string
+          heading?: number | null
+          id?: string
+          is_active?: boolean
+          location: unknown
+          speed?: number | null
+          timestamp?: string
+        }
+        Update: {
+          accuracy?: number | null
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          is_active?: boolean
+          location?: unknown
+          speed?: number | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           car_model: string | null
@@ -225,7 +273,15 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      update_driver_location: {
+        Args: {
+          p_accuracy?: number
+          p_heading?: number
+          p_location: unknown
+          p_speed?: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
