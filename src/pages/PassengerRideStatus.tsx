@@ -141,7 +141,7 @@ const PassengerRideStatus = () => {
         description: "Your ride has been cancelled successfully",
       });
 
-      navigate('/passenger/dashboard');
+      navigate('/passenger');
     } catch (error: any) {
       toast({
         title: "Error",
