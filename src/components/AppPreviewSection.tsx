@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Smartphone, 
@@ -16,6 +17,25 @@ import mapBgImage from '@/assets/map-bg.jpg';
 
 const AppPreviewSection = () => {
   const [activeTab, setActiveTab] = useState('passenger');
+  const [destination, setDestination] = useState('');
+  const [selectedRideType, setSelectedRideType] = useState('standard');
+  const [showEstimate, setShowEstimate] = useState(false);
+
+  const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDestination(e.target.value);
+    if (e.target.value.length > 2) {
+      setShowEstimate(true);
+    } else {
+      setShowEstimate(false);
+    }
+  };
+
+  const handleRideTypeSelect = (type: 'standard' | 'premium') => {
+    setSelectedRideType(type);
+    if (destination.length > 2) {
+      setShowEstimate(true);
+    }
+  };
 
   const passengerFeatures = [
     {
@@ -133,21 +153,58 @@ const AppPreviewSection = () => {
                       </div>
                       
                       <div className="space-y-3">
-                        <div className="h-10 bg-muted rounded-lg flex items-center px-3">
-                          <MapPin className="h-4 w-4 text-muted-foreground mr-2" />
-                          <span className="text-sm text-muted-foreground">Where to?</span>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Where to?"
+                            value={destination}
+                            onChange={handleDestinationChange}
+                            className="pl-10 h-10 bg-background border-muted"
+                          />
                         </div>
-                        <div className="h-8 bg-muted/50 rounded" />
+                        
+                        {showEstimate && (
+                          <div className="h-8 bg-muted/50 rounded px-3 flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Estimated time:</span>
+                            <span className="font-medium">12 min</span>
+                          </div>
+                        )}
+                        
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="h-12 bg-primary/20 rounded-lg flex items-center justify-center gap-2 border border-primary/30">
-                            <Car className="h-4 w-4 text-primary" />
-                            <span className="text-xs font-medium text-primary">Standard</span>
-                          </div>
-                          <div className="h-12 bg-accent/20 rounded-lg flex items-center justify-center gap-2 border border-accent/30">
-                            <User className="h-4 w-4 text-accent" />
-                            <span className="text-xs font-medium text-accent">Premium</span>
-                          </div>
+                          <button
+                            onClick={() => handleRideTypeSelect('standard')}
+                            className={`h-12 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                              selectedRideType === 'standard'
+                                ? 'bg-primary/30 border-primary text-primary shadow-lg'
+                                : 'bg-primary/20 border-primary/30 text-primary hover:bg-primary/25'
+                            }`}
+                          >
+                            <Car className="h-4 w-4" />
+                            <span className="text-xs font-medium">Standard</span>
+                          </button>
+                          <button
+                            onClick={() => handleRideTypeSelect('premium')}
+                            className={`h-12 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                              selectedRideType === 'premium'
+                                ? 'bg-accent/30 border-accent text-accent shadow-lg'
+                                : 'bg-accent/20 border-accent/30 text-accent hover:bg-accent/25'
+                            }`}
+                          >
+                            <User className="h-4 w-4" />
+                            <span className="text-xs font-medium">Premium</span>
+                          </button>
                         </div>
+                        
+                        {showEstimate && (
+                          <Button 
+                            variant="hero" 
+                            className="w-full mt-4"
+                            onClick={() => alert('Demo: Ride booking would start here!')}
+                          >
+                            Book {selectedRideType === 'premium' ? 'Premium' : 'Standard'} Ride - $
+                            {selectedRideType === 'premium' ? '18.50' : '12.30'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
