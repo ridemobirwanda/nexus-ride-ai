@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,9 @@ import {
   User,
   Navigation,
   Clock,
-  Star
+  Star,
+  Loader2,
+  Crosshair
 } from 'lucide-react';
 import mapBgImage from '@/assets/map-bg.jpg';
 
@@ -20,6 +22,74 @@ const AppPreviewSection = () => {
   const [destination, setDestination] = useState('');
   const [selectedRideType, setSelectedRideType] = useState('standard');
   const [showEstimate, setShowEstimate] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<string>('');
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationCoords, setLocationCoords] = useState<{lat: number, lng: number} | null>(null);
+
+  // Real-time location tracking
+  useEffect(() => {
+    if (activeTab === 'passenger' && 'geolocation' in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocationCoords({ lat: latitude, lng: longitude });
+          
+          // Simulate address geocoding (in real app, you'd use Mapbox or Google Maps API)
+          const mockAddresses = [
+            '123 Tech Street, San Francisco, CA',
+            '456 Innovation Ave, Palo Alto, CA', 
+            '789 Startup Blvd, Mountain View, CA',
+            '321 Silicon Way, Cupertino, CA'
+          ];
+          const randomAddress = mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
+          setCurrentLocation(randomAddress);
+        },
+        (error) => {
+          console.log('Location error:', error);
+        },
+        { 
+          enableHighAccuracy: true, 
+          timeout: 10000, 
+          maximumAge: 30000 
+        }
+      );
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, [activeTab]);
+
+  const handleGetCurrentLocation = () => {
+    if (!('geolocation' in navigator)) {
+      alert('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    setIsLoadingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationCoords({ lat: latitude, lng: longitude });
+        
+        // Simulate reverse geocoding
+        const mockAddresses = [
+          '123 Current Street, Your City, State',
+          '456 Live Location Ave, Your Area, State',
+          '789 Real Time Blvd, Your District, State'
+        ];
+        const randomAddress = mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
+        setCurrentLocation(randomAddress);
+        setDestination(randomAddress);
+        setShowEstimate(true);
+        setIsLoadingLocation(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setIsLoadingLocation(false);
+        alert('Unable to get your location. Please check your browser permissions.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDestination(e.target.value);
@@ -153,15 +223,42 @@ const AppPreviewSection = () => {
                       </div>
                       
                       <div className="space-y-3">
+                        {/* Current Location Display */}
+                        {currentLocation && (
+                          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                            <span className="text-xs text-primary font-medium">Live: {currentLocation}</span>
+                          </div>
+                        )}
+                        
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             placeholder="Where to?"
                             value={destination}
                             onChange={handleDestinationChange}
-                            className="pl-10 h-10 bg-background border-muted"
+                            className="pl-10 pr-12 h-10 bg-background border-muted"
                           />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleGetCurrentLocation}
+                            disabled={isLoadingLocation}
+                            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                          >
+                            {isLoadingLocation ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Crosshair className="h-4 w-4" />
+                            )}
+                          </Button>
                         </div>
+                        
+                        {locationCoords && (
+                          <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1">
+                            📍 GPS: {locationCoords.lat.toFixed(4)}, {locationCoords.lng.toFixed(4)}
+                          </div>
+                        )}
                         
                         {showEstimate && (
                           <div className="h-8 bg-muted/50 rounded px-3 flex items-center justify-between text-sm">
@@ -199,7 +296,7 @@ const AppPreviewSection = () => {
                           <Button 
                             variant="hero" 
                             className="w-full mt-4"
-                            onClick={() => alert('Demo: Ride booking would start here!')}
+                            onClick={() => alert(`Demo: Booking ${selectedRideType} ride from ${currentLocation || 'current location'} to ${destination}`)}
                           >
                             Book {selectedRideType === 'premium' ? 'Premium' : 'Standard'} Ride - $
                             {selectedRideType === 'premium' ? '18.50' : '12.30'}
