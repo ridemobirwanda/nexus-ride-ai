@@ -105,8 +105,12 @@ export type Database = {
           current_location: unknown | null
           id: string
           is_available: boolean | null
+          last_activity_at: string | null
           name: string
           phone: string | null
+          rating: number | null
+          status: Database["public"]["Enums"]["driver_status"]
+          total_trips: number | null
           user_id: string
         }
         Insert: {
@@ -116,8 +120,12 @@ export type Database = {
           current_location?: unknown | null
           id?: string
           is_available?: boolean | null
+          last_activity_at?: string | null
           name: string
           phone?: string | null
+          rating?: number | null
+          status?: Database["public"]["Enums"]["driver_status"]
+          total_trips?: number | null
           user_id: string
         }
         Update: {
@@ -127,8 +135,12 @@ export type Database = {
           current_location?: unknown | null
           id?: string
           is_available?: boolean | null
+          last_activity_at?: string | null
           name?: string
           phone?: string | null
+          rating?: number | null
+          status?: Database["public"]["Enums"]["driver_status"]
+          total_trips?: number | null
           user_id?: string
         }
         Relationships: []
@@ -273,6 +285,28 @@ export type Database = {
       }
     }
     Functions: {
+      find_nearest_driver: {
+        Args: {
+          p_limit?: number
+          p_max_distance_km?: number
+          p_pickup_location: unknown
+        }
+        Returns: {
+          car_model: string
+          car_plate: string
+          distance_km: number
+          driver_id: string
+          estimated_arrival_minutes: number
+          name: string
+          phone: string
+          rating: number
+          total_trips: number
+        }[]
+      }
+      point_distance: {
+        Args: { p1: unknown; p2: unknown }
+        Returns: number
+      }
       update_driver_location: {
         Args: {
           p_accuracy?: number
@@ -282,9 +316,17 @@ export type Database = {
         }
         Returns: string
       }
+      update_driver_status: {
+        Args: { p_status: Database["public"]["Enums"]["driver_status"] }
+        Returns: boolean
+      }
+      update_inactive_drivers: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
-      [_ in never]: never
+      driver_status: "offline" | "available" | "on_trip" | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -411,6 +453,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      driver_status: ["offline", "available", "on_trip", "inactive"],
+    },
   },
 } as const
