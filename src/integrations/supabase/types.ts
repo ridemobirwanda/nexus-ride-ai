@@ -765,6 +765,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_logs: {
+        Row: {
+          activity_details: Json | null
+          activity_type: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          activity_details?: Json | null
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          activity_details?: Json | null
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -838,6 +871,21 @@ export type Database = {
           total_trips: number
         }[]
       }
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_drivers: number
+          completed_rides: number
+          pending_rides: number
+          today_revenue: number
+          today_rides: number
+          total_drivers: number
+          total_passengers: number
+          total_revenue: number
+          total_rides: number
+          total_users: number
+        }[]
+      }
       get_driver_earnings_summary: {
         Args: { p_days?: number; p_driver_user_id: string }
         Returns: {
@@ -859,9 +907,28 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      log_user_activity: {
+        Args: {
+          p_activity_details?: Json
+          p_activity_type: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_user_id: string
+          p_user_type: string
+        }
+        Returns: string
+      }
       point_distance: {
         Args: { p1: unknown; p2: unknown }
         Returns: number
+      }
+      request_admin_password_reset: {
+        Args: { admin_email: string }
+        Returns: string
+      }
+      setup_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_driver_location: {
         Args: {

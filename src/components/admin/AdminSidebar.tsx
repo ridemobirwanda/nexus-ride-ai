@@ -1,4 +1,4 @@
-import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home } from "lucide-react";
+import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,7 @@ const menuItems = [
   { id: "analytics", label: "Reports & Analytics", icon: BarChart3, requiredRole: ["super_admin", "admin"] },
   { id: "promos", label: "Promo Codes", icon: Tag, requiredRole: ["super_admin", "admin"] },
   { id: "support", label: "Support Center", icon: MessageSquare, requiredRole: ["super_admin", "admin", "support"] },
+  { id: "activity", label: "Activity Tracking", icon: Activity, requiredRole: ["super_admin", "admin"] },
 ];
 
 export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebarProps) {

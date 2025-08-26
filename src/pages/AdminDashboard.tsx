@@ -12,6 +12,7 @@ import { DriverVerification } from "@/components/admin/DriverVerification";
 import { ReportsAnalytics } from "@/components/admin/ReportsAnalytics";
 import { PromoCodeManager } from "@/components/admin/PromoCodeManager";
 import { SupportCenter } from "@/components/admin/SupportCenter";
+import { ActivityTracker } from "@/components/admin/ActivityTracker";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
@@ -77,6 +78,8 @@ const AdminDashboard = () => {
         return <PromoCodeManager userRole={userRole} />;
       case "support":
         return <SupportCenter userRole={userRole} />;
+      case "activity":
+        return <ActivityTracker userRole={userRole} />;
       default:
         return <AdminOverview userRole={userRole} />;
     }
