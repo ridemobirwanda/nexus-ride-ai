@@ -24,10 +24,11 @@ const Map: React.FC<MapProps> = ({
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
+  const [mapboxToken, setMapboxToken] = useState('pk.eyJ1Ijoia3J3aWJ1dHNvIiwiYSI6ImNtZXNhODJ0bzAwbjQybHNjZ200cXV2dmgifQ.sq9l5w_gvj4F2lqtMU-KOg');
+  const [showTokenInput, setShowTokenInput] = useState(false);
   const [locationMode, setLocationMode] = useState<'pickup' | 'dropoff' | null>(null);
   const [driverMarkers, setDriverMarkers] = useState<Record<string, mapboxgl.Marker>>({});
+  const [is3D, setIs3D] = useState(true);
   
   // Get real-time driver locations
   const { driverLocations, isLoading, error } = useDriverLocationSubscription();
@@ -39,13 +40,72 @@ const Map: React.FC<MapProps> = ({
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: is3D ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11',
       center: [-74.5, 40], // Default to NYC area
-      zoom: 9
+      zoom: is3D ? 15 : 9,
+      pitch: is3D ? 60 : 0, // 3D tilt
+      bearing: is3D ? -17.6 : 0, // 3D rotation
+      antialias: true, // Enable for smooth 3D rendering
+      projection: is3D ? 'globe' : 'mercator'
     });
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Add navigation controls with 3D pitch/bearing controls
+    map.current.addControl(new mapboxgl.NavigationControl({
+      visualizePitch: true,
+      showZoom: true,
+      showCompass: true
+    }), 'top-right');
+
+    // Add 3D buildings layer
+    if (is3D) {
+      map.current.on('style.load', () => {
+        // Add 3D buildings
+        const layers = map.current?.getStyle().layers;
+        const labelLayerId = layers?.find(
+          (layer) => layer.type === 'symbol' && layer.layout && layer.layout['text-field']
+        )?.id;
+
+        map.current?.addLayer({
+          id: '3d-buildings',
+          source: 'composite',
+          'source-layer': 'building',
+          filter: ['==', 'extrude', 'true'],
+          type: 'fill-extrusion',
+          minzoom: 15,
+          paint: {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'height']
+            ],
+            'fill-extrusion-base': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'min_height']
+            ],
+            'fill-extrusion-opacity': 0.6
+          }
+        }, labelLayerId);
+
+        // Add atmospheric effects
+        map.current?.setFog({
+          color: 'rgb(186, 210, 235)', // Lower atmosphere
+          'high-color': 'rgb(36, 92, 223)', // Upper atmosphere
+          'horizon-blend': 0.02, // Atmosphere thickness (default 0.2 at low zooms)
+          'space-color': 'rgb(11, 11, 25)', // Background color
+          'star-intensity': 0.6 // Background star brightness (default 0.35 at low zooms )
+        });
+      });
+    }
 
     // Add click handler for location selection
     if (onLocationSelect) {
@@ -118,6 +178,65 @@ const Map: React.FC<MapProps> = ({
     }
   }, [pickupLocation, dropoffLocation, driverLocations, showAllDrivers, assignedDriverId]);
   
+  // Handle 3D mode changes
+  useEffect(() => {
+    if (!map.current) return;
+
+    map.current.setStyle(is3D ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11');
+    map.current.setPitch(is3D ? 60 : 0);
+    map.current.setBearing(is3D ? -17.6 : 0);
+    
+    if (is3D) {
+      map.current.once('style.load', () => {
+        // Re-add 3D buildings layer when style changes
+        const layers = map.current?.getStyle().layers;
+        const labelLayerId = layers?.find(
+          (layer) => layer.type === 'symbol' && layer.layout && layer.layout['text-field']
+        )?.id;
+
+        map.current?.addLayer({
+          id: '3d-buildings',
+          source: 'composite',
+          'source-layer': 'building',
+          filter: ['==', 'extrude', 'true'],
+          type: 'fill-extrusion',
+          minzoom: 15,
+          paint: {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'height']
+            ],
+            'fill-extrusion-base': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'min_height']
+            ],
+            'fill-extrusion-opacity': 0.6
+          }
+        }, labelLayerId);
+
+        // Add atmospheric effects
+        map.current?.setFog({
+          color: 'rgb(186, 210, 235)',
+          'high-color': 'rgb(36, 92, 223)',
+          'horizon-blend': 0.02,
+          'space-color': 'rgb(11, 11, 25)',
+          'star-intensity': 0.6
+        });
+      });
+    }
+  }, [is3D]);
+
   // Real-time driver marker updates with smooth animation
   useEffect(() => {
     if (!map.current || isLoading) return;
@@ -231,6 +350,22 @@ const Map: React.FC<MapProps> = ({
     <div className={`relative ${className}`} data-map-component>
       <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
       
+      {/* 3D Toggle */}
+      <div className="absolute top-4 right-20">
+        <Button
+          variant={is3D ? 'default' : 'secondary'}
+          size="sm"
+          onClick={() => setIs3D(!is3D)}
+          className="gap-2"
+        >
+          <div className="relative">
+            <MapPin className="h-4 w-4" />
+            {is3D && <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full"></div>}
+          </div>
+          {is3D ? '3D' : '2D'}
+        </Button>
+      </div>
+
       {onLocationSelect && (
         <div className="absolute top-4 left-4">
           <Button
