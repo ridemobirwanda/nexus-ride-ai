@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import Map from '@/components/Map';
+import CarCategorySelector from '@/components/CarCategorySelector';
 
 interface Passenger {
   id: string;
@@ -53,7 +54,8 @@ const PassengerDashboard = () => {
     estimatedFare: 0,
     paymentMethod: 'cash' as 'cash' | 'mobile_money' | 'card',
     pickupLocation: null as { lat: number; lng: number; address: string } | null,
-    dropoffLocation: null as { lat: number; lng: number; address: string } | null
+    dropoffLocation: null as { lat: number; lng: number; address: string } | null,
+    selectedCarCategory: null as any
   });
 
   // Auth state listener
@@ -148,7 +150,7 @@ const PassengerDashboard = () => {
     }
   };
 
-  const calculateEstimatedFare = () => {
+  const calculateDistance = () => {
     if (!rideData.pickupLocation || !rideData.dropoffLocation) return 0;
     
     // Calculate distance using Haversine formula
@@ -168,15 +170,18 @@ const PassengerDashboard = () => {
       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
+    return R * c; // Distance in km
+  };
+
+  const calculateEstimatedFare = () => {
+    if (!rideData.pickupLocation || !rideData.dropoffLocation || !rideData.selectedCarCategory) return 0;
     
-    // Fare calculation: base fare + distance rate + surge pricing (if applicable)
-    const baseFare = 2.50;
-    const perKmRate = 1.20;
-    const minimumFare = 5.00;
+    const distance = calculateDistance();
+    const category = rideData.selectedCarCategory;
     
-    const calculatedFare = baseFare + (distance * perKmRate);
-    return Math.max(calculatedFare, minimumFare);
+    // Use category-specific pricing
+    const calculatedFare = category.base_fare + (distance * category.base_price_per_km);
+    return Math.max(calculatedFare, category.minimum_fare);
   };
 
   const handleBookRide = async () => {
@@ -184,6 +189,15 @@ const PassengerDashboard = () => {
       toast({
         title: "Error",
         description: "Please select both pickup and dropoff locations on the map",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!rideData.selectedCarCategory) {
+      toast({
+        title: "Error",
+        description: "Please select a car category",
         variant: "destructive"
       });
       return;
@@ -236,6 +250,7 @@ const PassengerDashboard = () => {
           dropoff_location: `POINT(${rideData.dropoffLocation.lng} ${rideData.dropoffLocation.lat})`,
           estimated_fare: estimatedFare,
           payment_method: rideData.paymentMethod,
+          car_category_id: rideData.selectedCarCategory.id,
           status: 'pending'
         })
         .select()
@@ -313,6 +328,16 @@ const PassengerDashboard = () => {
             />
           </CardContent>
         </Card>
+
+        {/* Car Category Selection */}
+        {!currentRide && (
+          <CarCategorySelector
+            selectedCategoryId={rideData.selectedCarCategory?.id}
+            onCategorySelect={(category) => setRideData({ ...rideData, selectedCarCategory: category })}
+            showPricing={true}
+            distance={calculateDistance()}
+          />
+        )}
 
         {/* Booking Card */}
         <Card className="gradient-card card-shadow">
@@ -410,10 +435,10 @@ const PassengerDashboard = () => {
                 onClick={handleBookRide}
                 className="w-full"
                 size="lg"
-                disabled={!rideData.pickupLocation || !rideData.dropoffLocation}
+                disabled={!rideData.pickupLocation || !rideData.dropoffLocation || !rideData.selectedCarCategory}
               >
                 <Search className="h-4 w-4 mr-2" />
-                Book Ride - ${rideData.pickupLocation && rideData.dropoffLocation ? calculateEstimatedFare().toFixed(2) : '0.00'}
+                Book Ride - ${rideData.pickupLocation && rideData.dropoffLocation && rideData.selectedCarCategory ? calculateEstimatedFare().toFixed(2) : '0.00'}
               </Button>
             ) : (
               <div className="space-y-3">

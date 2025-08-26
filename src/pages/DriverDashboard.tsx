@@ -16,8 +16,10 @@ import {
   MapPin,
   Navigation,
   Phone,
-  MessageCircle
+  MessageCircle,
+  Settings
 } from 'lucide-react';
+import DriverCarSetup from '@/components/DriverCarSetup';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface Driver {
@@ -49,6 +51,7 @@ const DriverDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeRide, setActiveRide] = useState<Ride | null>(null);
   const [pendingRides, setPendingRides] = useState<Ride[]>([]);
+  const [showCarSetup, setShowCarSetup] = useState(false);
   const navigate = useNavigate();
 
   // Auth state listener
@@ -279,53 +282,75 @@ const DriverDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Driver Status and Location Tracking */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Driver Status */}
-          <Card className="gradient-card card-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Car className="h-5 w-5" />
-                  Driver Status
-                </div>
-                <Badge variant={driver?.is_available ? "default" : "secondary"}>
-                  {driver?.is_available ? "Online" : "Offline"}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Availability</p>
-                  <p className="text-sm text-muted-foreground">
-                    {driver?.is_available ? "You're receiving ride requests" : "You're not receiving requests"}
-                  </p>
-                </div>
-                <Switch
-                  checked={driver?.is_available || false}
-                  onCheckedChange={toggleAvailability}
-                />
-              </div>
-              
-              {driver && (
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Vehicle</p>
-                    <p className="font-medium">{driver.car_model}</p>
+        {/* Car Setup or Driver Status */}
+        {showCarSetup ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Vehicle Setup</h2>
+              <Button variant="outline" onClick={() => setShowCarSetup(false)}>
+                Back to Dashboard
+              </Button>
+            </div>
+            {driver && <DriverCarSetup driverId={driver.id} />}
+          </div>
+        ) : (
+          <>
+            {/* Driver Status and Location Tracking */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Driver Status */}
+              <Card className="gradient-card card-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Car className="h-5 w-5" />
+                      Driver Status
+                    </div>
+                    <Badge variant={driver?.is_available ? "default" : "secondary"}>
+                      {driver?.is_available ? "Online" : "Offline"}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Availability</p>
+                      <p className="text-sm text-muted-foreground">
+                        {driver?.is_available ? "You're receiving ride requests" : "You're not receiving requests"}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={driver?.is_available || false}
+                      onCheckedChange={toggleAvailability}
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Plate</p>
-                    <p className="font-medium">{driver.car_plate}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  
+                  {driver && (
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Vehicle</p>
+                        <p className="font-medium">{driver.car_model}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Plate</p>
+                        <p className="font-medium">{driver.car_plate}</p>
+                      </div>
+                    </div>
+                  )}
 
-          {/* Location Tracking */}
-          <LocationTracker />
-        </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-4" 
+                    onClick={() => setShowCarSetup(true)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage Vehicle
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Location Tracking */}
+              <LocationTracker />
+            </div>
 
         {/* Active Ride */}
         {activeRide && (
@@ -474,6 +499,8 @@ const DriverDashboard = () => {
               </p>
             </CardContent>
           </Card>
+        )}
+          </>
         )}
       </div>
     </div>
