@@ -14,6 +14,8 @@ import PassengerHistory from "./pages/PassengerHistory";
 import PassengerProfile from "./pages/PassengerProfile";
 import DriverAuth from "./pages/DriverAuth";
 import DriverDashboard from "./pages/DriverDashboard";
+import AdminAuth from "./pages/AdminAuth";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Create QueryClient outside component to avoid hot reload issues
 const queryClient = new QueryClient({
@@ -43,6 +45,8 @@ const App = () => {
             <Route path="/passenger/profile" element={<PassengerProfile />} />
             <Route path="/driver/auth" element={<DriverAuth />} />
             <Route path="/driver/dashboard" element={<DriverDashboard />} />
+            <Route path="/admin/auth" element={<AdminAuth />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

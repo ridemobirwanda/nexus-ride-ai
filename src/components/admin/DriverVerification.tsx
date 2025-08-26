@@ -1,0 +1,420 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { CheckCircle, XCircle, Eye, Clock, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface DriverVerificationProps {
+  userRole: string | null;
+}
+
+interface VerificationRequest {
+  id: string;
+  driver_name: string;
+  driver_phone: string | null;
+  status: string;
+  documents: any[];
+  rejection_reason: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+}
+
+export function DriverVerification({ userRole }: DriverVerificationProps) {
+  const [requests, setRequests] = useState<VerificationRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchVerificationRequests();
+  }, []);
+
+  const fetchVerificationRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("driver_verification_requests")
+        .select(`
+          id,
+          status,
+          documents,
+          rejection_reason,
+          submitted_at,
+          reviewed_at,
+          reviewed_by,
+          drivers!inner(name, phone)
+        `)
+        .order("submitted_at", { ascending: false });
+
+      if (error) throw error;
+
+      const formattedRequests = data?.map(request => ({
+        id: request.id,
+        driver_name: request.drivers?.name || "Unknown",
+        driver_phone: request.drivers?.phone || null,
+        status: request.status,
+        documents: Array.isArray(request.documents) ? request.documents : [],
+        rejection_reason: request.rejection_reason,
+        submitted_at: request.submitted_at,
+        reviewed_at: request.reviewed_at,
+        reviewed_by: request.reviewed_by,
+      })) || [];
+
+      setRequests(formattedRequests);
+    } catch (error) {
+      console.error("Error fetching verification requests:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch verification requests.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from("driver_verification_requests")
+        .update({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Driver verification approved successfully.",
+      });
+
+      fetchVerificationRequests();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve verification.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReject = async (requestId: string, reason: string) => {
+    if (!reason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a rejection reason.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("driver_verification_requests")
+        .update({
+          status: "rejected",
+          rejection_reason: reason,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Driver verification rejected.",
+      });
+
+      setRejectionReason("");
+      fetchVerificationRequests();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reject verification.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "default";
+      case "rejected":
+        return "destructive";
+      case "pending":
+        return "secondary";
+      default:
+        return "outline";
+    }
+  };
+
+  const statusCounts = {
+    pending: requests.filter(r => r.status === 'pending').length,
+    approved: requests.filter(r => r.status === 'approved').length,
+    rejected: requests.filter(r => r.status === 'rejected').length,
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Driver Verification</h2>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-muted rounded w-1/4"></div>
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-10 bg-muted rounded"></div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Driver Verification</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-500">{statusCounts.pending}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-500">{statusCounts.approved}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">{statusCounts.rejected}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Verification Requests</CardTitle>
+          <CardDescription>
+            Review and approve driver verification documents
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Driver</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Documents</TableHead>
+                <TableHead>Submitted</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {requests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell className="font-medium">{request.driver_name}</TableCell>
+                  <TableCell>{request.driver_phone || "Not provided"}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(request.status)} className="capitalize">
+                      {request.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 mr-1" />
+                      {request.documents.length} files
+                    </div>
+                  </TableCell>
+                  <TableCell>{new Date(request.submitted_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setSelectedRequest(request)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Verification Request Details</DialogTitle>
+                            <DialogDescription>
+                              Review driver documents and make a decision
+                            </DialogDescription>
+                          </DialogHeader>
+                          {selectedRequest && (
+                            <div className="space-y-6">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <h4 className="font-medium mb-2">Driver Information</h4>
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Name:</span>
+                                      <span>{selectedRequest.driver_name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Phone:</span>
+                                      <span>{selectedRequest.driver_phone || "Not provided"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Status:</span>
+                                      <Badge variant={getStatusBadgeVariant(selectedRequest.status)} className="capitalize">
+                                        {selectedRequest.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <h4 className="font-medium mb-2">Submission Details</h4>
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Submitted:</span>
+                                      <span>{new Date(selectedRequest.submitted_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Documents:</span>
+                                      <span>{selectedRequest.documents.length} files</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h4 className="font-medium mb-2">Documents</h4>
+                                <div className="space-y-2">
+                                  {selectedRequest.documents.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">No documents uploaded</p>
+                                  ) : (
+                                    selectedRequest.documents.map((doc: any, index: number) => (
+                                      <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-sm font-medium">{doc.name || `Document ${index + 1}`}</span>
+                                          <Badge variant="outline">{doc.type || "Unknown"}</Badge>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+
+                              {selectedRequest.rejection_reason && (
+                                <div>
+                                  <h4 className="font-medium mb-2">Rejection Reason</h4>
+                                  <p className="text-sm text-muted-foreground p-3 bg-destructive/10 rounded-lg">
+                                    {selectedRequest.rejection_reason}
+                                  </p>
+                                </div>
+                              )}
+
+                              {selectedRequest.status === "pending" && (
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="font-medium mb-2">Rejection Reason (if rejecting)</h4>
+                                    <Textarea
+                                      placeholder="Provide a reason for rejection..."
+                                      value={rejectionReason}
+                                      onChange={(e) => setRejectionReason(e.target.value)}
+                                    />
+                                  </div>
+                                  
+                                  <div className="flex justify-end space-x-2">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => handleReject(selectedRequest.id, rejectionReason)}
+                                      disabled={userRole !== 'super_admin' && userRole !== 'admin'}
+                                    >
+                                      <XCircle className="w-4 h-4 mr-2" />
+                                      Reject
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleApprove(selectedRequest.id)}
+                                      disabled={userRole !== 'super_admin' && userRole !== 'admin'}
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      Approve
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
+
+                      {request.status === "pending" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleApprove(request.id)}
+                            disabled={userRole !== 'super_admin' && userRole !== 'admin'}
+                          >
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleReject(request.id, "Quick rejection")}
+                            disabled={userRole !== 'super_admin' && userRole !== 'admin'}
+                          >
+                            <XCircle className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
