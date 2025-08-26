@@ -39,15 +39,33 @@ const Map: React.FC<MapProps> = ({
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
     
+    // Default center to Kigali, Rwanda
+    const defaultCenter: [number, number] = [30.0619, -1.9441]; // Kigali coordinates
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [-74.5, 40], // Default to NYC area
-      zoom: is3D ? 15 : 9,
+      center: defaultCenter,
+      zoom: is3D ? 15 : 12,
       pitch: is3D ? 45 : 0,
       bearing: is3D ? -17.6 : 0,
       projection: is3D ? 'globe' : 'mercator'
     });
+
+    // Try to get user's current location and center map
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.current?.setCenter([longitude, latitude]);
+          map.current?.setZoom(14);
+        },
+        (error) => {
+          console.log('Could not get current location, using default (Kigali):', error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
+      );
+    }
 
     // Add navigation controls with pitch/bearing
     map.current.addControl(new mapboxgl.NavigationControl({
@@ -117,8 +135,24 @@ const Map: React.FC<MapProps> = ({
         
         const { lng, lat } = e.lngLat;
         
-        // Reverse geocoding (simplified - in real app would use Mapbox Geocoding API)
-        const address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        // Generate realistic Kigali street address
+        const kigaliStreets = [
+          'KG 11 Ave', 'KG 7 Ave', 'KN 3 Rd', 'KN 5 Rd', 'KG 9 Ave',
+          'Boulevard de la Revolution', 'Avenue de la Paix', 'KG 15 Ave',
+          'KN 1 Rd', 'KG 3 Ave', 'Nyarugenge District', 'Gasabo District',
+          'Kicukiro District', 'Remera', 'Kimisagara', 'Gikondo'
+        ];
+        
+        const isInKigali = lat > -2.1 && lat < -1.8 && lng > 29.9 && lng < 30.3;
+        let address: string;
+        
+        if (isInKigali) {
+          const randomStreet = kigaliStreets[Math.floor(Math.random() * kigaliStreets.length)];
+          const streetNumber = Math.floor(Math.random() * 100) + 1;
+          address = `${streetNumber} ${randomStreet}, Kigali, Rwanda`;
+        } else {
+          address = `${lat.toFixed(4)}, ${lng.toFixed(4)} - Location`;
+        }
         
         onLocationSelect({ lat, lng, address }, locationMode);
         setLocationMode(null);

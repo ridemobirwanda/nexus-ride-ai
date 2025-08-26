@@ -68,6 +68,7 @@ export type Database = {
           is_active: boolean
           minimum_fare: number
           name: string
+          passenger_capacity: number | null
           surge_multiplier: number
           updated_at: string
         }
@@ -82,6 +83,7 @@ export type Database = {
           is_active?: boolean
           minimum_fare?: number
           name: string
+          passenger_capacity?: number | null
           surge_multiplier?: number
           updated_at?: string
         }
@@ -96,6 +98,7 @@ export type Database = {
           is_active?: boolean
           minimum_fare?: number
           name?: string
+          passenger_capacity?: number | null
           surge_multiplier?: number
           updated_at?: string
         }

@@ -13,6 +13,7 @@ interface CarCategory {
   base_price_per_km: number;
   base_fare: number;
   minimum_fare: number;
+  passenger_capacity: number;
   features: string[];
   image_url?: string;
 }
@@ -66,7 +67,9 @@ const CarCategorySelector = ({
   };
 
   const calculateFare = (category: CarCategory, distanceKm: number) => {
-    const fare = category.base_fare + (distanceKm * category.base_price_per_km);
+    // Calculate base fare: base_price_per_km * passenger_capacity * distance + base_fare
+    const farePerKm = category.base_price_per_km * category.passenger_capacity;
+    const fare = category.base_fare + (distanceKm * farePerKm);
     return Math.max(fare, category.minimum_fare);
   };
 
@@ -75,6 +78,10 @@ const CarCategorySelector = ({
     if (feature.toLowerCase().includes('comfort') || feature.toLowerCase().includes('luxury')) return <Star className="h-3 w-3" />;
     if (feature.toLowerCase().includes('air') || feature.toLowerCase().includes('conditioning')) return <Wind className="h-3 w-3" />;
     return <Shield className="h-3 w-3" />;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `${amount.toLocaleString()} RWF`;
   };
 
   if (isLoading) {
@@ -139,10 +146,13 @@ const CarCategorySelector = ({
                 {showPricing && distance > 0 && (
                   <div className="text-right">
                     <div className="text-xl font-bold text-primary">
-                      ${calculateFare(category, distance).toFixed(2)}
+                      {formatCurrency(calculateFare(category, distance))}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      ${category.base_price_per_km}/km
+                      {formatCurrency(category.base_price_per_km * category.passenger_capacity)}/km
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {category.passenger_capacity} passengers
                     </div>
                   </div>
                 )}
@@ -161,9 +171,15 @@ const CarCategorySelector = ({
               {/* Pricing Info */}
               {!showPricing && (
                 <div className="text-sm text-muted-foreground">
-                  Base: ${category.base_fare} + ${category.base_price_per_km}/km • Min: ${category.minimum_fare}
+                  Base: {formatCurrency(category.base_fare)} + {formatCurrency(category.base_price_per_km * category.passenger_capacity)}/km • Min: {formatCurrency(category.minimum_fare)}
                 </div>
               )}
+              
+              {/* Passenger Capacity */}
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Users className="h-3 w-3" />
+                <span>{category.passenger_capacity} passengers</span>
+              </div>
 
               {/* Car Image Placeholder */}
               {category.image_url && (

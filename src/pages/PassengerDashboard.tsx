@@ -23,6 +23,7 @@ import {
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import Map from '@/components/Map';
 import CarCategorySelector from '@/components/CarCategorySelector';
+import CurrentLocationButton from '@/components/CurrentLocationButton';
 
 interface Passenger {
   id: string;
@@ -179,9 +180,14 @@ const PassengerDashboard = () => {
     const distance = calculateDistance();
     const category = rideData.selectedCarCategory;
     
-    // Use category-specific pricing
-    const calculatedFare = category.base_fare + (distance * category.base_price_per_km);
+    // Calculate fare: base_fare + (distance * price_per_km * passenger_capacity)
+    const farePerKm = category.base_price_per_km * category.passenger_capacity;
+    const calculatedFare = category.base_fare + (distance * farePerKm);
     return Math.max(calculatedFare, category.minimum_fare);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `${amount.toLocaleString()} RWF`;
   };
 
   const handleBookRide = async () => {
@@ -261,7 +267,7 @@ const PassengerDashboard = () => {
       const driversFound = matchingResult?.drivers?.length || 0;
       toast({
         title: "Ride Booked!",
-        description: `Found ${driversFound} drivers nearby. Estimated fare: $${estimatedFare.toFixed(2)}`,
+        description: `Found ${driversFound} drivers nearby. Estimated fare: ${formatCurrency(estimatedFare)}`,
       });
 
       // Navigate to ride status page
@@ -354,14 +360,26 @@ const PassengerDashboard = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pickup">Pickup Location</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="pickup"
-                  placeholder="Select on map or enter pickup location"
-                  className="pl-10"
-                  value={rideData.pickupAddress}
-                  onChange={(e) => setRideData({ ...rideData, pickupAddress: e.target.value })}
+              <div className="space-y-2">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="pickup"
+                    placeholder="Select on map or enter pickup location"
+                    className="pl-10"
+                    value={rideData.pickupAddress}
+                    onChange={(e) => setRideData({ ...rideData, pickupAddress: e.target.value })}
+                  />
+                </div>
+                <CurrentLocationButton
+                  onLocationFound={(location) => {
+                    setRideData({ 
+                      ...rideData, 
+                      pickupLocation: location, 
+                      pickupAddress: location.address 
+                    });
+                  }}
+                  className="w-full"
                 />
               </div>
             </div>
@@ -421,11 +439,14 @@ const PassengerDashboard = () => {
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Estimated Fare:</span>
                   <span className="text-xl font-bold text-primary">
-                    ${calculateEstimatedFare().toFixed(2)}
+                    {formatCurrency(calculateEstimatedFare())}
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Base: $2.50 + Distance charge • Payment: {rideData.paymentMethod.replace('_', ' ')}
+                  Distance: {calculateDistance().toFixed(1)}km • {rideData.selectedCarCategory?.passenger_capacity} passengers • Payment: {rideData.paymentMethod.replace('_', ' ')}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Base: {formatCurrency(rideData.selectedCarCategory?.base_fare || 0)} + {formatCurrency((rideData.selectedCarCategory?.base_price_per_km || 0) * (rideData.selectedCarCategory?.passenger_capacity || 1))}/km
                 </div>
               </div>
             )}
@@ -438,7 +459,7 @@ const PassengerDashboard = () => {
                 disabled={!rideData.pickupLocation || !rideData.dropoffLocation || !rideData.selectedCarCategory}
               >
                 <Search className="h-4 w-4 mr-2" />
-                Book Ride - ${rideData.pickupLocation && rideData.dropoffLocation && rideData.selectedCarCategory ? calculateEstimatedFare().toFixed(2) : '0.00'}
+                Book Ride - {rideData.pickupLocation && rideData.dropoffLocation && rideData.selectedCarCategory ? formatCurrency(calculateEstimatedFare()) : '0 RWF'}
               </Button>
             ) : (
               <div className="space-y-3">
