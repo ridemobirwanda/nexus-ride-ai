@@ -49,6 +49,36 @@ export type Database = {
           },
         ]
       }
+      driver_earnings: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          driver_id: string
+          id: string
+          ride_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date?: string
+          driver_id: string
+          id?: string
+          ride_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          driver_id?: string
+          id?: string
+          ride_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_locations: {
         Row: {
           accuracy: number | null
@@ -349,6 +379,19 @@ export type Database = {
           phone: string
           rating: number
           total_trips: number
+        }[]
+      }
+      get_driver_earnings_summary: {
+        Args: { p_days?: number; p_driver_user_id: string }
+        Returns: {
+          avg_fare: number
+          daily_breakdown: Json
+          last_week_earnings: number
+          this_week_earnings: number
+          today_earnings: number
+          total_earnings: number
+          total_rides: number
+          yesterday_earnings: number
         }[]
       }
       point_distance: {
