@@ -329,31 +329,91 @@ const PassengerDashboard = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pickup">Pickup Location</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="pickup"
-                  placeholder="Select on map or enter pickup location"
-                  className="pl-10"
-                  value={rideData.pickupAddress}
-                  onChange={(e) => setRideData({ ...rideData, pickupAddress: e.target.value })}
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="pickup"
+                    placeholder="Current location will be detected"
+                    className="pl-10"
+                    value={rideData.pickupAddress}
+                    readOnly
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if ("geolocation" in navigator) {
+                      navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                          const { latitude, longitude } = position.coords;
+                          setRideData({
+                            ...rideData,
+                            pickupLocation: { lat: latitude, lng: longitude, address: `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})` },
+                            pickupAddress: `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
+                          });
+                          toast({
+                            title: "Location detected",
+                            description: "Your current location has been set as pickup point"
+                          });
+                        },
+                        (error) => {
+                          toast({
+                            title: "Location Error",
+                            description: "Could not detect your location. Please enable location services.",
+                            variant: "destructive"
+                          });
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                      );
+                    } else {
+                      toast({
+                        title: "Not Supported",
+                        description: "Geolocation is not supported by this browser",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  className="shrink-0"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Detect
+                </Button>
               </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="dropoff">Dropoff Location</Label>
-              <div className="relative">
-                <Navigation className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="dropoff"
-                  placeholder="Select on map or enter destination"
-                  className="pl-10"
-                  value={rideData.dropoffAddress}
-                  onChange={(e) => {
-                    setRideData({ ...rideData, dropoffAddress: e.target.value });
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Navigation className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="dropoff"
+                    placeholder="Click 'Select on Map' to choose destination"
+                    className="pl-10"
+                    value={rideData.dropoffAddress}
+                    readOnly
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // Trigger map's dropoff selection mode
+                    const mapComponent = document.querySelector('[data-map-component]');
+                    if (mapComponent) {
+                      const selectButton = mapComponent.querySelector('[data-select-dropoff]');
+                      if (selectButton) {
+                        (selectButton as HTMLButtonElement).click();
+                      }
+                    }
                   }}
-                />
+                  className="shrink-0"
+                >
+                  <Navigation className="h-4 w-4" />
+                  Select on Map
+                </Button>
               </div>
             </div>
 

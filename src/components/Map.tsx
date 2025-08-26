@@ -228,20 +228,13 @@ const Map: React.FC<MapProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} data-map-component>
       <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
       
       {onLocationSelect && (
-        <div className="absolute top-4 left-4 space-y-2">
+        <div className="absolute top-4 left-4">
           <Button
-            variant={locationMode === 'pickup' ? 'default' : 'secondary'}
-            size="sm"
-            onClick={() => setLocationMode(locationMode === 'pickup' ? null : 'pickup')}
-          >
-            <MapPin className="h-4 w-4 mr-2" />
-            Select Pickup
-          </Button>
-          <Button
+            data-select-dropoff
             variant={locationMode === 'dropoff' ? 'default' : 'secondary'}
             size="sm"
             onClick={() => setLocationMode(locationMode === 'dropoff' ? null : 'dropoff')}
@@ -253,9 +246,9 @@ const Map: React.FC<MapProps> = ({
       )}
       
       {locationMode && (
-        <div className="absolute bottom-4 left-4 right-4 bg-card p-4 rounded-lg shadow-lg">
-          <p className="text-sm text-center">
-            Click on the map to select your {locationMode} location
+        <div className="absolute bottom-4 left-4 right-4 bg-primary text-primary-foreground p-4 rounded-lg shadow-lg">
+          <p className="text-sm text-center font-medium">
+            📍 Click anywhere on the map to set your dropoff location
           </p>
         </div>
       )}
