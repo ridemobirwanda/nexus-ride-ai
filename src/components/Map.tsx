@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation, Car } from 'lucide-react';
+import { MapPin, Navigation, Car, Box, Map as MapIcon } from 'lucide-react';
 import { useDriverLocationSubscription } from '@/hooks/useDriverLocationSubscription';
 
 interface MapProps {
@@ -24,28 +24,91 @@ const Map: React.FC<MapProps> = ({
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
   const [locationMode, setLocationMode] = useState<'pickup' | 'dropoff' | null>(null);
   const [driverMarkers, setDriverMarkers] = useState<Record<string, mapboxgl.Marker>>({});
+  const [is3D, setIs3D] = useState(false);
   
   // Get real-time driver locations
   const { driverLocations, isLoading, error } = useDriverLocationSubscription();
 
-  useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+  // Mapbox token - integrated directly
+  const MAPBOX_TOKEN = 'pk.eyJ1Ijoia3J3aWJ1dHNvIiwiYSI6ImNtZXNhMWl5aTAwbG8yanM5NzBpdHdyZnQifQ.LekbGpZ0ndO2MQSPq0jYMA';
 
-    mapboxgl.accessToken = mapboxToken;
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: [-74.5, 40], // Default to NYC area
-      zoom: 9
+      zoom: is3D ? 15 : 9,
+      pitch: is3D ? 45 : 0,
+      bearing: is3D ? -17.6 : 0,
+      projection: is3D ? 'globe' : 'mercator'
     });
 
-    // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Add navigation controls with pitch/bearing
+    map.current.addControl(new mapboxgl.NavigationControl({
+      visualizePitch: true
+    }), 'top-right');
+
+    // Add 3D buildings and atmosphere when in 3D mode
+    map.current.on('style.load', () => {
+      if (!map.current) return;
+      
+      if (is3D) {
+        // Add 3D buildings
+        const layers = map.current.getStyle().layers;
+        const labelLayerId = layers.find(
+          (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
+        )?.id;
+
+        map.current.addLayer(
+          {
+            id: '3d-buildings',
+            source: 'composite',
+            'source-layer': 'building',
+            filter: ['==', 'extrude', 'true'],
+            type: 'fill-extrusion',
+            minzoom: 15,
+            paint: {
+              'fill-extrusion-color': 'hsl(var(--muted))',
+              'fill-extrusion-height': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                15,
+                0,
+                15.05,
+                ['get', 'height']
+              ],
+              'fill-extrusion-base': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                15,
+                0,
+                15.05,
+                ['get', 'min_height']
+              ],
+              'fill-extrusion-opacity': 0.6
+            }
+          },
+          labelLayerId
+        );
+
+        // Add atmosphere and fog
+        map.current.setFog({
+          color: 'rgb(186, 210, 235)',
+          'high-color': 'rgb(36, 92, 223)',
+          'horizon-blend': 0.02,
+          'space-color': 'rgb(11, 11, 25)',
+          'star-intensity': 0.6
+        });
+      }
+    });
 
     // Add click handler for location selection
     if (onLocationSelect) {
@@ -66,7 +129,7 @@ const Map: React.FC<MapProps> = ({
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, onLocationSelect, locationMode]);
+  }, [onLocationSelect, locationMode, is3D]);
 
   // Add/update pickup and dropoff markers
   useEffect(() => {
@@ -196,40 +259,52 @@ const Map: React.FC<MapProps> = ({
     setDriverMarkers(newDriverMarkers);
   }, [driverLocations, driverMarkers, assignedDriverId, showAllDrivers, isLoading]);
 
-  if (showTokenInput) {
-    const visibleDrivers = driverLocations.filter(driver => 
-      showAllDrivers || driver.driver_id === assignedDriverId
-    );
+  // Toggle between 2D and 3D view
+  const toggle3DView = () => {
+    if (!map.current) return;
     
-    return (
-      <div className={`${className} flex items-center justify-center bg-muted rounded-lg`}>
-        <div className="text-center p-6 max-w-md">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Car className="h-6 w-6 text-primary" />
-            <h3 className="text-lg font-semibold">Live Driver Tracking</h3>
-          </div>
-          <div className="bg-background/50 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-center h-32 text-muted-foreground flex-col gap-2">
-              <MapPin className="h-8 w-8" />
-              {!isLoading && (
-                <div className="text-sm">
-                  {visibleDrivers.length} {assignedDriverId ? 'assigned driver' : 'drivers'} tracked
-                </div>
-              )}
-              {isLoading && <div className="text-sm">Connecting to live data...</div>}
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {assignedDriverId ? 'Tracking your assigned driver' : 'Showing all available drivers'}
-          </p>
-        </div>
-      </div>
-    );
-  }
+    const newIs3D = !is3D;
+    setIs3D(newIs3D);
+    
+    if (newIs3D) {
+      // Switch to 3D
+      map.current.setPitch(45);
+      map.current.setBearing(-17.6);
+      map.current.setZoom(15);
+      map.current.setProjection('globe');
+    } else {
+      // Switch to 2D
+      map.current.setPitch(0);
+      map.current.setBearing(0);
+      map.current.setZoom(9);
+      map.current.setProjection('mercator');
+      
+      // Remove 3D buildings layer if it exists
+      if (map.current.getLayer('3d-buildings')) {
+        map.current.removeLayer('3d-buildings');
+      }
+      
+      // Remove fog
+      map.current.setFog(null);
+    }
+  };
 
   return (
     <div className={`relative ${className}`}>
       <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
+      
+      {/* 2D/3D Toggle Button */}
+      <div className="absolute top-4 right-4">
+        <Button
+          variant={is3D ? 'default' : 'secondary'}
+          size="sm"
+          onClick={toggle3DView}
+          className="flex items-center gap-2"
+        >
+          {is3D ? <Box className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
+          {is3D ? '3D' : '2D'}
+        </Button>
+      </div>
       
       {onLocationSelect && (
         <div className="absolute top-4 left-4 space-y-2">
