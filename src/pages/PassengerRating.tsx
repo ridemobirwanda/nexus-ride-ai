@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Star, ArrowLeft, CheckCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Star, ArrowLeft, CheckCircle } from 'lucide-react';
 
 interface Ride {
   id: string;
@@ -22,9 +22,6 @@ interface Ride {
     name: string;
     car_model: string;
     car_plate: string;
-    photo_url?: string;
-    rating?: number;
-    total_trips?: number;
   };
 }
 
@@ -37,12 +34,6 @@ const PassengerRating = () => {
   const [hoveredStar, setHoveredStar] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reviewCategories, setReviewCategories] = useState({
-    cleanliness: 0,
-    punctuality: 0,
-    communication: 0,
-    driving: 0
-  });
 
   useEffect(() => {
     fetchRideDetails();
@@ -93,8 +84,7 @@ const PassengerRating = () => {
     setIsSubmitting(true);
 
     try {
-      // Update the ride with rating
-      const { error: rideError } = await supabase
+      const { error } = await supabase
         .from('rides')
         .update({
           rating,
@@ -102,29 +92,7 @@ const PassengerRating = () => {
         })
         .eq('id', rideId);
 
-      if (rideError) throw rideError;
-
-      // Create detailed review if categories are provided
-      if (Object.values(reviewCategories).some(val => val > 0) && ride?.driver) {
-        const { data: passengerData } = await supabase
-          .from('passengers')
-          .select('id')
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .single();
-
-        if (passengerData) {
-          await supabase
-            .from('driver_reviews')
-            .insert({
-              ride_id: rideId,
-              driver_id: ride.driver.id,
-              passenger_id: passengerData.id,
-              rating,
-              review_text: feedback.trim() || null,
-              review_categories: reviewCategories
-            });
-        }
-      }
+      if (error) throw error;
 
       toast({
         title: "Thank You!",
@@ -217,28 +185,15 @@ const PassengerRating = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={ride.driver.photo_url || ""} />
+                <Avatar>
+                  <AvatarImage src="" />
                   <AvatarFallback>{ride.driver.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{ride.driver.name}</p>
-                    {ride.driver.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs">{ride.driver.rating.toFixed(1)}</span>
-                      </div>
-                    )}
-                  </div>
+                  <p className="font-medium">{ride.driver.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {ride.driver.car_model} • {ride.driver.car_plate}
                   </p>
-                  {ride.driver.total_trips && (
-                    <p className="text-xs text-muted-foreground">
-                      {ride.driver.total_trips} trips
-                    </p>
-                  )}
                 </div>
               </div>
             </CardContent>
@@ -280,41 +235,6 @@ const PassengerRating = () => {
                   {rating === 4 && "Your ride was good"}
                   {rating === 5 && "Excellent ride!"}
                 </p>
-              </div>
-            )}
-
-            {rating > 0 && (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Rate specific aspects (optional)</h4>
-                  {[
-                    { key: 'cleanliness', label: 'Vehicle Cleanliness' },
-                    { key: 'punctuality', label: 'Punctuality' },
-                    { key: 'communication', label: 'Communication' },
-                    { key: 'driving', label: 'Driving Quality' }
-                  ].map(({ key, label }) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <span className="text-sm">{label}</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((score) => (
-                          <button
-                            key={score}
-                            onClick={() => setReviewCategories(prev => ({ ...prev, [key]: score }))}
-                            className="p-1"
-                          >
-                            <Star
-                              className={`h-4 w-4 ${
-                                score <= (reviewCategories[key as keyof typeof reviewCategories] || 0)
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 

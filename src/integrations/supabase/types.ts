@@ -49,36 +49,6 @@ export type Database = {
           },
         ]
       }
-      driver_earnings: {
-        Row: {
-          amount: number
-          created_at: string
-          date: string
-          driver_id: string
-          id: string
-          ride_id: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          date?: string
-          driver_id: string
-          id?: string
-          ride_id: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          date?: string
-          driver_id?: string
-          id?: string
-          ride_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       driver_locations: {
         Row: {
           accuracy: number | null
@@ -127,48 +97,8 @@ export type Database = {
           },
         ]
       }
-      driver_reviews: {
-        Row: {
-          created_at: string
-          driver_id: string
-          id: string
-          is_anonymous: boolean | null
-          passenger_id: string
-          rating: number
-          review_categories: Json | null
-          review_text: string | null
-          ride_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          driver_id: string
-          id?: string
-          is_anonymous?: boolean | null
-          passenger_id: string
-          rating: number
-          review_categories?: Json | null
-          review_text?: string | null
-          ride_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          driver_id?: string
-          id?: string
-          is_anonymous?: boolean | null
-          passenger_id?: string
-          rating?: number
-          review_categories?: Json | null
-          review_text?: string | null
-          ride_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       drivers: {
         Row: {
-          bio: string | null
           car_model: string | null
           car_plate: string | null
           created_at: string
@@ -178,14 +108,12 @@ export type Database = {
           last_activity_at: string | null
           name: string
           phone: string | null
-          photo_url: string | null
           rating: number | null
           status: Database["public"]["Enums"]["driver_status"]
           total_trips: number | null
           user_id: string
         }
         Insert: {
-          bio?: string | null
           car_model?: string | null
           car_plate?: string | null
           created_at?: string
@@ -195,14 +123,12 @@ export type Database = {
           last_activity_at?: string | null
           name: string
           phone?: string | null
-          photo_url?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_trips?: number | null
           user_id: string
         }
         Update: {
-          bio?: string | null
           car_model?: string | null
           car_plate?: string | null
           created_at?: string
@@ -212,7 +138,6 @@ export type Database = {
           last_activity_at?: string | null
           name?: string
           phone?: string | null
-          photo_url?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_trips?: number | null
@@ -225,7 +150,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          notification_preferences: Json | null
           phone: string | null
           profile_pic: string | null
           user_id: string
@@ -234,7 +158,6 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          notification_preferences?: Json | null
           phone?: string | null
           profile_pic?: string | null
           user_id: string
@@ -243,7 +166,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          notification_preferences?: Json | null
           phone?: string | null
           profile_pic?: string | null
           user_id?: string
@@ -379,19 +301,6 @@ export type Database = {
           phone: string
           rating: number
           total_trips: number
-        }[]
-      }
-      get_driver_earnings_summary: {
-        Args: { p_days?: number; p_driver_user_id: string }
-        Returns: {
-          avg_fare: number
-          daily_breakdown: Json
-          last_week_earnings: number
-          this_week_earnings: number
-          today_earnings: number
-          total_earnings: number
-          total_rides: number
-          yesterday_earnings: number
         }[]
       }
       point_distance: {

@@ -15,14 +15,9 @@ import {
   Navigation,
   Clock,
   DollarSign,
-  X,
-  Star,
-  AlertTriangle,
-  Bell
+  X
 } from 'lucide-react';
 import Map from '@/components/Map';
-import RideCancelModal from '@/components/RideCancelModal';
-import RideNotifications from '@/components/RideNotifications';
 
 interface Ride {
   id: string;
@@ -42,10 +37,6 @@ interface Ride {
     car_model: string;
     car_plate: string;
     current_location?: unknown;
-    rating?: number;
-    total_trips?: number;
-    photo_url?: string;
-    bio?: string;
   };
 }
 
@@ -54,8 +45,6 @@ const PassengerRideStatus = () => {
   const navigate = useNavigate();
   const [ride, setRide] = useState<Ride | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     fetchRideDetails();
@@ -72,28 +61,7 @@ const PassengerRideStatus = () => {
           filter: `id=eq.${rideId}`
         },
         (payload) => {
-          const oldStatus = ride?.status;
-          const newStatus = payload.new.status;
-          
           setRide(prev => prev ? { ...prev, ...payload.new } : null);
-          
-          // Show notification for status changes
-          if (oldStatus && oldStatus !== newStatus) {
-            const statusMessages = {
-              'accepted': 'Driver found! Your ride has been accepted.',
-              'in_progress': 'Your ride is now in progress!',
-              'completed': 'Your ride has been completed. Please rate your experience.',
-              'cancelled': 'Your ride has been cancelled.'
-            };
-            
-            if (statusMessages[newStatus as keyof typeof statusMessages]) {
-              toast({
-                title: "Ride Update",
-                description: statusMessages[newStatus as keyof typeof statusMessages],
-                variant: newStatus === 'cancelled' ? 'destructive' : 'default',
-              });
-            }
-          }
         }
       )
       .subscribe();
@@ -157,46 +125,13 @@ const PassengerRideStatus = () => {
     }
   };
 
-  const canCancelRide = () => {
-    if (!ride) return false;
-    
-    const rideAge = new Date().getTime() - new Date(ride.created_at).getTime();
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    // Can cancel if pending or if accepted within 5 minutes
-    if (ride.status === 'pending') return true;
-    if (ride.status === 'accepted' && rideAge < fiveMinutes) return true;
-    
-    return false;
-  };
-
-  const getCancelConditionMessage = () => {
-    if (!ride) return '';
-    
-    if (ride.status === 'in_progress') {
-      return 'Cannot cancel ride in progress. Please contact your driver.';
-    }
-    
-    const rideAge = new Date().getTime() - new Date(ride.created_at).getTime();
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    if (ride.status === 'accepted' && rideAge >= fiveMinutes) {
-      return 'Cannot cancel after 5 minutes of driver acceptance. Please contact your driver.';
-    }
-    
-    return '';
-  };
-
   const handleCancelRide = async () => {
-    if (!ride || !canCancelRide()) return;
+    if (!ride || !['pending', 'accepted'].includes(ride.status)) return;
 
     try {
       const { error } = await supabase
         .from('rides')
-        .update({ 
-          status: 'cancelled',
-          feedback: cancelReason || 'Cancelled by passenger' 
-        })
+        .update({ status: 'cancelled' })
         .eq('id', rideId);
 
       if (error) throw error;
@@ -274,8 +209,6 @@ const PassengerRideStatus = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <RideNotifications />
-      
       {/* Header */}
       <header className="bg-card border-b px-4 py-3">
         <div className="container mx-auto flex items-center justify-between">
@@ -352,31 +285,18 @@ const PassengerRideStatus = () => {
             <CardHeader>
               <CardTitle>Driver Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={ride.driver.photo_url || ""} />
-                    <AvatarFallback className="text-lg">{ride.driver.name.charAt(0)}</AvatarFallback>
+                  <Avatar>
+                    <AvatarImage src="" />
+                    <AvatarFallback>{ride.driver.name.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-lg">{ride.driver.name}</p>
-                      {ride.driver.rating && (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{ride.driver.rating.toFixed(1)}</span>
-                        </div>
-                      )}
-                    </div>
+                  <div>
+                    <p className="font-medium">{ride.driver.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {ride.driver.car_model} • {ride.driver.car_plate}
                     </p>
-                    {ride.driver.total_trips && (
-                      <p className="text-xs text-muted-foreground">
-                        {ride.driver.total_trips} trips completed
-                      </p>
-                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -392,12 +312,6 @@ const PassengerRideStatus = () => {
                   </Button>
                 </div>
               </div>
-              
-              {ride.driver.bio && (
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">{ride.driver.bio}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         )}
@@ -405,25 +319,15 @@ const PassengerRideStatus = () => {
         {/* Actions */}
         {['pending', 'accepted'].includes(ride.status) && (
           <Card>
-            <CardContent className="p-4 space-y-3">
-              {canCancelRide() ? (
-                <Button 
-                  variant="destructive" 
-                  className="w-full"
-                  onClick={() => setShowCancelModal(true)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel Ride
-                </Button>
-              ) : (
-                <div className="p-3 bg-muted/50 rounded-lg flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium">Cannot Cancel</p>
-                    <p className="text-muted-foreground">{getCancelConditionMessage()}</p>
-                  </div>
-                </div>
-              )}
+            <CardContent className="p-4">
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                onClick={handleCancelRide}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel Ride
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -440,17 +344,6 @@ const PassengerRideStatus = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* Cancel Modal */}
-        <RideCancelModal
-          isOpen={showCancelModal}
-          onClose={() => setShowCancelModal(false)}
-          onConfirm={(reason) => {
-            setCancelReason(reason);
-            setShowCancelModal(false);
-            handleCancelRide();
-          }}
-        />
       </div>
     </div>
   );

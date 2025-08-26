@@ -7,7 +7,6 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import LocationTracker from '@/components/LocationTracker';
-import EarningsDashboard from '@/components/EarningsDashboard';
 import { 
   Car, 
   DollarSign, 
@@ -327,9 +326,6 @@ const DriverDashboard = () => {
           {/* Location Tracking */}
           <LocationTracker />
         </div>
-
-        {/* Earnings Dashboard */}
-        <EarningsDashboard />
 
         {/* Active Ride */}
         {activeRide && (
