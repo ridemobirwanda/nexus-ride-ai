@@ -97,8 +97,48 @@ export type Database = {
           },
         ]
       }
+      driver_reviews: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          is_anonymous: boolean | null
+          passenger_id: string
+          rating: number
+          review_categories: Json | null
+          review_text: string | null
+          ride_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_anonymous?: boolean | null
+          passenger_id: string
+          rating: number
+          review_categories?: Json | null
+          review_text?: string | null
+          ride_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_anonymous?: boolean | null
+          passenger_id?: string
+          rating?: number
+          review_categories?: Json | null
+          review_text?: string | null
+          ride_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
+          bio: string | null
           car_model: string | null
           car_plate: string | null
           created_at: string
@@ -108,12 +148,14 @@ export type Database = {
           last_activity_at: string | null
           name: string
           phone: string | null
+          photo_url: string | null
           rating: number | null
           status: Database["public"]["Enums"]["driver_status"]
           total_trips: number | null
           user_id: string
         }
         Insert: {
+          bio?: string | null
           car_model?: string | null
           car_plate?: string | null
           created_at?: string
@@ -123,12 +165,14 @@ export type Database = {
           last_activity_at?: string | null
           name: string
           phone?: string | null
+          photo_url?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_trips?: number | null
           user_id: string
         }
         Update: {
+          bio?: string | null
           car_model?: string | null
           car_plate?: string | null
           created_at?: string
@@ -138,6 +182,7 @@ export type Database = {
           last_activity_at?: string | null
           name?: string
           phone?: string | null
+          photo_url?: string | null
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_trips?: number | null
@@ -150,6 +195,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          notification_preferences: Json | null
           phone: string | null
           profile_pic: string | null
           user_id: string
@@ -158,6 +204,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          notification_preferences?: Json | null
           phone?: string | null
           profile_pic?: string | null
           user_id: string
@@ -166,6 +213,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          notification_preferences?: Json | null
           phone?: string | null
           profile_pic?: string | null
           user_id?: string
