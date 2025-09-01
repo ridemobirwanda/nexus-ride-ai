@@ -128,6 +128,71 @@ export type Database = {
         }
         Relationships: []
       }
+      car_rentals: {
+        Row: {
+          car_id: string
+          contact_phone: string
+          created_at: string
+          driver_license_number: string | null
+          duration_type: string
+          duration_value: number
+          id: string
+          pickup_location: string | null
+          rental_end: string
+          rental_start: string
+          return_location: string | null
+          special_requests: string | null
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          car_id: string
+          contact_phone: string
+          created_at?: string
+          driver_license_number?: string | null
+          duration_type: string
+          duration_value: number
+          id?: string
+          pickup_location?: string | null
+          rental_end: string
+          rental_start: string
+          return_location?: string | null
+          special_requests?: string | null
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          car_id?: string
+          contact_phone?: string
+          created_at?: string
+          driver_license_number?: string | null
+          duration_type?: string
+          duration_value?: number
+          id?: string
+          pickup_location?: string | null
+          rental_end?: string
+          rental_start?: string
+          return_location?: string | null
+          special_requests?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_rentals_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "rental_cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -491,6 +556,164 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: []
+      }
+      rental_car_images: {
+        Row: {
+          caption: string | null
+          car_id: string
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          is_primary: boolean
+        }
+        Insert: {
+          caption?: string | null
+          car_id: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_primary?: boolean
+        }
+        Update: {
+          caption?: string | null
+          car_id?: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_primary?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_car_images_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "rental_cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_cars: {
+        Row: {
+          availability_status: string
+          brand: string
+          car_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          features: Json | null
+          fuel_type: string
+          id: string
+          is_active: boolean
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          model: string
+          price_per_day: number
+          price_per_hour: number
+          seating_capacity: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          availability_status?: string
+          brand: string
+          car_type: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          features?: Json | null
+          fuel_type?: string
+          id?: string
+          is_active?: boolean
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          model: string
+          price_per_day: number
+          price_per_hour: number
+          seating_capacity?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          availability_status?: string
+          brand?: string
+          car_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          features?: Json | null
+          fuel_type?: string
+          id?: string
+          is_active?: boolean
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          model?: string
+          price_per_day?: number
+          price_per_hour?: number
+          seating_capacity?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      rental_locations: {
+        Row: {
+          accuracy: number | null
+          car_id: string
+          heading: number | null
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          rental_id: string
+          speed: number | null
+          timestamp: string
+        }
+        Insert: {
+          accuracy?: number | null
+          car_id: string
+          heading?: number | null
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          rental_id: string
+          speed?: number | null
+          timestamp?: string
+        }
+        Update: {
+          accuracy?: number | null
+          car_id?: string
+          heading?: number | null
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          rental_id?: string
+          speed?: number | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_locations_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "rental_cars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_locations_rental_id_fkey"
+            columns: ["rental_id"]
+            isOneToOne: false
+            referencedRelation: "car_rentals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rides: {
         Row: {
