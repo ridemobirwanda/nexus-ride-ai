@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Car, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Car, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, RotateCcw } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 const DriverAuth = () => {
@@ -31,6 +31,9 @@ const DriverAuth = () => {
     email: '',
     password: ''
   });
+
+  const [resetEmail, setResetEmail] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   // Auth state listener
   useEffect(() => {
@@ -144,6 +147,34 @@ const DriverAuth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Check your email for a link to reset your password"
+      });
+      
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -176,6 +207,7 @@ const DriverAuth = () => {
               </TabsList>
               
               <TabsContent value="signin" className="space-y-4 mt-4">
+                {!showForgotPassword ? (
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -229,7 +261,66 @@ const DriverAuth = () => {
                   >
                     {isLoading ? 'Signing In...' : 'Sign In'}
                   </Button>
+                  
+                  <div className="text-center mt-4">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-muted-foreground hover:text-primary"
+                    >
+                      Forgot your password?
+                    </Button>
+                  </div>
                 </form>
+                ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <RotateCcw className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <h3 className="text-lg font-semibold">Reset Password</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your email address and we'll send you a link to reset your password
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="Enter your email address"
+                        className="pl-10"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={isLoading || !resetEmail}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    {isLoading ? "Sending Reset Email..." : "Send Reset Email"}
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetEmail('');
+                    }}
+                    className="w-full text-sm text-muted-foreground"
+                  >
+                    Back to Sign In
+                  </Button>
+                </form>
+                )}
               </TabsContent>
               
               <TabsContent value="signup" className="space-y-4 mt-4">

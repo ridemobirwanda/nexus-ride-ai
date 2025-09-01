@@ -16,6 +16,7 @@ import DriverAuth from "./pages/DriverAuth";
 import DriverDashboard from "./pages/DriverDashboard";
 import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/AdminDashboard";
+import ResetPassword from "./pages/ResetPassword";
 
 // Create QueryClient outside component to avoid hot reload issues
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/passenger/auth" element={<PassengerAuth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/passenger" element={<PassengerDashboard />} />
             <Route path="/passenger/ride/:rideId" element={<PassengerRideStatus />} />
             <Route path="/passenger/chat/:rideId" element={<PassengerChat />} />
