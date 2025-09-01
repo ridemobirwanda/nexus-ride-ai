@@ -351,6 +351,7 @@ export type Database = {
           rating: number | null
           status: Database["public"]["Enums"]["driver_status"]
           total_trips: number | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -372,6 +373,7 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_trips?: number | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -393,6 +395,7 @@ export type Database = {
           rating?: number | null
           status?: Database["public"]["Enums"]["driver_status"]
           total_trips?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -830,27 +833,30 @@ export type Database = {
       drivers_public: {
         Row: {
           car_model: string | null
-          created_at: string | null
-          current_location: unknown | null
+          car_plate: string | null
           id: string | null
           is_available: boolean | null
-          name: string | null
+          latitude: number | null
+          longitude: number | null
+          updated_at: string | null
         }
         Insert: {
           car_model?: string | null
-          created_at?: string | null
-          current_location?: unknown | null
+          car_plate?: string | null
           id?: string | null
           is_available?: boolean | null
-          name?: string | null
+          latitude?: never
+          longitude?: never
+          updated_at?: string | null
         }
         Update: {
           car_model?: string | null
-          created_at?: string | null
-          current_location?: unknown | null
+          car_plate?: string | null
           id?: string | null
           is_available?: boolean | null
-          name?: string | null
+          latitude?: never
+          longitude?: never
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -876,18 +882,7 @@ export type Database = {
       }
       get_admin_dashboard_stats: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          active_drivers: number
-          completed_rides: number
-          pending_rides: number
-          today_revenue: number
-          today_rides: number
-          total_drivers: number
-          total_passengers: number
-          total_revenue: number
-          total_rides: number
-          total_users: number
-        }[]
+        Returns: undefined
       }
       get_driver_earnings_summary: {
         Args: { p_days?: number; p_driver_user_id: string }
@@ -911,14 +906,16 @@ export type Database = {
         Returns: boolean
       }
       log_user_activity: {
-        Args: {
-          p_activity_details?: Json
-          p_activity_type: string
-          p_ip_address?: unknown
-          p_user_agent?: string
-          p_user_id: string
-          p_user_type: string
-        }
+        Args:
+          | Record<PropertyKey, never>
+          | {
+              p_activity_details?: Json
+              p_activity_type: string
+              p_ip_address?: unknown
+              p_user_agent?: string
+              p_user_id: string
+              p_user_type: string
+            }
         Returns: string
       }
       point_distance: {
@@ -926,7 +923,7 @@ export type Database = {
         Returns: number
       }
       request_admin_password_reset: {
-        Args: { admin_email: string }
+        Args: Record<PropertyKey, never> | { admin_email: string }
         Returns: string
       }
       setup_admin_user: {

@@ -23,6 +23,7 @@ import {
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import Map from '@/components/Map';
 import CarCategorySelector from '@/components/CarCategorySelector';
+import SeatFilterSelector from '@/components/SeatFilterSelector';
 import CurrentLocationButton from '@/components/CurrentLocationButton';
 
 interface Passenger {
@@ -56,7 +57,8 @@ const PassengerDashboard = () => {
     paymentMethod: 'cash' as 'cash' | 'mobile_money' | 'card',
     pickupLocation: null as { lat: number; lng: number; address: string } | null,
     dropoffLocation: null as { lat: number; lng: number; address: string } | null,
-    selectedCarCategory: null as any
+    selectedCarCategory: null as any,
+    selectedSeats: [] as number[]
   });
 
   // Auth state listener
@@ -337,12 +339,20 @@ const PassengerDashboard = () => {
 
         {/* Car Category Selection */}
         {!currentRide && (
-          <CarCategorySelector
-            selectedCategoryId={rideData.selectedCarCategory?.id}
-            onCategorySelect={(category) => setRideData({ ...rideData, selectedCarCategory: category })}
-            showPricing={true}
-            distance={calculateDistance()}
-          />
+          <>
+            <SeatFilterSelector
+              selectedSeats={rideData.selectedSeats}
+              onSeatChange={(seats) => setRideData({ ...rideData, selectedSeats: seats })}
+            />
+            
+            <CarCategorySelector
+              selectedCategoryId={rideData.selectedCarCategory?.id}
+              onCategorySelect={(category) => setRideData({ ...rideData, selectedCarCategory: category })}
+              showPricing={true}
+              distance={calculateDistance()}
+              seatFilter={rideData.selectedSeats}
+            />
+          </>
         )}
 
         {/* Booking Card */}

@@ -4,7 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Car, Check, Star, Users, Shield, Wind } from 'lucide-react';
+import { Car, Check, Star, Users, Shield, Wind, Crown } from 'lucide-react';
+
+// Import car images
+import standardCarImg from '@/assets/standard-4seat.jpg';
+import comfortableCarImg from '@/assets/comfortable-4seat.jpg';
+import standardSuvImg from '@/assets/standard-7seat.jpg';
+import premiumCarImg from '@/assets/premium-4seat.jpg';
+import luxuryCarImg from '@/assets/luxury-4seat.jpg';
+import vanImg from '@/assets/standard-10seat.jpg';
 
 interface CarCategory {
   id: string;
@@ -24,6 +32,7 @@ interface CarCategorySelectorProps {
   showPricing?: boolean;
   distance?: number;
   readonly?: boolean;
+  seatFilter?: number[];
 }
 
 const CarCategorySelector = ({ 
@@ -31,7 +40,8 @@ const CarCategorySelector = ({
   onCategorySelect, 
   showPricing = false,
   distance = 0,
-  readonly = false
+  readonly = false,
+  seatFilter = []
 }: CarCategorySelectorProps) => {
   const [categories, setCategories] = useState<CarCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,9 +77,8 @@ const CarCategorySelector = ({
   };
 
   const calculateFare = (category: CarCategory, distanceKm: number) => {
-    // Calculate base fare: base_price_per_km * passenger_capacity * distance + base_fare
-    const farePerKm = category.base_price_per_km * category.passenger_capacity;
-    const fare = category.base_fare + (distanceKm * farePerKm);
+    // Calculate fare: base_fare + (distance * base_price_per_km)
+    const fare = category.base_fare + (distanceKm * category.base_price_per_km);
     return Math.max(fare, category.minimum_fare);
   };
 
@@ -77,8 +86,42 @@ const CarCategorySelector = ({
     if (feature.toLowerCase().includes('seat')) return <Users className="h-3 w-3" />;
     if (feature.toLowerCase().includes('comfort') || feature.toLowerCase().includes('luxury')) return <Star className="h-3 w-3" />;
     if (feature.toLowerCase().includes('air') || feature.toLowerCase().includes('conditioning')) return <Wind className="h-3 w-3" />;
+    if (feature.toLowerCase().includes('premium') || feature.toLowerCase().includes('champagne')) return <Crown className="h-3 w-3" />;
     return <Shield className="h-3 w-3" />;
   };
+
+  const getCarImage = (categoryName: string) => {
+    if (categoryName.includes('Standard 4-Seat')) return standardCarImg;
+    if (categoryName.includes('Comfortable 4-Seat')) return comfortableCarImg;
+    if (categoryName.includes('Standard 7-Seat') || categoryName.includes('Comfortable 7-Seat')) return standardSuvImg;
+    if (categoryName.includes('Standard 10-Seat')) return vanImg;
+    if (categoryName.includes('Premium')) return premiumCarImg;
+    if (categoryName.includes('Luxury')) return luxuryCarImg;
+    return standardCarImg;
+  };
+
+  const getPricingTier = (pricePerKm: number) => {
+    if (pricePerKm <= 600) return 'Standard';
+    if (pricePerKm <= 1000) return 'Comfortable';  
+    if (pricePerKm <= 1500) return 'Premium';
+    return 'Luxury';
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case 'Standard': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Comfortable': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Premium': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Luxury': return 'bg-amber-100 text-amber-800 border-amber-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  // Filter categories based on seat selection
+  const filteredCategories = categories.filter(category => {
+    if (seatFilter.length === 0) return true;
+    return seatFilter.includes(category.passenger_capacity);
+  });
 
   const formatCurrency = (amount: number) => {
     return `${amount.toLocaleString()} RWF`;
@@ -113,7 +156,9 @@ const CarCategorySelector = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {categories.map((category) => (
+        {filteredCategories.map((category) => {
+          const tier = getPricingTier(category.base_price_per_km);
+          return (
           <div
             key={category.id}
             className={`
@@ -140,7 +185,12 @@ const CarCategorySelector = ({
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-lg">{category.name}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-lg">{category.name}</h3>
+                    <Badge className={`text-xs ${getTierColor(tier)}`}>
+                      {tier}
+                    </Badge>
+                  </div>
                   <p className="text-sm text-muted-foreground">{category.description}</p>
                 </div>
                 {showPricing && distance > 0 && (
@@ -149,7 +199,7 @@ const CarCategorySelector = ({
                       {formatCurrency(calculateFare(category, distance))}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {formatCurrency(category.base_price_per_km * category.passenger_capacity)}/km
+                      {formatCurrency(category.base_price_per_km)}/km
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {category.passenger_capacity} passengers
@@ -171,7 +221,7 @@ const CarCategorySelector = ({
               {/* Pricing Info */}
               {!showPricing && (
                 <div className="text-sm text-muted-foreground">
-                  Base: {formatCurrency(category.base_fare)} + {formatCurrency(category.base_price_per_km * category.passenger_capacity)}/km • Min: {formatCurrency(category.minimum_fare)}
+                  Base: {formatCurrency(category.base_fare)} + {formatCurrency(category.base_price_per_km)}/km • Min: {formatCurrency(category.minimum_fare)}
                 </div>
               )}
               
@@ -181,16 +231,14 @@ const CarCategorySelector = ({
                 <span>{category.passenger_capacity} passengers</span>
               </div>
 
-              {/* Car Image Placeholder */}
-              {category.image_url && (
-                <div className="mt-3">
-                  <img
-                    src={category.image_url}
-                    alt={category.name}
-                    className="w-full h-32 object-cover rounded-md"
-                  />
-                </div>
-              )}
+              {/* Car Image */}
+              <div className="mt-3">
+                <img
+                  src={getCarImage(category.name)}
+                  alt={category.name}
+                  className="w-full h-32 object-cover rounded-md bg-gray-50"
+                />
+              </div>
             </div>
 
             {!readonly && (
@@ -206,12 +254,18 @@ const CarCategorySelector = ({
               </Button>
             )}
           </div>
-        ))}
+        );
+        })}
 
-        {categories.length === 0 && (
+        {filteredCategories.length === 0 && (
           <div className="text-center py-8">
             <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">No car categories available</p>
+            <p className="text-muted-foreground">
+              {seatFilter.length > 0 
+                ? `No cars available for ${seatFilter.join(', ')} passenger${seatFilter.length > 1 ? 's' : ''}`
+                : 'No car categories available'
+              }
+            </p>
           </div>
         )}
       </CardContent>
