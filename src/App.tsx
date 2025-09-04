@@ -21,6 +21,7 @@ import CarRentals from "./pages/CarRentals";
 import CarDetail from "./pages/CarDetail";
 import CarBooking from "./pages/CarBooking";
 import PassengerRentals from "./pages/PassengerRentals";
+import RentalTracking from "./pages/RentalTracking";
 
 // Create QueryClient outside component to avoid hot reload issues
 const queryClient = new QueryClient({
