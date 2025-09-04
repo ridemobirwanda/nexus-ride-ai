@@ -24,6 +24,9 @@ const Navigation = () => {
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-smooth">
               Features
             </a>
+            <a href="/cars" className="text-muted-foreground hover:text-foreground transition-smooth">
+              Car Rentals
+            </a>
             <a href="#safety" className="text-muted-foreground hover:text-foreground transition-smooth">
               Safety
             </a>
@@ -56,6 +59,9 @@ const Navigation = () => {
           <div className="md:hidden mt-4 pb-4 space-y-4 border-t border-border pt-4">
             <a href="#features" className="block text-muted-foreground hover:text-foreground transition-smooth">
               Features
+            </a>
+            <a href="/cars" className="block text-muted-foreground hover:text-foreground transition-smooth">
+              Car Rentals
             </a>
             <a href="#safety" className="block text-muted-foreground hover:text-foreground transition-smooth">
               Safety

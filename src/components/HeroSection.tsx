@@ -84,6 +84,14 @@ const HeroSection = () => {
               </Button>
               <Button 
                 size="lg" 
+                variant="outline" 
+                className="text-lg px-8 py-6"
+                onClick={() => window.location.href = '/cars'}
+              >
+                Rent a Car
+              </Button>
+              <Button 
+                size="lg" 
                 variant="ghost" 
                 className="text-lg px-8 py-6"
                 onClick={() => window.location.href = '/driver/auth'}
