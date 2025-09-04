@@ -1107,6 +1107,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_current_driver_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_passenger_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_driver_earnings_summary: {
         Args: { p_days?: number; p_driver_user_id: string }
         Returns: {
