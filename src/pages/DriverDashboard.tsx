@@ -57,55 +57,18 @@ const DriverDashboard = () => {
 
   // Auth state listener with driver verification
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          navigate('/driver/auth');
-          return;
-        }
+    let isMounted = true;
 
-        // Verify user is a driver
-        try {
-          const { data: isDriverUser, error } = await supabase.rpc('is_driver', {
-            user_id: session.user.id
-          });
-          
-          if (error) {
-            console.error('Error verifying driver status:', error);
-            toast({
-              title: "Authentication Error", 
-              description: "Unable to verify driver access. Please sign in again.",
-              variant: "destructive"
-            });
-            navigate('/driver/auth');
-            return;
-          }
-          
-          if (!isDriverUser) {
-            toast({
-              title: "Access Denied",
-              description: "You need a driver account to access this dashboard.",
-              variant: "destructive"
-            });
-            navigate('/driver/auth');
-            return;
-          }
-        } catch (error: any) {
-          console.error('Driver verification error:', error);
-          navigate('/driver/auth');
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const handleAuth = async (session: any) => {
+      if (!isMounted) return;
+      
+      console.log('Auth session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (!session?.user) {
+        console.log('No session, redirecting to auth');
+        setIsLoading(false);
         navigate('/driver/auth');
         return;
       }
@@ -116,17 +79,57 @@ const DriverDashboard = () => {
           user_id: session.user.id
         });
         
-        if (error || !isDriverUser) {
+        console.log('Driver verification result:', { isDriverUser, error });
+        
+        if (error) {
+          console.error('Error verifying driver status:', error);
+          toast({
+            title: "Authentication Error", 
+            description: "Unable to verify driver access. Please sign in again.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
           navigate('/driver/auth');
           return;
         }
+        
+        if (!isDriverUser) {
+          toast({
+            title: "Access Denied",
+            description: "You need a driver account to access this dashboard.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          navigate('/driver/auth');
+          return;
+        }
+        
+        // If we get here, user is verified as a driver
+        console.log('User verified as driver');
       } catch (error: any) {
-        console.error('Session driver verification error:', error);
+        console.error('Driver verification error:', error);
+        setIsLoading(false);
         navigate('/driver/auth');
       }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event);
+        await handleAuth(session);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session check');
+      await handleAuth(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Fetch driver profile
