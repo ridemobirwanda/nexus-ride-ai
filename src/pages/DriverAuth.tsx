@@ -35,26 +35,83 @@ const DriverAuth = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  // Auth state listener
+  // Auth state listener with driver role check
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          navigate('/driver/dashboard');
+          // Check if user is a driver
+          setTimeout(async () => {
+            try {
+              const { data: isDriverUser, error } = await supabase.rpc('is_driver', {
+                user_id: session.user.id
+              });
+              
+              if (error) {
+                console.error('Error checking driver status:', error);
+                toast({
+                  title: "Authentication Error",
+                  description: "Unable to verify driver status. Please try again.",
+                  variant: "destructive"
+                });
+                return;
+              }
+              
+              if (isDriverUser) {
+                navigate('/driver/dashboard');
+              } else {
+                toast({
+                  title: "Access Denied",
+                  description: "This portal is only for registered drivers. Please use the passenger app.",
+                  variant: "destructive"
+                });
+                await supabase.auth.signOut();
+              }
+            } catch (error: any) {
+              toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive"
+              });
+            }
+          }, 500);
         }
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        navigate('/driver/dashboard');
+        // Check if user is a driver
+        try {
+          const { data: isDriverUser, error } = await supabase.rpc('is_driver', {
+            user_id: session.user.id
+          });
+          
+          if (error) {
+            console.error('Error checking driver status:', error);
+            return;
+          }
+          
+          if (isDriverUser) {
+            navigate('/driver/dashboard');
+          } else {
+            toast({
+              title: "Access Denied", 
+              description: "This portal is only for registered drivers.",
+              variant: "destructive"
+            });
+            await supabase.auth.signOut();
+          }
+        } catch (error: any) {
+          console.error('Session check error:', error);
+        }
       }
     });
 

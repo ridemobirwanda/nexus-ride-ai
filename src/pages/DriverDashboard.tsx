@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import LocationTracker from '@/components/LocationTracker';
+import DriverStatusPanel from '@/components/DriverStatusPanel';
 import { 
   Car, 
   DollarSign, 
@@ -54,25 +55,73 @@ const DriverDashboard = () => {
   const [showCarSetup, setShowCarSetup] = useState(false);
   const navigate = useNavigate();
 
-  // Auth state listener
+  // Auth state listener with driver verification
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (!session?.user) {
+          navigate('/driver/auth');
+          return;
+        }
+
+        // Verify user is a driver
+        try {
+          const { data: isDriverUser, error } = await supabase.rpc('is_driver', {
+            user_id: session.user.id
+          });
+          
+          if (error) {
+            console.error('Error verifying driver status:', error);
+            toast({
+              title: "Authentication Error", 
+              description: "Unable to verify driver access. Please sign in again.",
+              variant: "destructive"
+            });
+            navigate('/driver/auth');
+            return;
+          }
+          
+          if (!isDriverUser) {
+            toast({
+              title: "Access Denied",
+              description: "You need a driver account to access this dashboard.",
+              variant: "destructive"
+            });
+            navigate('/driver/auth');
+            return;
+          }
+        } catch (error: any) {
+          console.error('Driver verification error:', error);
           navigate('/driver/auth');
         }
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (!session?.user) {
+        navigate('/driver/auth');
+        return;
+      }
+
+      // Verify user is a driver
+      try {
+        const { data: isDriverUser, error } = await supabase.rpc('is_driver', {
+          user_id: session.user.id
+        });
+        
+        if (error || !isDriverUser) {
+          navigate('/driver/auth');
+          return;
+        }
+      } catch (error: any) {
+        console.error('Session driver verification error:', error);
         navigate('/driver/auth');
       }
     });
@@ -95,11 +144,23 @@ const DriverDashboard = () => {
         if (error) throw error;
         setDriver(data);
       } catch (error: any) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive"
-        });
+        console.error('Driver profile fetch error:', error);
+        
+        // If driver profile doesn't exist, show helpful message
+        if (error.message?.includes('No driver profile found')) {
+          toast({
+            title: "Profile Setup Required",
+            description: "Please complete your driver registration first.",
+            variant: "destructive"
+          });
+          setShowCarSetup(true);
+        } else {
+          toast({
+            title: "Error Loading Profile",
+            description: error.message || "Unable to load driver profile",
+            variant: "destructive"
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -297,56 +358,17 @@ const DriverDashboard = () => {
           <>
             {/* Driver Status and Location Tracking */}
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* Driver Status */}
-              <Card className="gradient-card card-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Car className="h-5 w-5" />
-                      Driver Status
-                    </div>
-                    <Badge variant={driver?.is_available ? "default" : "secondary"}>
-                      {driver?.is_available ? "Online" : "Offline"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Availability</p>
-                      <p className="text-sm text-muted-foreground">
-                        {driver?.is_available ? "You're receiving ride requests" : "You're not receiving requests"}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={driver?.is_available || false}
-                      onCheckedChange={toggleAvailability}
-                    />
-                  </div>
-                  
-                  {driver && (
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Vehicle</p>
-                        <p className="font-medium">{driver.car_model}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Plate</p>
-                        <p className="font-medium">{driver.car_plate}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-4" 
-                    onClick={() => setShowCarSetup(true)}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Manage Vehicle
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Enhanced Driver Status */}
+              {driver && (
+                <DriverStatusPanel 
+                  driverId={driver.id} 
+                  onManageVehicle={() => setShowCarSetup(true)}
+                  driverData={{
+                    car_model: driver.car_model,
+                    car_plate: driver.car_plate
+                  }}
+                />
+              )}
 
               {/* Location Tracking */}
               <LocationTracker />
@@ -385,7 +407,12 @@ const DriverDashboard = () => {
                   <p className="text-sm text-muted-foreground">Fare: ${activeRide.estimated_fare}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`tel:${activeRide.passenger.phone}`, '_self')}
+                    title={`Call ${activeRide.passenger.name}`}
+                  >
                     <Phone className="h-4 w-4" />
                   </Button>
                   <Button 

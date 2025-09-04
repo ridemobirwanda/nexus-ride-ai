@@ -1136,6 +1136,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      is_driver: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       log_user_activity: {
         Args:
           | Record<PropertyKey, never>
