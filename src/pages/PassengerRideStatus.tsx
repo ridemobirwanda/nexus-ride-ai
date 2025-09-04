@@ -300,7 +300,12 @@ const PassengerRideStatus = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`tel:${ride.driver.phone}`, '_self')}
+                    title={`Call ${ride.driver.name}`}
+                  >
                     <Phone className="h-4 w-4" />
                   </Button>
                   <Button 
