@@ -48,16 +48,13 @@ const PassengerDashboard = () => {
     selectedSeats: [] as number[]
   });
 
-  // Auth state listener
+  // Auth state listener - Allow browsing without auth
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (!session?.user) {
-          navigate('/passenger/auth');
-        }
+        // Don't redirect - allow browsing
       }
     );
 
@@ -65,10 +62,7 @@ const PassengerDashboard = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        navigate('/passenger/auth');
-      }
+      // Don't redirect - allow browsing
     });
 
     return () => subscription.unsubscribe();

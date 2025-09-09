@@ -23,6 +23,7 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
+import InlineRegistration from '@/components/InlineRegistration';
 
 interface RentalCar {
   id: string;
@@ -42,6 +43,7 @@ const CarBooking = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const [bookingData, setBookingData] = useState({
     rentalStart: '',
@@ -67,17 +69,9 @@ const CarBooking = () => {
   }, [bookingData.rentalStart, bookingData.rentalEnd, bookingData.durationType]);
 
   const checkAuth = async () => {
+    // Allow browsing without authentication
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to book a car",
-        variant: "destructive"
-      });
-      navigate('/passenger/auth');
-      return;
-    }
-    setUser(user);
+    setUser(user || null);
   };
 
   const fetchCarDetails = async () => {
@@ -91,61 +85,66 @@ const CarBooking = () => {
 
       if (error) throw error;
       setCar(data);
-      
-      // Set default locations
-      setBookingData(prev => ({
-        ...prev,
-        pickupLocation: data.location_address,
-        returnLocation: data.location_address
-      }));
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error fetching car:', error);
       toast({
         title: "Error",
         description: "Failed to load car details",
         variant: "destructive"
       });
-      navigate('/cars');
     } finally {
       setIsLoading(false);
     }
   };
 
   const calculateDuration = () => {
-    if (!bookingData.rentalStart || !bookingData.rentalEnd) return;
+    if (!bookingData.rentalStart || !bookingData.rentalEnd) {
+      setBookingData(prev => ({ ...prev, durationValue: 1 }));
+      return;
+    }
 
     const start = new Date(bookingData.rentalStart);
     const end = new Date(bookingData.rentalEnd);
     const diffMs = end.getTime() - start.getTime();
 
-    if (diffMs <= 0) return;
-
-    if (bookingData.durationType === 'hourly') {
-      const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-      setBookingData(prev => ({ ...prev, durationValue: hours }));
-    } else {
-      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      setBookingData(prev => ({ ...prev, durationValue: days }));
+    if (diffMs <= 0) {
+      setBookingData(prev => ({ ...prev, durationValue: 1 }));
+      return;
     }
+
+    let duration;
+    if (bookingData.durationType === 'hourly') {
+      duration = Math.ceil(diffMs / (1000 * 60 * 60)); // hours
+    } else {
+      duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // days
+    }
+
+    setBookingData(prev => ({ ...prev, durationValue: Math.max(1, duration) }));
   };
 
   const calculateTotalPrice = () => {
     if (!car) return 0;
-    
-    const basePrice = bookingData.durationType === 'hourly' 
-      ? car.price_per_hour 
-      : car.price_per_day;
-    
-    return basePrice * bookingData.durationValue;
+    const rate = bookingData.durationType === 'hourly' ? car.price_per_hour : car.price_per_day;
+    return rate * bookingData.durationValue;
   };
 
-  const formatPrice = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-RW', {
+      style: 'currency',
+      currency: 'RWF'
+    }).format(price);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !car) return;
+    // If no user, show registration
+    if (!user) {
+      setShowRegistration(true);
+      return;
+    }
+
+    if (!car) return;
 
     // Validation
     if (!bookingData.rentalStart || !bookingData.rentalEnd) {
@@ -195,14 +194,15 @@ const CarBooking = () => {
           return_location: bookingData.returnLocation,
           driver_license_number: bookingData.driverLicenseNumber,
           contact_phone: bookingData.contactPhone,
-          special_requests: bookingData.specialRequests
+          special_requests: bookingData.specialRequests,
+          status: 'pending'
         });
 
       if (error) throw error;
 
       toast({
         title: "Booking Confirmed!",
-        description: "Your car rental has been successfully booked. Check your email for confirmation details."
+        description: "Your car rental has been booked successfully. Check your rentals for details.",
       });
 
       navigate('/passenger/rentals');
@@ -246,6 +246,26 @@ const CarBooking = () => {
     );
   }
 
+  // Show registration overlay if needed
+  if (showRegistration && !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-md mx-auto">
+            <InlineRegistration
+              onRegistrationComplete={(registeredUser) => {
+                setShowRegistration(false);
+                setUser(registeredUser);
+              }}
+              title="Complete Registration"
+              description="Just a few details to confirm your car rental"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -267,7 +287,7 @@ const CarBooking = () => {
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Rental Period */}
-              <Card>
+              <Card className="gradient-card card-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
@@ -275,29 +295,8 @@ const CarBooking = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Duration Type */}
-                  <div>
-                    <Label>Rental Type</Label>
-                    <RadioGroup 
-                      value={bookingData.durationType} 
-                      onValueChange={(value: 'hourly' | 'daily') => 
-                        setBookingData({ ...bookingData, durationType: value })
-                      }
-                      className="flex gap-6 mt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="hourly" id="hourly" />
-                        <Label htmlFor="hourly">Hourly Rental</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="daily" id="daily" />
-                        <Label htmlFor="daily">Daily Rental</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="start-date">Start Date & Time</Label>
                       <Input
                         id="start-date"
@@ -308,7 +307,8 @@ const CarBooking = () => {
                         required
                       />
                     </div>
-                    <div>
+                    
+                    <div className="space-y-2">
                       <Label htmlFor="end-date">End Date & Time</Label>
                       <Input
                         id="end-date"
@@ -321,53 +321,80 @@ const CarBooking = () => {
                     </div>
                   </div>
 
-                  {bookingData.durationValue > 0 && (
-                    <div className="p-4 bg-primary/10 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        <span className="font-medium">
-                          Duration: {bookingData.durationValue} {bookingData.durationType === 'hourly' ? 'hours' : 'days'}
-                        </span>
+                  <div className="space-y-2">
+                    <Label>Billing Type</Label>
+                    <RadioGroup
+                      value={bookingData.durationType}
+                      onValueChange={(value: 'hourly' | 'daily') => 
+                        setBookingData({ ...bookingData, durationType: value })
+                      }
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="hourly" id="hourly" />
+                        <Label htmlFor="hourly" className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Hourly ({formatPrice(car.price_per_hour)}/hr)
+                        </Label>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="daily" id="daily" />
+                        <Label htmlFor="daily" className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          Daily ({formatPrice(car.price_per_day)}/day)
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {bookingData.durationValue > 0 && (
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-center">
+                        Duration: <span className="font-semibold">
+                          {bookingData.durationValue} {bookingData.durationType === 'hourly' ? 'hours' : 'days'}
+                        </span>
+                      </p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Location Details */}
-              <Card>
+              {/* Pickup & Return */}
+              <Card className="gradient-card card-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MapPin className="h-5 w-5" />
-                    Pickup & Return
+                    Pickup & Return Location
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="pickup-location">Pickup Location</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="pickup">Pickup Location</Label>
                     <Input
-                      id="pickup-location"
-                      placeholder="Enter pickup address"
+                      id="pickup"
+                      placeholder="Enter pickup address or leave blank for car location"
                       value={bookingData.pickupLocation}
                       onChange={(e) => setBookingData({ ...bookingData, pickupLocation: e.target.value })}
-                      required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Default: {car.location_address}
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="return-location">Return Location</Label>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="return">Return Location</Label>
                     <Input
-                      id="return-location"
-                      placeholder="Enter return address"
+                      id="return"
+                      placeholder="Enter return address or leave blank for same as pickup"
                       value={bookingData.returnLocation}
                       onChange={(e) => setBookingData({ ...bookingData, returnLocation: e.target.value })}
-                      required
                     />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Driver Information */}
-              <Card>
+              <Card className="gradient-card card-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
@@ -375,28 +402,36 @@ const CarBooking = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="license">Driver's License Number *</Label>
-                    <Input
-                      id="license"
-                      placeholder="Enter your driver's license number"
-                      value={bookingData.driverLicenseNumber}
-                      onChange={(e) => setBookingData({ ...bookingData, driverLicenseNumber: e.target.value })}
-                      required
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="license">Driver's License Number *</Label>
+                      <Input
+                        id="license"
+                        placeholder="Enter license number"
+                        value={bookingData.driverLicenseNumber}
+                        onChange={(e) => setBookingData({ ...bookingData, driverLicenseNumber: e.target.value })}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Contact Phone *</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="Enter phone number"
+                          className="pl-10"
+                          value={bookingData.contactPhone}
+                          onChange={(e) => setBookingData({ ...bookingData, contactPhone: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="phone">Contact Phone *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={bookingData.contactPhone}
-                      onChange={(e) => setBookingData({ ...bookingData, contactPhone: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
+                  
+                  <div className="space-y-2">
                     <Label htmlFor="requests">Special Requests (Optional)</Label>
                     <Textarea
                       id="requests"
@@ -452,9 +487,11 @@ const CarBooking = () => {
 
                     <Separator />
 
-                    <div className="flex justify-between text-lg font-bold">
+                    <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span className="text-primary">{formatPrice(calculateTotalPrice())}</span>
+                      <span className="text-primary">
+                        {formatPrice(calculateTotalPrice())}
+                      </span>
                     </div>
                   </div>
 
@@ -483,6 +520,8 @@ const CarBooking = () => {
                   >
                     {isSubmitting ? (
                       'Processing Booking...'
+                    ) : !user ? (
+                      'Register & Confirm Booking'
                     ) : (
                       <>
                         <CreditCard className="h-5 w-5 mr-2" />

@@ -9,6 +9,7 @@ import { Car, Search } from 'lucide-react';
 import LocationSelector from './LocationSelector';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import RideStatusDisplay from './RideStatusDisplay';
+import InlineRegistration from './InlineRegistration';
 import { useFareCalculator } from '@/hooks/useFareCalculator';
 
 interface Location {
@@ -46,6 +47,7 @@ interface RideBookingCardProps {
 
 const RideBookingCard = ({ passenger, currentRide, rideData, setRideData }: RideBookingCardProps) => {
   const navigate = useNavigate();
+  const [showRegistration, setShowRegistration] = useState(false);
   const { distance, estimatedFare, formatCurrency } = useFareCalculator(
     rideData.pickupLocation,
     rideData.dropoffLocation,
@@ -53,7 +55,13 @@ const RideBookingCard = ({ passenger, currentRide, rideData, setRideData }: Ride
   );
 
   const handleBookRide = async () => {
-    if (!passenger || !rideData.pickupLocation || !rideData.dropoffLocation) {
+    // If no passenger, show registration
+    if (!passenger) {
+      setShowRegistration(true);
+      return;
+    }
+
+    if (!rideData.pickupLocation || !rideData.dropoffLocation) {
       toast({
         title: "Error",
         description: "Please select both pickup and dropoff locations on the map",
@@ -202,18 +210,32 @@ const RideBookingCard = ({ passenger, currentRide, rideData, setRideData }: Ride
           </div>
         )}
 
-        {!currentRide ? (
-          <Button 
-            onClick={handleBookRide}
-            className="w-full"
-            size="lg"
-            disabled={!rideData.pickupLocation || !rideData.dropoffLocation || !rideData.selectedCarCategory}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            Book Ride - {rideData.pickupLocation && rideData.dropoffLocation && rideData.selectedCarCategory ? formatCurrency(estimatedFare) : '0 RWF'}
-          </Button>
+        {showRegistration && !passenger ? (
+          <InlineRegistration
+            onRegistrationComplete={(user) => {
+              setShowRegistration(false);
+              // Trigger a re-fetch of passenger data
+              window.location.reload();
+            }}
+            title="Quick Registration"
+            description="Just enter your details to book your ride"
+          />
         ) : (
-          <RideStatusDisplay currentRide={currentRide} />
+          <>
+            {!currentRide ? (
+              <Button 
+                onClick={handleBookRide}
+                className="w-full"
+                size="lg"
+                disabled={!rideData.pickupLocation || !rideData.dropoffLocation || !rideData.selectedCarCategory}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Book Ride - {rideData.pickupLocation && rideData.dropoffLocation && rideData.selectedCarCategory ? formatCurrency(estimatedFare) : '0 RWF'}
+              </Button>
+            ) : (
+              <RideStatusDisplay currentRide={currentRide} />
+            )}
+          </>
         )}
       </CardContent>
     </Card>
