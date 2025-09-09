@@ -182,19 +182,13 @@ const Map: React.FC<MapProps> = ({
       refreshMapTiles();
     }, 600000); // 10 minutes
 
-    // Cleanup
-    return () => {
-      clearInterval(refreshInterval);
-      map.current?.remove();
-    };
-
-    // Add click handler for location selection
-    if (onLocationSelect) {
-      map.current.on('click', async (e) => {
+    // Add click handler for location selection BEFORE cleanup
+    let mapClickHandler: ((e: any) => void) | null = null;
+    if (onLocationSelect && map.current) {
+      mapClickHandler = async (e: any) => {
         if (!locationMode) return;
-        
         const { lng, lat } = e.lngLat;
-        
+
         // Generate realistic Kigali street address
         const kigaliStreets = [
           'KG 11 Ave', 'KG 7 Ave', 'KN 3 Rd', 'KN 5 Rd', 'KG 9 Ave',
@@ -202,10 +196,10 @@ const Map: React.FC<MapProps> = ({
           'KN 1 Rd', 'KG 3 Ave', 'Nyarugenge District', 'Gasabo District',
           'Kicukiro District', 'Remera', 'Kimisagara', 'Gikondo'
         ];
-        
+
         const isInKigali = lat > -2.1 && lat < -1.8 && lng > 29.9 && lng < 30.3;
         let address: string;
-        
+
         if (isInKigali) {
           const randomStreet = kigaliStreets[Math.floor(Math.random() * kigaliStreets.length)];
           const streetNumber = Math.floor(Math.random() * 100) + 1;
@@ -213,12 +207,23 @@ const Map: React.FC<MapProps> = ({
         } else {
           address = `${lat.toFixed(4)}, ${lng.toFixed(4)} - Location`;
         }
-        
-        onLocationSelect({ lat, lng, address }, locationMode);
+
+        onLocationSelect?.({ lat, lng, address }, locationMode);
         setLocationMode(null);
-      });
+      };
+
+      map.current.on('click', mapClickHandler);
     }
 
+    // Cleanup
+    return () => {
+      clearInterval(refreshInterval);
+      if (mapClickHandler) {
+        map.current?.off('click', mapClickHandler);
+      }
+      map.current?.remove();
+    };
+  
   }, [onLocationSelect, locationMode, is3D, mapStyle]);
 
   // Function to add enhanced layers for detailed mapping
