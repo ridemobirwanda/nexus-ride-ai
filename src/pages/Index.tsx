@@ -137,7 +137,10 @@ const Index = () => {
   }, [currentLocation, dropoffLocation]);
 
   const handleMapClick = (location: {lat: number; lng: number; address: string}) => {
-    setDropoffLocation(location);
+    if (isDraggingDropoff || !dropoffLocation) {
+      setDropoffLocation(location);
+      setIsDraggingDropoff(false);
+    }
   };
 
   const handleGetCurrentLocation = async () => {
@@ -291,15 +294,14 @@ const Index = () => {
               className="h-80"
             />
             
-            {/* Draggable Dropoff Icon */}
+            {/* Draggable Dropoff Instruction */}
             {!dropoffLocation && (
-              <div 
-                className="absolute top-4 left-4 z-50 bg-red-500 text-white p-3 rounded-full shadow-lg cursor-move hover:bg-red-600 transition-colors"
-                draggable
-                onDragStart={() => setIsDraggingDropoff(true)}
-                onDragEnd={() => setIsDraggingDropoff(false)}
-              >
-                <MapPin className="h-6 w-6" />
+              <div className="absolute top-4 left-4 right-4 z-50 bg-red-500 text-white p-3 rounded-lg shadow-lg text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <MapPin className="h-5 w-5" />
+                  <span className="font-semibold">Tap anywhere on the map to set your dropoff location</span>
+                </div>
+                <p className="text-sm text-red-100">Choose where you want to be dropped off</p>
               </div>
             )}
             
@@ -398,29 +400,6 @@ const Index = () => {
           </Card>
         )}
 
-        {/* Dropoff Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Dropoff Location</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              {dropoffLocation?.address || "Tap on the map or type an address"}
-            </p>
-            <input
-              type="text"
-              placeholder="Enter destination address"
-              className="w-full p-2 border rounded-md"
-              value={dropoffLocation?.address || ''}
-              onChange={(e) => {
-                // For demo purposes, just update the address
-                if (dropoffLocation) {
-                  setDropoffLocation({...dropoffLocation, address: e.target.value});
-                }
-              }}
-            />
-          </CardContent>
-        </Card>
 
         {/* Booking Summary - Only show after dropoff is selected */}
         {selectedDriver && dropoffLocation && (
