@@ -8,6 +8,9 @@ import LiveDriverMap from '@/components/LiveDriverMap';
 import { LogOut } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import Map from '@/components/Map';
+import LocationDetector from '@/components/LocationDetector';
+import AvailableDriversList from '@/components/AvailableDriversList';
+import LiveRideTracking from '@/components/LiveRideTracking';
 import CarCategorySelector from '@/components/CarCategorySelector';
 import SeatFilterSelector from '@/components/SeatFilterSelector';
 import RideBookingCard from '@/components/RideBookingCard';
@@ -237,8 +240,21 @@ const PassengerDashboard = () => {
           setRideData={setRideData}
         />
 
-        {/* Live Drivers Map */}
-        <LiveDriverMap className="mb-6" />
+        {/* Updated PassengerDashboard to show live tracking if user has an active ride */}
+        {currentRide && (
+          <LiveRideTracking 
+            ride={currentRide}
+            driver={{
+              id: currentRide.driver_id,
+              name: 'Driver Name', // In real app, fetch from driver table
+              phone: '+250123456789',
+              car_model: 'Toyota Camry',
+              car_plate: 'RAB 123A',
+              rating: 4.8
+            }}
+            onRideUpdate={(updatedRide) => setCurrentRide(updatedRide)}
+          />
+        )}
 
         {/* Quick Actions */}
         <QuickActionsGrid />
