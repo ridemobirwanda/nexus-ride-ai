@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation, Car, Box, Map as MapIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MapPin, Navigation, Car, Box, Map as MapIcon, Satellite, Layers, RefreshCw } from 'lucide-react';
 import { useDriverLocationSubscription } from '@/hooks/useDriverLocationSubscription';
 
 interface MapProps {
@@ -27,6 +28,37 @@ const Map: React.FC<MapProps> = ({
   const [locationMode, setLocationMode] = useState<'pickup' | 'dropoff' | null>(null);
   const [driverMarkers, setDriverMarkers] = useState<Record<string, mapboxgl.Marker>>({});
   const [is3D, setIs3D] = useState(false);
+  const [mapStyle, setMapStyle] = useState('streets-v12');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Enhanced map styles with detailed options
+  const mapStyles = {
+    'streets-v12': {
+      name: 'Streets (Detailed)',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      description: 'Most detailed streets with all road names and POIs'
+    },
+    'satellite-streets-v12': {
+      name: 'Satellite + Streets',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      description: 'High-res satellite with street overlays'
+    },
+    'satellite-v9': {
+      name: 'Satellite',
+      style: 'mapbox://styles/mapbox/satellite-v9',
+      description: 'Pure satellite imagery'
+    },
+    'navigation-day-v1': {
+      name: 'Navigation',
+      style: 'mapbox://styles/mapbox/navigation-day-v1',
+      description: 'Optimized for turn-by-turn navigation'
+    },
+    'light-v11': {
+      name: 'Light',
+      style: 'mapbox://styles/mapbox/light-v11',
+      description: 'Clean minimal style'
+    }
+  };
   
   // Get real-time driver locations
   const { driverLocations, isLoading, error } = useDriverLocationSubscription();
@@ -44,12 +76,19 @@ const Map: React.FC<MapProps> = ({
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: mapStyles[mapStyle as keyof typeof mapStyles].style,
       center: defaultCenter,
-      zoom: is3D ? 15 : 12,
+      zoom: is3D ? 15 : 14,
       pitch: is3D ? 45 : 0,
       bearing: is3D ? -17.6 : 0,
-      projection: is3D ? 'globe' : 'mercator'
+      projection: is3D ? 'globe' : 'mercator',
+      // Enhanced settings for detailed maps
+      hash: false,
+      attributionControl: true,
+      logoPosition: 'bottom-right',
+      // Optimize for high detail
+      maxZoom: 22, // Allow very high zoom for detailed views
+      minZoom: 1
     });
 
     // Try to get user's current location and center map
@@ -72,12 +111,15 @@ const Map: React.FC<MapProps> = ({
       visualizePitch: true
     }), 'top-right');
 
-    // Add 3D buildings and atmosphere when in 3D mode
+    // Enhanced map configuration on style load
     map.current.on('style.load', () => {
       if (!map.current) return;
       
+      // Add enhanced POI and road labeling
+      addEnhancedLayers();
+      
       if (is3D) {
-        // Add 3D buildings
+        // Add 3D buildings with enhanced detail
         const layers = map.current.getStyle().layers;
         const labelLayerId = layers.find(
           (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
@@ -90,34 +132,41 @@ const Map: React.FC<MapProps> = ({
             'source-layer': 'building',
             filter: ['==', 'extrude', 'true'],
             type: 'fill-extrusion',
-            minzoom: 15,
+            minzoom: 14,
             paint: {
-              'fill-extrusion-color': 'hsl(var(--muted))',
+              'fill-extrusion-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'height'],
+                0, 'hsl(var(--muted))',
+                50, 'hsl(var(--primary) / 0.8)',
+                200, 'hsl(var(--accent) / 0.6)'
+              ],
               'fill-extrusion-height': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                15,
+                14,
                 0,
-                15.05,
+                14.05,
                 ['get', 'height']
               ],
               'fill-extrusion-base': [
                 'interpolate',
                 ['linear'],
                 ['zoom'],
-                15,
+                14,
                 0,
-                15.05,
+                14.05,
                 ['get', 'min_height']
               ],
-              'fill-extrusion-opacity': 0.6
+              'fill-extrusion-opacity': 0.8
             }
           },
           labelLayerId
         );
 
-        // Add atmosphere and fog
+        // Enhanced atmosphere and fog
         map.current.setFog({
           color: 'rgb(186, 210, 235)',
           'high-color': 'rgb(36, 92, 223)',
@@ -127,6 +176,17 @@ const Map: React.FC<MapProps> = ({
         });
       }
     });
+
+    // Auto-refresh tiles every 10 minutes for latest data
+    const refreshInterval = setInterval(() => {
+      refreshMapTiles();
+    }, 600000); // 10 minutes
+
+    // Cleanup
+    return () => {
+      clearInterval(refreshInterval);
+      map.current?.remove();
+    };
 
     // Add click handler for location selection
     if (onLocationSelect) {
@@ -159,11 +219,92 @@ const Map: React.FC<MapProps> = ({
       });
     }
 
-    // Cleanup
-    return () => {
-      map.current?.remove();
-    };
-  }, [onLocationSelect, locationMode, is3D]);
+  }, [onLocationSelect, locationMode, is3D, mapStyle]);
+
+  // Function to add enhanced layers for detailed mapping
+  const addEnhancedLayers = () => {
+    if (!map.current) return;
+
+    // Enhanced POI visibility
+    const poiLayers = [
+      'poi-level-1', 'poi-level-2', 'poi-level-3',
+      'transit-label', 'place-label', 'road-label'
+    ];
+
+    poiLayers.forEach(layerId => {
+      if (map.current?.getLayer(layerId)) {
+        map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+        // Increase text size for better visibility
+        if (map.current.getLayer(layerId)?.type === 'symbol') {
+          map.current.setPaintProperty(layerId, 'text-halo-width', 2);
+          map.current.setPaintProperty(layerId, 'text-halo-color', 'rgba(255,255,255,0.8)');
+        }
+      }
+    });
+
+    // Enhance road labeling
+    const roadLayers = ['road-label', 'road-number-shield'];
+    roadLayers.forEach(layerId => {
+      if (map.current?.getLayer(layerId)) {
+        map.current.setLayoutProperty(layerId, 'visibility', 'visible');
+        map.current.setPaintProperty(layerId, 'text-halo-width', 1.5);
+      }
+    });
+  };
+
+  // Function to refresh map tiles
+  const refreshMapTiles = async () => {
+    if (!map.current || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      // Force reload the style to get latest tiles
+      const currentStyle = map.current.getStyle();
+      const currentCenter = map.current.getCenter();
+      const currentZoom = map.current.getZoom();
+      const currentPitch = map.current.getPitch();
+      const currentBearing = map.current.getBearing();
+
+      // Reload style with cache bypass
+      await new Promise<void>((resolve) => {
+        map.current?.once('style.load', () => {
+          map.current?.setCenter(currentCenter);
+          map.current?.setZoom(currentZoom);
+          map.current?.setPitch(currentPitch);
+          map.current?.setBearing(currentBearing);
+          addEnhancedLayers();
+          resolve();
+        });
+        
+        map.current?.setStyle(mapStyles[mapStyle as keyof typeof mapStyles].style + `?fresh=${Date.now()}`);
+      });
+    } catch (error) {
+      console.log('Map refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Handle map style changes
+  const handleStyleChange = (newStyle: string) => {
+    if (!map.current || newStyle === mapStyle) return;
+    
+    setMapStyle(newStyle);
+    const currentCenter = map.current.getCenter();
+    const currentZoom = map.current.getZoom();
+    const currentPitch = map.current.getPitch();
+    const currentBearing = map.current.getBearing();
+    
+    map.current.setStyle(mapStyles[newStyle as keyof typeof mapStyles].style);
+    
+    map.current.once('style.load', () => {
+      map.current?.setCenter(currentCenter);
+      map.current?.setZoom(currentZoom);
+      map.current?.setPitch(currentPitch);
+      map.current?.setBearing(currentBearing);
+      addEnhancedLayers();
+    });
+  };
 
   // Add/update pickup and dropoff markers
   useEffect(() => {
@@ -327,17 +468,51 @@ const Map: React.FC<MapProps> = ({
     <div className={`relative ${className}`}>
       <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
       
-      {/* 2D/3D Toggle Button */}
-      <div className="absolute top-4 right-4">
-        <Button
-          variant={is3D ? 'default' : 'secondary'}
-          size="sm"
-          onClick={toggle3DView}
-          className="flex items-center gap-2"
-        >
-          {is3D ? <Box className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
-          {is3D ? '3D' : '2D'}
-        </Button>
+      {/* Enhanced Map Controls */}
+      <div className="absolute top-4 right-4 space-y-2">
+        {/* Map Style Selector */}
+        <Select value={mapStyle} onValueChange={handleStyleChange}>
+          <SelectTrigger className="w-48 bg-card/80 backdrop-blur-lg border-border">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(mapStyles).map(([key, style]) => (
+              <SelectItem key={key} value={key}>
+                <div className="flex items-center gap-2">
+                  {key.includes('satellite') ? <Satellite className="h-4 w-4" /> : <Layers className="h-4 w-4" />}
+                  <div>
+                    <div className="font-medium">{style.name}</div>
+                    <div className="text-xs text-muted-foreground">{style.description}</div>
+                  </div>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Control Buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant={is3D ? 'default' : 'secondary'}
+            size="sm"
+            onClick={toggle3DView}
+            className="flex items-center gap-2 bg-card/80 backdrop-blur-lg"
+          >
+            {is3D ? <Box className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
+            {is3D ? '3D' : '2D'}
+          </Button>
+          
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={refreshMapTiles}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 bg-card/80 backdrop-blur-lg"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
       
       {onLocationSelect && (
