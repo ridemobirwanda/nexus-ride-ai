@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Car, Clock, Star } from 'lucide-react';
+import { MapPin, Car, Clock, Star, DollarSign } from 'lucide-react';
 import Map from '@/components/Map';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
 import { supabase } from '@/integrations/supabase/client';
@@ -350,44 +350,123 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Booking Summary */}
+        {/* Booking Summary - Only show after dropoff is selected */}
         {selectedDriver && dropoffLocation && (
           <Card>
             <CardHeader>
               <CardTitle>Booking Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span>Distance:</span>
-                <span>{distance.toFixed(1)} km</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Estimated Fare:</span>
-                <span className="font-semibold">{formatCurrency(estimatedFare)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Driver:</span>
-                <span>{selectedDriver.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Arrival Time:</span>
-                <span>{selectedDriver.estimated_arrival} minutes</span>
-              </div>
-              
-              {/* Payment Method */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Payment Method:</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value as any)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="cash">Cash</option>
-                  <option value="mobile_money">Mobile Money (MoMo)</option>
-                  <option value="card">Credit/Debit Card</option>
-                </select>
+              {/* Route Preview */}
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">Route Preview</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span>{currentLocation?.address}</span>
+                  </div>
+                  <div className="flex items-center gap-2 ml-1">
+                    <div className="w-1 h-8 bg-gray-300"></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span>{dropoffLocation.address}</span>
+                  </div>
+                </div>
               </div>
 
+              {/* Fare Breakdown */}
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Distance:</span>
+                  <span>{distance.toFixed(1)} km</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Base Fare:</span>
+                  <span>{formatCurrency(selectedDriver.car_category.base_fare)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Distance Cost:</span>
+                  <span>{formatCurrency(distance * selectedDriver.car_category.base_price_per_km)}</span>
+                </div>
+                <hr />
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total Estimated Fare:</span>
+                  <span className="text-primary">{formatCurrency(estimatedFare)}</span>
+                </div>
+              </div>
+
+              {/* Driver Info */}
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">Your Driver</h4>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Car className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{selectedDriver.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedDriver.car_model} • {selectedDriver.car_plate}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Arrives in {selectedDriver.estimated_arrival} minutes
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Payment Method Selection */}
+              <div className="space-y-3">
+                <h4 className="font-medium">Choose Payment Method</h4>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="cash"
+                      checked={paymentMethod === 'cash'}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      className="w-4 h-4"
+                    />
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      <span>Cash Payment</span>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="mobile_money"
+                      checked={paymentMethod === 'mobile_money'}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      className="w-4 h-4"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📱</span>
+                      <span>Mobile Money (MoMo)</span>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      className="w-4 h-4"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">💳</span>
+                      <span>Credit/Debit Card</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Book Ride Button */}
               <Button 
                 onClick={handleBookRide} 
                 className="w-full" 
