@@ -13,6 +13,7 @@ import { ReportsAnalytics } from "@/components/admin/ReportsAnalytics";
 import { PromoCodeManager } from "@/components/admin/PromoCodeManager";
 import { SupportCenter } from "@/components/admin/SupportCenter";
 import { ActivityTracker } from "@/components/admin/ActivityTracker";
+import LiveRideMonitor from "@/components/admin/LiveRideMonitor";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
@@ -64,6 +65,8 @@ const AdminDashboard = () => {
     switch (activeTab) {
       case "overview":
         return <AdminOverview userRole={userRole} />;
+      case "live-monitor":
+        return <LiveRideMonitor userRole={userRole} />;
       case "users":
         return <UserManagement userRole={userRole} />;
       case "rides":
