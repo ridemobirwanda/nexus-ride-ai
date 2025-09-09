@@ -41,6 +41,68 @@ const Index = () => {
   const [showRegistration, setShowRegistration] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'mobile_money' | 'card'>('cash');
   const [user, setUser] = useState<any>(null);
+  const [isDraggingDropoff, setIsDraggingDropoff] = useState(false);
+  
+  // Sample available drivers data
+  const sampleDrivers: AvailableDriver[] = [
+    {
+      id: '1',
+      name: 'John Uwimana',
+      car_model: 'Toyota Camry',
+      car_plate: 'RAB 123A',
+      rating: 4.8,
+      current_location: [30.0619, -1.9441],
+      distance: 0.8,
+      estimated_arrival: 5,
+      car_category: {
+        id: 'standard',
+        name: 'Standard',
+        base_fare: 2500,
+        base_price_per_km: 400,
+        minimum_fare: 2000,
+        passenger_capacity: 4,
+        image_url: '/api/placeholder/300/200'
+      }
+    },
+    {
+      id: '2', 
+      name: 'Marie Mukamana',
+      car_model: 'Honda Civic',
+      car_plate: 'RAB 456B',
+      rating: 4.9,
+      current_location: [30.0819, -1.9341],
+      distance: 1.2,
+      estimated_arrival: 7,
+      car_category: {
+        id: 'comfort',
+        name: 'Comfort',
+        base_fare: 3000,
+        base_price_per_km: 500,
+        minimum_fare: 2500,
+        passenger_capacity: 4,
+        image_url: '/api/placeholder/300/200'
+      }
+    },
+    {
+      id: '3',
+      name: 'David Nkurunziza', 
+      car_model: 'BMW X5',
+      car_plate: 'RAB 789C',
+      rating: 4.7,
+      current_location: [30.0419, -1.9541],
+      distance: 1.5,
+      estimated_arrival: 8,
+      car_category: {
+        id: 'premium',
+        name: 'Premium',
+        base_fare: 5000,
+        base_price_per_km: 800,
+        minimum_fare: 4000,
+        passenger_capacity: 4,
+        image_url: '/api/placeholder/300/200'
+      }
+    }
+  ];
   
   const { getCurrentLocation, isLoading: locationLoading } = useCurrentLocation({ autoFetch: false });
   const { estimatedFare, distance, formatCurrency } = useFareCalculator(
@@ -67,12 +129,16 @@ const Index = () => {
     handleGetCurrentLocation();
   }, []);
 
-  // Fetch available drivers when location is set
+  // Show available drivers immediately when dropoff is selected
   useEffect(() => {
-    if (currentLocation) {
-      fetchAvailableDrivers();
+    if (currentLocation && dropoffLocation) {
+      setAvailableDrivers(sampleDrivers);
     }
-  }, [currentLocation]);
+  }, [currentLocation, dropoffLocation]);
+
+  const handleMapClick = (location: {lat: number; lng: number; address: string}) => {
+    setDropoffLocation(location);
+  };
 
   const handleGetCurrentLocation = async () => {
     try {
@@ -88,50 +154,6 @@ const Index = () => {
         description: "Please enable location access to find nearby drivers",
         variant: "destructive"
       });
-    }
-  };
-
-  const fetchAvailableDrivers = async () => {
-    if (!currentLocation) return;
-
-    try {
-      const { data, error } = await supabase.rpc('find_nearest_driver', {
-        p_pickup_location: `(${currentLocation.lng},${currentLocation.lat})`,
-        p_max_distance_km: 10,
-        p_limit: 10
-      });
-
-      if (error) throw error;
-
-      // Transform the data to include car category info
-      const driversWithCategories = await Promise.all(
-        data.map(async (driver: any) => {
-          const { data: categoryData } = await supabase
-            .from('car_categories')
-            .select('*')
-            .eq('id', driver.car_category_id)
-            .single();
-
-          return {
-            ...driver,
-            distance: driver.distance_km,
-            estimated_arrival: driver.estimated_arrival_minutes,
-            current_location: [currentLocation.lng, currentLocation.lat] as [number, number],
-            car_category: categoryData || {
-              id: 'default',
-              name: 'Standard',
-              base_fare: 2.50,
-              base_price_per_km: 1.20,
-              minimum_fare: 5.00,
-              passenger_capacity: 4
-            }
-          };
-        })
-      );
-
-      setAvailableDrivers(driversWithCategories);
-    } catch (error) {
-      console.error('Error fetching drivers:', error);
     }
   };
 
@@ -252,74 +274,124 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Live Map */}
+        {/* Live Map with Draggable Dropoff */}
         <Card>
-          <CardContent className="p-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              {!dropoffLocation ? "Drag the red pin to select dropoff location" : "Selected Locations"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 relative">
             <Map
-              onLocationSelect={(location, type) => {
-                if (type === 'dropoff') {
-                  setDropoffLocation(location);
-                }
-              }}
+              onLocationSelect={handleMapClick}
               pickupLocation={currentLocation}
               dropoffLocation={dropoffLocation}
               showAllDrivers={true}
               className="h-80"
             />
+            
+            {/* Draggable Dropoff Icon */}
+            {!dropoffLocation && (
+              <div 
+                className="absolute top-4 left-4 z-50 bg-red-500 text-white p-3 rounded-full shadow-lg cursor-move hover:bg-red-600 transition-colors"
+                draggable
+                onDragStart={() => setIsDraggingDropoff(true)}
+                onDragEnd={() => setIsDraggingDropoff(false)}
+              >
+                <MapPin className="h-6 w-6" />
+              </div>
+            )}
+            
+            {dropoffLocation && (
+              <div className="absolute bottom-4 left-4 right-4 bg-green-500 text-white p-2 rounded-lg text-center text-sm font-medium">
+                ✅ Dropoff location selected! Available cars are shown below.
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Available Drivers */}
-        {availableDrivers.length > 0 && (
+        {/* Available Drivers - Show immediately after dropoff selection */}
+        {currentLocation && dropoffLocation && availableDrivers.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Car className="h-5 w-5" />
-                Available Drivers ({availableDrivers.length})
+                <Car className="h-5 w-5 text-green-500" />
+                🚗 Available Cars Near You ({availableDrivers.length})
               </CardTitle>
+              <p className="text-sm text-muted-foreground">Select your preferred car</p>
             </CardHeader>
             <CardContent className="space-y-4">
               {availableDrivers.map((driver) => (
                 <div
                   key={driver.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg ${
                     selectedDriver?.id === driver.id 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-green-500 bg-green-50 shadow-md' 
+                      : 'border-border hover:border-green-300'
                   }`}
                   onClick={() => setSelectedDriver(driver)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                        <Car className="h-6 w-6" />
+                      <div className="relative">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {driver.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                          <Car className="h-3 w-3 text-white" />
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold">{driver.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {driver.car_model} • {driver.car_plate}
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-bold text-lg text-gray-800">{driver.name}</h4>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                            {driver.car_category.name}
+                          </span>
+                        </div>
+                        
+                        <p className="text-gray-600 font-medium mb-2">
+                          🚗 {driver.car_model} • 🚙 {driver.car_plate}
                         </p>
-                        <div className="flex items-center gap-4 mt-1">
+                        
+                        <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs">{driver.rating}</span>
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="font-semibold text-gray-700">{driver.rating}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span className="text-xs">{driver.estimated_arrival} min</span>
+                          
+                          <div className="flex items-center gap-1 text-green-600">
+                            <Clock className="h-4 w-4" />
+                            <span className="font-medium">{driver.estimated_arrival} min away</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-1 text-blue-600">
+                            <MapPin className="h-4 w-4" />
+                            <span className="font-medium">{driver.distance.toFixed(1)} km</span>
                           </div>
                         </div>
                       </div>
                     </div>
+
                     <div className="text-right">
-                      <p className="font-semibold text-lg">
+                      <p className="font-bold text-2xl text-green-600">
                         {formatCurrency(driver.car_category.base_fare)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {driver.distance.toFixed(1)}km away
+                      <p className="text-sm text-gray-500">Base fare</p>
+                      <p className="text-xs text-gray-400">
+                        +{formatCurrency(driver.car_category.base_price_per_km)}/km
                       </p>
                     </div>
                   </div>
+
+                  {selectedDriver?.id === driver.id && (
+                    <div className="mt-3 pt-3 border-t border-green-200 bg-green-50 -mx-4 -mb-4 px-4 pb-4 rounded-b-lg">
+                      <p className="text-green-700 font-medium text-center">
+                        ✅ Selected! Continue below to complete your booking
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>
