@@ -1,4 +1,4 @@
-import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity, MapPin } from "lucide-react";
+import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +19,6 @@ interface AdminSidebarProps {
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: Home, requiredRole: ["super_admin", "admin", "support"] },
-  { id: "live-monitor", label: "Live Ride Monitor", icon: MapPin, requiredRole: ["super_admin", "admin", "support"] },
   { id: "users", label: "User Management", icon: Users, requiredRole: ["super_admin", "admin"] },
   { id: "rides", label: "Ride Management", icon: Car, requiredRole: ["super_admin", "admin", "support"] },
   { id: "pricing", label: "Pricing & Surge", icon: DollarSign, requiredRole: ["super_admin", "admin"] },
