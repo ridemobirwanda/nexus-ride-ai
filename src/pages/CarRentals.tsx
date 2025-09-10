@@ -274,16 +274,16 @@ const CarRentals = () => {
           </p>
         </div>
 
-        {/* Car Grid - 3 columns on large screens */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Car Grid - Compact layout for 3 cards per column */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {filteredCars.map((car) => (
             <Card 
               key={car.id} 
-              className="gradient-card card-shadow hover:shadow-lg transition-all duration-300 cursor-pointer group"
+              className="gradient-card card-shadow hover:shadow-lg transition-all duration-300 cursor-pointer group h-fit"
               onClick={() => navigate(`/cars/${car.id}`)}
             >
               <CardHeader className="p-0">
-                <div className="relative overflow-hidden rounded-t-lg h-64">
+                <div className="relative overflow-hidden rounded-t-lg h-32">
                   {car.images.length > 1 ? (
                     <Carousel className="w-full h-full">
                       <CarouselContent>
@@ -292,131 +292,101 @@ const CarRentals = () => {
                             <img
                               src={image.image_url}
                               alt={image.caption || `${car.brand} ${car.model} - Image ${index + 1}`}
-                              className="w-full h-64 object-cover"
+                              className="w-full h-32 object-cover"
                             />
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      <CarouselPrevious className="left-2 bg-white/80 hover:bg-white" />
-                      <CarouselNext className="right-2 bg-white/80 hover:bg-white" />
+                      <CarouselPrevious className="left-1 w-6 h-6 bg-white/80 hover:bg-white" />
+                      <CarouselNext className="right-1 w-6 h-6 bg-white/80 hover:bg-white" />
                     </Carousel>
                   ) : (
                     <img
                       src={car.images[0]?.image_url || '/placeholder.svg'}
                       alt={`${car.brand} ${car.model}`}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   )}
                   
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-white/90 text-primary hover:bg-white">
+                  <div className="absolute top-2 right-2">
+                    <Badge className="bg-white/90 text-primary hover:bg-white text-xs">
                       {car.availability_status.charAt(0).toUpperCase() + car.availability_status.slice(1)}
                     </Badge>
                   </div>
-                  <div className="absolute top-4 left-4">
-                    <Badge variant="secondary" className="bg-black/70 text-white">
-                      {getTypeIcon(car.car_type)} {car.car_type}
+                  <div className="absolute top-2 left-2">
+                    <Badge variant="secondary" className="bg-black/70 text-white text-xs">
+                      {getTypeIcon(car.car_type)}
                     </Badge>
                   </div>
                   {car.images.length > 1 && (
-                    <div className="absolute bottom-4 right-4">
+                    <div className="absolute bottom-2 right-2">
                       <Badge variant="secondary" className="bg-black/70 text-white text-xs">
-                        {car.images.length} photos
+                        {car.images.length}
                       </Badge>
                     </div>
                   )}
                 </div>
               </CardHeader>
               
-              <CardContent className="p-6">
-                <div className="space-y-4">
+              <CardContent className="p-3">
+                <div className="space-y-2">
                   {/* Car Info */}
                   <div>
-                    <h3 className="text-xl font-bold">
+                    <h3 className="text-sm font-bold truncate">
                       {car.brand} {car.model}
                     </h3>
-                    <p className="text-muted-foreground">{car.year}</p>
+                    <p className="text-xs text-muted-foreground">{car.year}</p>
                   </div>
 
-                  {/* Features */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  {/* Compact Features */}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      <span>{car.seating_capacity} seats</span>
+                      <Users className="h-3 w-3" />
+                      <span>{car.seating_capacity}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Fuel className="h-4 w-4" />
-                      <span>{car.fuel_type}</span>
+                      <Fuel className="h-3 w-3" />
+                      <span className="truncate">{car.fuel_type}</span>
                     </div>
                   </div>
 
-                  {/* Car Details */}
-                  <div className="space-y-2">
-                    {/* Location */}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>{car.location_address}</span>
+                  {/* Location & Plate */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{car.location_address}</span>
                     </div>
                     
-                    {/* Plate Number */}
                     {car.plate_number && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Hash className="h-4 w-4" />
-                        <span className="font-mono">{car.plate_number}</span>
-                      </div>
-                    )}
-                    
-                    {/* Owner */}
-                    {car.owner_name && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="h-4 w-4" />
-                        <span>{car.owner_name}</span>
-                        {car.owner_phone && (
-                          <span className="text-xs">• {car.owner_phone}</span>
-                        )}
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Hash className="h-3 w-3" />
+                        <span className="font-mono text-xs">{car.plate_number}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Pricing */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-primary" />
-                        <span className="text-lg font-bold text-primary">
-                          {formatPrice(car.price_per_day)}
-                        </span>
-                        <span className="text-sm text-muted-foreground">/day</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatPrice(car.price_per_hour)}/hour
-                      </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3 text-primary" />
+                      <span className="text-sm font-bold text-primary">
+                        {formatPrice(car.price_per_day)}
+                      </span>
                     </div>
-                    
-                    <Button 
-                      className="gradient-primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/cars/${car.id}/book`);
-                      }}
-                    >
-                      Rent Now
-                    </Button>
+                    <div className="text-xs text-muted-foreground">
+                      {formatPrice(car.price_per_hour)}/hr
+                    </div>
                   </div>
-
-                  {/* Quick Features */}
-                  <div className="flex flex-wrap gap-1">
-                    {car.features.slice(0, 3).map((feature, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                    {car.features.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{car.features.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
+                  
+                  <Button 
+                    className="gradient-primary w-full text-xs h-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/cars/${car.id}/book`);
+                    }}
+                  >
+                    Rent Now
+                  </Button>
                 </div>
               </CardContent>
             </Card>
