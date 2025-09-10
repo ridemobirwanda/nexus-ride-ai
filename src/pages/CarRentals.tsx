@@ -17,8 +17,19 @@ import {
   Filter,
   Star,
   Clock,
-  DollarSign
+  DollarSign,
+  User,
+  Hash
 } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+
+interface RentalCarImage {
+  id: string;
+  image_url: string;
+  caption?: string;
+  display_order: number;
+  is_primary: boolean;
+}
 
 interface RentalCar {
   id: string;
@@ -34,7 +45,10 @@ interface RentalCar {
   features: string[];
   availability_status: string;
   location_address: string;
-  primary_image?: string;
+  plate_number?: string;
+  owner_name?: string;
+  owner_phone?: string;
+  images: RentalCarImage[];
 }
 
 const CarRentals = () => {
@@ -57,34 +71,45 @@ const CarRentals = () => {
 
   const fetchCars = async () => {
     try {
-      // Optimized query - fetch cars and images separately for better performance
+      // Fetch cars with all new fields
       const { data: carsData, error: carsError } = await supabase
         .from('rental_cars')
         .select('*')
         .eq('is_active', true)
         .eq('availability_status', 'available')
         .order('car_type', { ascending: true })
-        .limit(50); // Limit results for better performance
+        .limit(50);
 
       if (carsError) throw carsError;
 
-      // Fetch primary images separately
+      // Fetch all images for each car
       const carIds = carsData?.map(car => car.id) || [];
       const { data: imagesData, error: imagesError } = await supabase
         .from('rental_car_images')
-        .select('car_id, image_url')
+        .select('*')
         .in('car_id', carIds)
-        .eq('is_primary', true);
+        .order('display_order', { ascending: true });
 
       if (imagesError) throw imagesError;
 
-      // Combine data efficiently
-      const imageMap = new Map(imagesData?.map(img => [img.car_id, img.image_url]) || []);
+      // Group images by car_id
+      const imagesByCarId = new Map<string, RentalCarImage[]>();
+      imagesData?.forEach(img => {
+        if (!imagesByCarId.has(img.car_id)) {
+          imagesByCarId.set(img.car_id, []);
+        }
+        imagesByCarId.get(img.car_id)!.push(img);
+      });
       
       const carsWithImages = (carsData || []).map(car => ({
         ...car,
         features: Array.isArray(car.features) ? car.features.map(f => String(f)) : [],
-        primary_image: imageMap.get(car.id) || '/placeholder.svg'
+        images: imagesByCarId.get(car.id) || [{
+          id: 'placeholder',
+          image_url: '/placeholder.svg',
+          display_order: 0,
+          is_primary: true
+        }]
       }));
 
       setCars(carsWithImages);
@@ -249,8 +274,8 @@ const CarRentals = () => {
           </p>
         </div>
 
-        {/* Car Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Car Grid - 4 columns on large screens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredCars.map((car) => (
             <Card 
               key={car.id} 
@@ -258,12 +283,31 @@ const CarRentals = () => {
               onClick={() => navigate(`/cars/${car.id}`)}
             >
               <CardHeader className="p-0">
-                <div className="relative overflow-hidden rounded-t-lg h-48">
-                  <img
-                    src={car.primary_image}
-                    alt={`${car.brand} ${car.model}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                <div className="relative overflow-hidden rounded-t-lg h-64">
+                  {car.images.length > 1 ? (
+                    <Carousel className="w-full h-full">
+                      <CarouselContent>
+                        {car.images.map((image, index) => (
+                          <CarouselItem key={image.id}>
+                            <img
+                              src={image.image_url}
+                              alt={image.caption || `${car.brand} ${car.model} - Image ${index + 1}`}
+                              className="w-full h-64 object-cover"
+                            />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="left-2 bg-white/80 hover:bg-white" />
+                      <CarouselNext className="right-2 bg-white/80 hover:bg-white" />
+                    </Carousel>
+                  ) : (
+                    <img
+                      src={car.images[0]?.image_url || '/placeholder.svg'}
+                      alt={`${car.brand} ${car.model}`}
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
+                  
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-white/90 text-primary hover:bg-white">
                       {car.availability_status.charAt(0).toUpperCase() + car.availability_status.slice(1)}
@@ -274,6 +318,13 @@ const CarRentals = () => {
                       {getTypeIcon(car.car_type)} {car.car_type}
                     </Badge>
                   </div>
+                  {car.images.length > 1 && (
+                    <div className="absolute bottom-4 right-4">
+                      <Badge variant="secondary" className="bg-black/70 text-white text-xs">
+                        {car.images.length} photos
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               
@@ -299,10 +350,32 @@ const CarRentals = () => {
                     </div>
                   </div>
 
-                  {/* Location */}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{car.location_address}</span>
+                  {/* Car Details */}
+                  <div className="space-y-2">
+                    {/* Location */}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>{car.location_address}</span>
+                    </div>
+                    
+                    {/* Plate Number */}
+                    {car.plate_number && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Hash className="h-4 w-4" />
+                        <span className="font-mono">{car.plate_number}</span>
+                      </div>
+                    )}
+                    
+                    {/* Owner */}
+                    {car.owner_name && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <User className="h-4 w-4" />
+                        <span>{car.owner_name}</span>
+                        {car.owner_phone && (
+                          <span className="text-xs">• {car.owner_phone}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Pricing */}

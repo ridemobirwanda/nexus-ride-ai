@@ -503,6 +503,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          failure_reason: string | null
+          id: string
+          method: string
+          processed_at: string | null
+          ride_id: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          method?: string
+          processed_at?: string | null
+          ride_id: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          method?: string
+          processed_at?: string | null
+          ride_id?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       promo_codes: {
         Row: {
           code: string
@@ -611,6 +650,9 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           model: string
+          owner_name: string | null
+          owner_phone: string | null
+          plate_number: string | null
           price_per_day: number
           price_per_hour: number
           seating_capacity: number
@@ -632,6 +674,9 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           model: string
+          owner_name?: string | null
+          owner_phone?: string | null
+          plate_number?: string | null
           price_per_day: number
           price_per_hour: number
           seating_capacity?: number
@@ -653,6 +698,9 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           model?: string
+          owner_name?: string | null
+          owner_phone?: string | null
+          plate_number?: string | null
           price_per_day?: number
           price_per_hour?: number
           seating_capacity?: number
@@ -1156,6 +1204,10 @@ export type Database = {
       point_distance: {
         Args: { p1: unknown; p2: unknown }
         Returns: number
+      }
+      process_payment: {
+        Args: { p_amount: number; p_method: string; p_ride_id: string }
+        Returns: string
       }
       request_admin_password_reset: {
         Args: Record<PropertyKey, never> | { admin_email: string }
