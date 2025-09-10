@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
@@ -54,7 +54,15 @@ const RideBookingCard = ({ passenger, currentRide, rideData, setRideData }: Ride
     rideData.selectedCarCategory
   );
 
-  const handleBookRide = async () => {
+  // Optimize with useMemo and useCallback to prevent unnecessary re-renders
+  const isBookingDisabled = useMemo(() => {
+    return !rideData.pickupLocation || 
+           !rideData.dropoffLocation || 
+           !rideData.selectedCarCategory || 
+           !rideData.paymentMethod;
+  }, [rideData.pickupLocation, rideData.dropoffLocation, rideData.selectedCarCategory, rideData.paymentMethod]);
+
+  const handleBookRide = useCallback(async () => {
     // If no passenger, show registration
     if (!passenger) {
       setShowRegistration(true);
@@ -147,7 +155,7 @@ const RideBookingCard = ({ passenger, currentRide, rideData, setRideData }: Ride
         variant: "destructive"
       });
     }
-  };
+  }, [passenger, rideData, estimatedFare, formatCurrency, navigate]); // Add dependencies for useCallback
 
   const getCardTitle = () => {
     if (currentRide) {

@@ -57,23 +57,34 @@ const CarRentals = () => {
 
   const fetchCars = async () => {
     try {
-      const { data, error } = await supabase
+      // Optimized query - fetch cars and images separately for better performance
+      const { data: carsData, error: carsError } = await supabase
         .from('rental_cars')
-        .select(`
-          *,
-          rental_car_images!inner(image_url)
-        `)
+        .select('*')
         .eq('is_active', true)
         .eq('availability_status', 'available')
-        .eq('rental_car_images.is_primary', true)
-        .order('car_type', { ascending: true });
+        .order('car_type', { ascending: true })
+        .limit(50); // Limit results for better performance
 
-      if (error) throw error;
+      if (carsError) throw carsError;
 
-      const carsWithImages = (data || []).map(car => ({
+      // Fetch primary images separately
+      const carIds = carsData?.map(car => car.id) || [];
+      const { data: imagesData, error: imagesError } = await supabase
+        .from('rental_car_images')
+        .select('car_id, image_url')
+        .in('car_id', carIds)
+        .eq('is_primary', true);
+
+      if (imagesError) throw imagesError;
+
+      // Combine data efficiently
+      const imageMap = new Map(imagesData?.map(img => [img.car_id, img.image_url]) || []);
+      
+      const carsWithImages = (carsData || []).map(car => ({
         ...car,
         features: Array.isArray(car.features) ? car.features.map(f => String(f)) : [],
-        primary_image: car.rental_car_images?.[0]?.image_url || '/placeholder.svg'
+        primary_image: imageMap.get(car.id) || '/placeholder.svg'
       }));
 
       setCars(carsWithImages);

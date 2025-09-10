@@ -1,9 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Shield, Smartphone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import heroCarImage from '@/assets/taxi-cab-hero.jpg';
 import appMockupImage from '@/assets/app-mockup.jpg';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with overlay */}
@@ -77,7 +80,7 @@ const HeroSection = () => {
                 size="lg" 
                 variant="hero" 
                 className="text-lg px-8 py-6"
-                onClick={() => window.location.href = '/passenger'}
+                onClick={() => navigate('/passenger')}
               >
                 <MapPin className="h-5 w-5" />
                 Book a Ride
@@ -86,7 +89,7 @@ const HeroSection = () => {
                 size="lg" 
                 variant="outline" 
                 className="text-lg px-8 py-6"
-                onClick={() => window.location.href = '/cars'}
+                onClick={() => navigate('/cars')}
               >
                 Rent a Car
               </Button>
@@ -94,7 +97,7 @@ const HeroSection = () => {
                 size="lg" 
                 variant="ghost" 
                 className="text-lg px-8 py-6"
-                onClick={() => window.location.href = '/driver/auth'}
+                onClick={() => navigate('/driver/auth')}
               >
                 Become a Driver
               </Button>
