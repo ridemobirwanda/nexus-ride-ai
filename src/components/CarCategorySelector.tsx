@@ -155,107 +155,112 @@ const CarCategorySelector = ({
           {readonly ? 'Selected Car Category' : 'Choose Car Category'}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {filteredCategories.map((category) => {
-          const tier = getPricingTier(category.base_price_per_km);
-          return (
-          <div
-            key={category.id}
-            className={`
-              relative p-4 border rounded-lg transition-all cursor-pointer
-              ${selectedCategoryId === category.id 
-                ? 'border-primary bg-primary/10 shadow-md' 
-                : 'border-muted hover:border-primary/50 hover:bg-muted/30'
-              }
-              ${readonly ? 'cursor-default' : ''}
-            `}
-            onClick={() => !readonly && onCategorySelect(category)}
-          >
-            {/* Selection Indicator */}
-            {selectedCategoryId === category.id && (
-              <div className="absolute top-2 right-2">
-                <Badge className="bg-primary text-primary-foreground">
-                  <Check className="h-3 w-3 mr-1" />
-                  Selected
-                </Badge>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-lg">{category.name}</h3>
-                    <Badge className={`text-xs ${getTierColor(tier)}`}>
-                      {tier}
+      <CardContent>
+        {/* Compact Grid Layout */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {filteredCategories.map((category) => {
+            const tier = getPricingTier(category.base_price_per_km);
+            return (
+              <div
+                key={category.id}
+                className={`
+                  relative p-2 border rounded-lg transition-all cursor-pointer h-fit
+                  ${selectedCategoryId === category.id 
+                    ? 'border-primary bg-primary/10 shadow-md ring-2 ring-primary/20' 
+                    : 'border-muted hover:border-primary/50 hover:bg-muted/30'
+                  }
+                  ${readonly ? 'cursor-default' : ''}
+                `}
+                onClick={() => !readonly && onCategorySelect(category)}
+              >
+                {/* Selection Indicator */}
+                {selectedCategoryId === category.id && (
+                  <div className="absolute top-1 right-1 z-10">
+                    <Badge className="bg-primary text-primary-foreground text-xs">
+                      <Check className="h-2 w-2" />
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                </div>
-                {showPricing && distance > 0 && (
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-primary">
-                      {formatCurrency(calculateFare(category, distance))}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatCurrency(category.base_price_per_km)}/km
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {category.passenger_capacity} passengers
+                )}
+
+                <div className="space-y-2">
+                  {/* Car Image */}
+                  <div className="relative">
+                    <img
+                      src={getCarImage(category.name)}
+                      alt={category.name}
+                      className="w-full h-20 object-cover rounded-md bg-gray-50"
+                    />
+                    <div className="absolute top-1 left-1">
+                      <Badge className={`text-xs ${getTierColor(tier)}`}>
+                        {tier}
+                      </Badge>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Features */}
-              <div className="flex flex-wrap gap-2">
-                {category.features.map((feature, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {getFeatureIcon(feature)}
-                    <span className="ml-1">{feature}</span>
-                  </Badge>
-                ))}
-              </div>
+                  {/* Header */}
+                  <div>
+                    <h3 className="font-semibold text-sm truncate">{category.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{category.description}</p>
+                  </div>
 
-              {/* Pricing Info */}
-              {!showPricing && (
-                <div className="text-sm text-muted-foreground">
-                  Base: {formatCurrency(category.base_fare)} + {formatCurrency(category.base_price_per_km)}/km • Min: {formatCurrency(category.minimum_fare)}
+                  {/* Capacity */}
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    <span>{category.passenger_capacity} seats</span>
+                  </div>
+
+                  {/* Pricing */}
+                  {showPricing && distance > 0 ? (
+                    <div className="space-y-1">
+                      <div className="text-sm font-bold text-primary">
+                        {formatCurrency(calculateFare(category, distance))}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatCurrency(category.base_price_per_km)}/km
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="text-xs text-muted-foreground">
+                        Base: {formatCurrency(category.base_fare)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatCurrency(category.base_price_per_km)}/km
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Compact Features */}
+                  <div className="flex flex-wrap gap-1">
+                    {category.features.slice(0, 2).map((feature, index) => (
+                      <Badge key={index} variant="outline" className="text-xs px-1 py-0">
+                        {getFeatureIcon(feature)}
+                      </Badge>
+                    ))}
+                    {category.features.length > 2 && (
+                      <Badge variant="outline" className="text-xs px-1 py-0">
+                        +{category.features.length - 2}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {!readonly && (
+                    <Button
+                      variant={selectedCategoryId === category.id ? "default" : "outline"}
+                      className="w-full text-xs h-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCategorySelect(category);
+                      }}
+                    >
+                      {selectedCategoryId === category.id ? 'Selected' : 'Select'}
+                    </Button>
+                  )}
                 </div>
-              )}
-              
-              {/* Passenger Capacity */}
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Users className="h-3 w-3" />
-                <span>{category.passenger_capacity} passengers</span>
               </div>
-
-              {/* Car Image */}
-              <div className="mt-3">
-                <img
-                  src={getCarImage(category.name)}
-                  alt={category.name}
-                  className="w-full h-32 object-cover rounded-md bg-gray-50"
-                />
-              </div>
-            </div>
-
-            {!readonly && (
-              <Button
-                variant={selectedCategoryId === category.id ? "default" : "outline"}
-                className="w-full mt-3"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCategorySelect(category);
-                }}
-              >
-                {selectedCategoryId === category.id ? 'Selected' : 'Select'}
-              </Button>
-            )}
-          </div>
-        );
-        })}
+            );
+          })}
+        </div>
 
         {filteredCategories.length === 0 && (
           <div className="text-center py-8">
