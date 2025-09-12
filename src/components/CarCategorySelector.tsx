@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { Car, Check, Star, Users, Shield, Wind, Crown } from 'lucide-react';
 
 // Import car images
@@ -46,6 +47,7 @@ const CarCategorySelector = ({
   readonly = false,
   seatFilter = []
 }: CarCategorySelectorProps) => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<CarCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -174,7 +176,12 @@ const CarCategorySelector = ({
                   }
                   ${readonly ? 'cursor-default' : ''}
                 `}
-                onClick={() => !readonly && onCategorySelect(category)}
+                onClick={() => {
+                  if (!readonly) {
+                    onCategorySelect(category);
+                    navigate(`/passenger/book-ride?category=${category.id}`);
+                  }
+                }}
               >
                 {/* Selection Indicator */}
                 {selectedCategoryId === category.id && (
@@ -264,6 +271,8 @@ const CarCategorySelector = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         onCategorySelect(category);
+                        // Navigate to ride booking page with selected category
+                        navigate(`/passenger/book-ride?category=${category.id}`);
                       }}
                     >
                       {selectedCategoryId === category.id ? 'Selected' : 'Select'}

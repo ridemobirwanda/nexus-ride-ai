@@ -20,6 +20,7 @@ import ResetPassword from "./pages/ResetPassword";
 import CarRentals from "./pages/CarRentals";
 import CarDetail from "./pages/CarDetail";
 import CarBooking from "./pages/CarBooking";
+import RideBooking from "./pages/RideBooking";
 import PassengerRentals from "./pages/PassengerRentals";
 import RentalTracking from "./pages/RentalTracking";
 
@@ -50,6 +51,7 @@ const App = () => {
             <Route path="/rentals/:id/track" element={<RentalTracking />} />
             <Route path="/passenger/rentals" element={<PassengerRentals />} />
             <Route path="/passenger" element={<PassengerDashboard />} />
+            <Route path="/passenger/book-ride" element={<RideBooking />} />
             <Route path="/passenger/ride/:rideId" element={<PassengerRideStatus />} />
             <Route path="/passenger/chat/:rideId" element={<PassengerChat />} />
             <Route path="/passenger/rate/:rideId" element={<PassengerRating />} />

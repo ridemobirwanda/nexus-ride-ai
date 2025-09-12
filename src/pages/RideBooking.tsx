@@ -1,0 +1,685 @@
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { 
+  ArrowLeft,
+  MapPin, 
+  Search,
+  Navigation,
+  CreditCard,
+  DollarSign,
+  Clock,
+  Car
+} from 'lucide-react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import PaymentMethodSelector from '@/components/PaymentMethodSelector';
+import InlineRegistration from '@/components/InlineRegistration';
+
+interface Location {
+  lat: number;
+  lng: number;
+  address: string;
+}
+
+interface CarCategory {
+  id: string;
+  name: string;
+  description: string;
+  base_fare: number;
+  base_price_per_km: number;
+  minimum_fare: number;
+  passenger_capacity: number;
+}
+
+interface Passenger {
+  id: string;
+  name: string;
+}
+
+const RideBooking = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const pickupMarker = useRef<mapboxgl.Marker | null>(null);
+  const dropoffMarker = useRef<mapboxgl.Marker | null>(null);
+  
+  const [selectedCategory, setSelectedCategory] = useState<CarCategory | null>(null);
+  const [passenger, setPassenger] = useState<Passenger | null>(null);
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+  
+  const [locationData, setLocationData] = useState({
+    pickupLocation: null as Location | null,
+    dropoffLocation: null as Location | null,
+    pickupAddress: '',
+    dropoffAddress: '',
+    paymentMethod: 'cash' as 'cash' | 'mobile_money' | 'card'
+  });
+
+  const [mapState, setMapState] = useState({
+    isSelectingPickup: true,
+    searchQuery: '',
+    isSearching: false,
+    searchResults: [] as any[]
+  });
+
+  useEffect(() => {
+    checkAuth();
+    fetchCategoryFromUrl();
+    initializeMap();
+    getCurrentLocation();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // Get passenger details
+      const { data: passengerData } = await supabase
+        .from('passengers')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      setPassenger(passengerData);
+    }
+  };
+
+  const fetchCategoryFromUrl = async () => {
+    const categoryId = searchParams.get('category');
+    if (categoryId) {
+      const { data } = await supabase
+        .from('car_categories')
+        .select('*')
+        .eq('id', categoryId)
+        .single();
+      
+      if (data) {
+        setSelectedCategory(data);
+      }
+    }
+  };
+
+  const initializeMap = () => {
+    if (!mapContainer.current) return;
+
+    // Use the Mapbox token from Supabase secrets
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZkangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+    
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/navigation-day-v1',
+      center: [30.0588, -1.9414], // Kigali, Rwanda
+      zoom: 12,
+      pitch: 45,
+      bearing: -15,
+      antialias: true
+    });
+
+    // Add 3D buildings
+    map.current.on('load', () => {
+      if (!map.current) return;
+      
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+      
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+      
+      // Add 3D buildings layer
+      if (!map.current.getLayer('building-3d')) {
+        map.current.addLayer({
+          'id': 'building-3d',
+          'source': 'composite',
+          'source-layer': 'building',
+          'filter': ['==', 'extrude', 'true'],
+          'type': 'fill-extrusion',
+          'minzoom': 10,
+          'paint': {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'height']
+            ],
+            'fill-extrusion-base': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              15,
+              0,
+              15.05,
+              ['get', 'min_height']
+            ],
+            'fill-extrusion-opacity': 0.6
+          }
+        });
+      }
+    });
+
+    // Add click handler for location selection
+    map.current.on('click', handleMapClick);
+    
+    // Add navigation controls
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          if (map.current) {
+            map.current.flyTo({
+              center: [longitude, latitude],
+              zoom: 14
+            });
+          }
+          
+          // Set as pickup location
+          const currentLocation: Location = {
+            lat: latitude,
+            lng: longitude,
+            address: 'Current Location'
+          };
+          
+          setLocationData(prev => ({
+            ...prev,
+            pickupLocation: currentLocation,
+            pickupAddress: 'Current Location'
+          }));
+          
+          addPickupMarker(longitude, latitude);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Location Access",
+            description: "Unable to get your current location. Please select pickup manually.",
+            variant: "destructive"
+          });
+        }
+      );
+    }
+  };
+
+  const handleMapClick = async (e: any) => {
+    const { lng, lat } = e.lngLat;
+    
+    try {
+      // Reverse geocoding to get address
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}&country=RW`
+      );
+      const data = await response.json();
+      const address = data.features[0]?.place_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      
+      const newLocation: Location = { lat, lng, address };
+      
+      if (mapState.isSelectingPickup) {
+        setLocationData(prev => ({
+          ...prev,
+          pickupLocation: newLocation,
+          pickupAddress: address
+        }));
+        addPickupMarker(lng, lat);
+        setMapState(prev => ({ ...prev, isSelectingPickup: false }));
+        toast({
+          title: "Pickup Set",
+          description: "Now tap to select drop-off location"
+        });
+      } else {
+        setLocationData(prev => ({
+          ...prev,
+          dropoffLocation: newLocation,
+          dropoffAddress: address
+        }));
+        addDropoffMarker(lng, lat);
+        toast({
+          title: "Drop-off Set",
+          description: "Both locations selected!"
+        });
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+    }
+  };
+
+  const addPickupMarker = (lng: number, lat: number) => {
+    if (!map.current) return;
+    
+    if (pickupMarker.current) {
+      pickupMarker.current.remove();
+    }
+    
+    const el = document.createElement('div');
+    el.className = 'pickup-marker';
+    el.style.cssText = `
+      background-color: #10b981;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    `;
+    
+    pickupMarker.current = new mapboxgl.Marker(el)
+      .setLngLat([lng, lat])
+      .addTo(map.current);
+  };
+
+  const addDropoffMarker = (lng: number, lat: number) => {
+    if (!map.current) return;
+    
+    if (dropoffMarker.current) {
+      dropoffMarker.current.remove();
+    }
+    
+    const el = document.createElement('div');
+    el.className = 'dropoff-marker';
+    el.style.cssText = `
+      background-color: #ef4444;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    `;
+    
+    dropoffMarker.current = new mapboxgl.Marker(el)
+      .setLngLat([lng, lat])
+      .addTo(map.current);
+  };
+
+  const searchLocation = async (query: string) => {
+    if (!query.trim()) return;
+    
+    setMapState(prev => ({ ...prev, isSearching: true }));
+    
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&country=RW&proximity=30.0588,-1.9414&limit=5`
+      );
+      const data = await response.json();
+      
+      setMapState(prev => ({ 
+        ...prev, 
+        searchResults: data.features || [],
+        isSearching: false 
+      }));
+    } catch (error) {
+      console.error('Search error:', error);
+      setMapState(prev => ({ ...prev, isSearching: false }));
+    }
+  };
+
+  const selectSearchResult = (feature: any) => {
+    const [lng, lat] = feature.center;
+    const address = feature.place_name;
+    
+    if (map.current) {
+      map.current.flyTo({
+        center: [lng, lat],
+        zoom: 16
+      });
+    }
+    
+    const newLocation: Location = { lat, lng, address };
+    
+    if (mapState.isSelectingPickup) {
+      setLocationData(prev => ({
+        ...prev,
+        pickupLocation: newLocation,
+        pickupAddress: address
+      }));
+      addPickupMarker(lng, lat);
+      setMapState(prev => ({ ...prev, isSelectingPickup: false }));
+    } else {
+      setLocationData(prev => ({
+        ...prev,
+        dropoffLocation: newLocation,
+        dropoffAddress: address
+      }));
+      addDropoffMarker(lng, lat);
+    }
+    
+    setMapState(prev => ({ 
+      ...prev, 
+      searchQuery: '',
+      searchResults: []
+    }));
+  };
+
+  const calculateDistance = () => {
+    if (!locationData.pickupLocation || !locationData.dropoffLocation) return 0;
+    
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (locationData.dropoffLocation.lat - locationData.pickupLocation.lat) * Math.PI / 180;
+    const dLon = (locationData.dropoffLocation.lng - locationData.pickupLocation.lng) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(locationData.pickupLocation.lat * Math.PI / 180) * 
+      Math.cos(locationData.dropoffLocation.lat * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const calculateFare = () => {
+    if (!selectedCategory) return 0;
+    const distance = calculateDistance();
+    const fare = selectedCategory.base_fare + (distance * selectedCategory.base_price_per_km);
+    return Math.max(fare, selectedCategory.minimum_fare);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `${Math.round(amount).toLocaleString()} RWF`;
+  };
+
+  const handleBookRide = async () => {
+    if (!passenger) {
+      setShowRegistration(true);
+      return;
+    }
+
+    if (!locationData.pickupLocation || !locationData.dropoffLocation || !selectedCategory) {
+      toast({
+        title: "Missing Information",
+        description: "Please select both pickup and drop-off locations",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('rides')
+        .insert({
+          passenger_id: passenger.id,
+          pickup_address: locationData.pickupAddress,
+          dropoff_address: locationData.dropoffAddress,
+          pickup_location: `POINT(${locationData.pickupLocation.lng} ${locationData.pickupLocation.lat})`,
+          dropoff_location: `POINT(${locationData.dropoffLocation.lng} ${locationData.dropoffLocation.lat})`,
+          estimated_fare: calculateFare(),
+          payment_method: locationData.paymentMethod,
+          car_category_id: selectedCategory.id,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Ride Booked Successfully!",
+        description: `Finding drivers nearby. Fare: ${formatCurrency(calculateFare())}`
+      });
+
+      navigate(`/passenger/ride/${data.id}`);
+    } catch (error: any) {
+      toast({
+        title: "Booking Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  if (!selectedCategory) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-2xl font-semibold mb-2">No Car Category Selected</h2>
+          <Button onClick={() => navigate('/passenger')} variant="outline">
+            ← Back to Ride Selection
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showRegistration && !passenger) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-md mx-auto">
+            <InlineRegistration
+              onRegistrationComplete={(user) => {
+                setShowRegistration(false);
+                // Refresh passenger data
+                checkAuth();
+              }}
+              title="Quick Registration"
+              description="Just enter your details to book your ride"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-white border-b p-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/passenger')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl font-semibold">Book Your Ride</h1>
+          <Badge variant="outline">
+            {selectedCategory.name}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-80px)]">
+        {/* Map */}
+        <div className="lg:col-span-3 relative">
+          <div ref={mapContainer} className="w-full h-full" />
+          
+          {/* Search Overlay */}
+          <div className="absolute top-4 left-4 right-4 z-10">
+            <Card className="shadow-lg">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {/* Location Status */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`w-3 h-3 rounded-full ${mapState.isSelectingPickup ? 'bg-green-500' : 'bg-gray-300'}`} />
+                    <span className={mapState.isSelectingPickup ? 'font-semibold' : ''}>
+                      {mapState.isSelectingPickup ? 'Select pickup location' : 'Select drop-off location'}
+                    </span>
+                  </div>
+                  
+                  {/* Search Box */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={`Search ${mapState.isSelectingPickup ? 'pickup' : 'drop-off'} location...`}
+                      value={mapState.searchQuery}
+                      onChange={(e) => {
+                        setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
+                        if (e.target.value) {
+                          searchLocation(e.target.value);
+                        }
+                      }}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  {/* Search Results */}
+                  {mapState.searchResults.length > 0 && (
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {mapState.searchResults.map((feature, index) => (
+                        <Button
+                          key={index}
+                          variant="ghost"
+                          className="w-full justify-start text-left h-auto p-2"
+                          onClick={() => selectSearchResult(feature)}
+                        >
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="text-sm truncate">{feature.place_name}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Instructions */}
+          <div className="absolute bottom-4 left-4 right-4 z-10">
+            <Card className="shadow-lg">
+              <CardContent className="p-3">
+                <p className="text-sm text-center text-muted-foreground">
+                  Tap anywhere on the 3D map to set your {mapState.isSelectingPickup ? 'pickup' : 'drop-off'} location
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Booking Panel */}
+        <div className="lg:col-span-1 bg-white border-l p-4 overflow-y-auto">
+          <div className="space-y-6">
+            {/* Selected Locations */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Your Trip</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Pickup */}
+                <div className="flex items-start gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500 mt-1.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground">PICKUP</p>
+                    <p className="text-sm truncate">
+                      {locationData.pickupAddress || 'Tap map to select'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Dropoff */}
+                <div className="flex items-start gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500 mt-1.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground">DROP-OFF</p>
+                    <p className="text-sm truncate">
+                      {locationData.dropoffAddress || 'Tap map to select'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Car Details */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Selected Car</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <h3 className="font-semibold">{selectedCategory.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedCategory.description}</p>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Car className="h-4 w-4" />
+                    <span>{selectedCategory.passenger_capacity} passengers</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment Method */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Payment Method</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PaymentMethodSelector
+                  paymentMethod={locationData.paymentMethod}
+                  onPaymentMethodChange={(method) => 
+                    setLocationData(prev => ({ ...prev, paymentMethod: method }))
+                  }
+                />
+              </CardContent>
+            </Card>
+
+            {/* Fare Estimate */}
+            {locationData.pickupLocation && locationData.dropoffLocation && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Distance:</span>
+                      <span className="text-sm font-medium">{calculateDistance().toFixed(1)} km</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Estimated Time:</span>
+                      <span className="text-sm font-medium">{Math.round(calculateDistance() / 30 * 60)} min</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Total Fare:</span>
+                      <span className="text-xl font-bold text-primary">
+                        {formatCurrency(calculateFare())}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Book Button */}
+            <Button
+              onClick={handleBookRide}
+              disabled={!locationData.pickupLocation || !locationData.dropoffLocation || isBooking}
+              className="w-full"
+              size="lg"
+            >
+              {isBooking ? (
+                <>
+                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  Booking...
+                </>
+              ) : (
+                <>
+                  <Car className="h-4 w-4 mr-2" />
+                  Book Ride • {locationData.pickupLocation && locationData.dropoffLocation ? formatCurrency(calculateFare()) : '---'}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RideBooking;
