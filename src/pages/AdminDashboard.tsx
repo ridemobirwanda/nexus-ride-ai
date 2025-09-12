@@ -13,6 +13,9 @@ import { ReportsAnalytics } from "@/components/admin/ReportsAnalytics";
 import { PromoCodeManager } from "@/components/admin/PromoCodeManager";
 import { SupportCenter } from "@/components/admin/SupportCenter";
 import { ActivityTracker } from "@/components/admin/ActivityTracker";
+import { SystemSettings } from "@/components/admin/SystemSettings";
+import { FinancialManagement } from "@/components/admin/FinancialManagement";
+import { ContentManagement } from "@/components/admin/ContentManagement";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
@@ -80,6 +83,12 @@ const AdminDashboard = () => {
         return <SupportCenter userRole={userRole} />;
       case "activity":
         return <ActivityTracker userRole={userRole} />;
+      case "financial":
+        return <FinancialManagement userRole={userRole} />;
+      case "content":
+        return <ContentManagement userRole={userRole} />;
+      case "system":
+        return <SystemSettings userRole={userRole} />;
       default:
         return <AdminOverview userRole={userRole} />;
     }
