@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Car, Check, Star, Users, Shield, Wind, Crown } from 'lucide-react';
@@ -13,6 +14,8 @@ import standardSuvImg from '@/assets/standard-7seat.jpg';
 import premiumCarImg from '@/assets/premium-4seat.jpg';
 import luxuryCarImg from '@/assets/luxury-4seat.jpg';
 import vanImg from '@/assets/standard-10seat.jpg';
+import heroCar from '@/assets/hero-car.jpg';
+import taxiCabHero from '@/assets/taxi-cab-hero.jpg';
 
 interface CarCategory {
   id: string;
@@ -90,14 +93,14 @@ const CarCategorySelector = ({
     return <Shield className="h-3 w-3" />;
   };
 
-  const getCarImage = (categoryName: string) => {
-    if (categoryName.includes('Standard 4-Seat')) return standardCarImg;
-    if (categoryName.includes('Comfortable 4-Seat')) return comfortableCarImg;
-    if (categoryName.includes('Standard 7-Seat') || categoryName.includes('Comfortable 7-Seat')) return standardSuvImg;
-    if (categoryName.includes('Standard 10-Seat')) return vanImg;
-    if (categoryName.includes('Premium')) return premiumCarImg;
-    if (categoryName.includes('Luxury')) return luxuryCarImg;
-    return standardCarImg;
+  const getCarImages = (categoryName: string) => {
+    if (categoryName.includes('Standard 4-Seat')) return [standardCarImg, heroCar, taxiCabHero];
+    if (categoryName.includes('Comfortable 4-Seat')) return [comfortableCarImg, standardCarImg, heroCar];
+    if (categoryName.includes('Standard 7-Seat') || categoryName.includes('Comfortable 7-Seat')) return [standardSuvImg, vanImg, comfortableCarImg];
+    if (categoryName.includes('Standard 10-Seat')) return [vanImg, standardSuvImg, luxuryCarImg];
+    if (categoryName.includes('Premium')) return [premiumCarImg, luxuryCarImg, heroCar];
+    if (categoryName.includes('Luxury')) return [luxuryCarImg, premiumCarImg, taxiCabHero];
+    return [standardCarImg, heroCar, taxiCabHero];
   };
 
   const getPricingTier = (pricePerKm: number) => {
@@ -183,13 +186,23 @@ const CarCategorySelector = ({
                 )}
 
                 <div className="space-y-2">
-                  {/* Car Image */}
+                  {/* Car Images Carousel */}
                   <div className="relative">
-                    <img
-                      src={getCarImage(category.name)}
-                      alt={category.name}
-                      className="w-full h-20 object-cover rounded-md bg-gray-50"
-                    />
+                    <Carousel className="w-full">
+                      <CarouselContent>
+                        {getCarImages(category.name).map((image, index) => (
+                          <CarouselItem key={index}>
+                            <img
+                              src={image}
+                              alt={`${category.name} - Image ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-md bg-gray-50"
+                            />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="h-6 w-6 left-1" />
+                      <CarouselNext className="h-6 w-6 right-1" />
+                    </Carousel>
                     <div className="absolute top-1 left-1">
                       <Badge className={`text-xs ${getTierColor(tier)}`}>
                         {tier}
