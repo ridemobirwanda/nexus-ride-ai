@@ -66,7 +66,6 @@ const RideBooking = () => {
   });
 
   const [mapState, setMapState] = useState({
-    isSelectingPickup: true,
     searchQuery: '',
     isSearching: false,
     searchResults: [] as any[]
@@ -78,6 +77,9 @@ const RideBooking = () => {
     initializeMap();
     getCurrentLocation();
   }, []);
+
+  // Get Mapbox token from Supabase secrets
+  const [mapboxToken, setMapboxToken] = useState<string>('');
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -108,11 +110,15 @@ const RideBooking = () => {
     }
   };
 
-  const initializeMap = () => {
+  const initializeMap = async () => {
     if (!mapContainer.current) return;
 
-    // Use the Mapbox token from Supabase secrets
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZkangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+    // Get Mapbox token from Supabase secrets
+    const { data } = await supabase.functions.invoke('get-mapbox-token');
+    const token = data?.token || 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZkangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+    
+    mapboxgl.accessToken = token;
+    setMapboxToken(token);
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -232,30 +238,17 @@ const RideBooking = () => {
       
       const newLocation: Location = { lat, lng, address };
       
-      if (mapState.isSelectingPickup) {
-        setLocationData(prev => ({
-          ...prev,
-          pickupLocation: newLocation,
-          pickupAddress: address
-        }));
-        addPickupMarker(lng, lat);
-        setMapState(prev => ({ ...prev, isSelectingPickup: false }));
-        toast({
-          title: "Pickup Set",
-          description: "Now tap to select drop-off location"
-        });
-      } else {
-        setLocationData(prev => ({
-          ...prev,
-          dropoffLocation: newLocation,
-          dropoffAddress: address
-        }));
-        addDropoffMarker(lng, lat);
-        toast({
-          title: "Drop-off Set",
-          description: "Both locations selected!"
-        });
-      }
+      // Only allow dropoff selection
+      setLocationData(prev => ({
+        ...prev,
+        dropoffLocation: newLocation,
+        dropoffAddress: address
+      }));
+      addDropoffMarker(lng, lat);
+      toast({
+        title: "Drop-off Set",
+        description: address
+      });
     } catch (error) {
       console.error('Geocoding error:', error);
     }
@@ -342,22 +335,13 @@ const RideBooking = () => {
     
     const newLocation: Location = { lat, lng, address };
     
-    if (mapState.isSelectingPickup) {
-      setLocationData(prev => ({
-        ...prev,
-        pickupLocation: newLocation,
-        pickupAddress: address
-      }));
-      addPickupMarker(lng, lat);
-      setMapState(prev => ({ ...prev, isSelectingPickup: false }));
-    } else {
-      setLocationData(prev => ({
-        ...prev,
-        dropoffLocation: newLocation,
-        dropoffAddress: address
-      }));
-      addDropoffMarker(lng, lat);
-    }
+    // Only allow dropoff selection
+    setLocationData(prev => ({
+      ...prev,
+      dropoffLocation: newLocation,
+      dropoffAddress: address
+    }));
+    addDropoffMarker(lng, lat);
     
     setMapState(prev => ({ 
       ...prev, 
@@ -511,9 +495,9 @@ const RideBooking = () => {
                 <div className="space-y-3">
                   {/* Location Status */}
                   <div className="flex items-center gap-2 text-sm">
-                    <div className={`w-3 h-3 rounded-full ${mapState.isSelectingPickup ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    <span className={mapState.isSelectingPickup ? 'font-semibold' : ''}>
-                      {mapState.isSelectingPickup ? 'Select pickup location' : 'Select drop-off location'}
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <span className="font-semibold">
+                      Select drop-off location
                     </span>
                   </div>
                   
@@ -521,7 +505,7 @@ const RideBooking = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder={`Search ${mapState.isSelectingPickup ? 'pickup' : 'drop-off'} location...`}
+                      placeholder="Search drop-off location..."
                       value={mapState.searchQuery}
                       onChange={(e) => {
                         setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
@@ -559,7 +543,7 @@ const RideBooking = () => {
             <Card className="shadow-lg">
               <CardContent className="p-3">
                 <p className="text-sm text-center text-muted-foreground">
-                  Tap anywhere on the 3D map to set your {mapState.isSelectingPickup ? 'pickup' : 'drop-off'} location
+                  Tap anywhere on the 3D map to set your drop-off location
                 </p>
               </CardContent>
             </Card>
