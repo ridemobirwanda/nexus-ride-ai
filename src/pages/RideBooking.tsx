@@ -16,7 +16,8 @@ import {
   CreditCard,
   DollarSign,
   Clock,
-  Car
+  Car,
+  Loader2
 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -465,136 +466,172 @@ const RideBooking = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-white border-b p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/passenger')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-xl font-semibold">Book Your Ride</h1>
-          <Badge variant="outline">
-            {selectedCategory.name}
-          </Badge>
+      {/* Mobile Header */}
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/passenger')}
+              className="flex items-center gap-2 h-10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back</span>
+            </Button>
+            <div className="flex flex-col items-center">
+              <h1 className="text-lg font-semibold text-foreground">Book Your Ride</h1>
+              <Badge variant="secondary" className="text-xs">
+                {selectedCategory.name}
+              </Badge>
+            </div>
+            <div className="w-10" /> {/* Spacer for centering */}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-80px)]">
-        {/* Map */}
-        <div className="lg:col-span-3 relative">
-          <div ref={mapContainer} className="w-full h-full" />
+      {/* Mobile-First Layout */}
+      <div className="flex flex-col lg:flex-row">
+        {/* Map Section */}
+        <div className="relative flex-1 order-2 lg:order-1">
+          <div 
+            ref={mapContainer} 
+            className="w-full h-[50vh] sm:h-[60vh] lg:h-screen"
+          />
           
-          {/* Search Overlay */}
+          {/* Map Status Indicator */}
           <div className="absolute top-4 left-4 right-4 z-10">
-            <Card className="shadow-lg">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  {/* Location Status */}
-                  <div className="flex items-center gap-2 text-sm">
+            <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                    <span className="text-sm font-medium text-foreground">Pickup: Current Location</span>
+                  </div>
+                  <Separator orientation="vertical" className="h-4" />
+                  <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-500" />
-                    <span className="font-semibold">
-                      Select drop-off location
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {locationData.dropoffLocation ? 'Drop-off set' : 'Select drop-off'}
                     </span>
                   </div>
-                  
-                  {/* Search Box */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search drop-off location..."
-                      value={mapState.searchQuery}
-                      onChange={(e) => {
-                        setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
-                        if (e.target.value) {
-                          searchLocation(e.target.value);
-                        }
-                      }}
-                      className="pl-10"
-                    />
-                  </div>
-                  
-                  {/* Search Results */}
-                  {mapState.searchResults.length > 0 && (
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {mapState.searchResults.map((feature, index) => (
-                        <Button
-                          key={index}
-                          variant="ghost"
-                          className="w-full justify-start text-left h-auto p-2"
-                          onClick={() => selectSearchResult(feature)}
-                        >
-                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span className="text-sm truncate">{feature.place_name}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Instructions */}
+          {/* Search Overlay */}
           <div className="absolute bottom-4 left-4 right-4 z-10">
-            <Card className="shadow-lg">
-              <CardContent className="p-3">
-                <p className="text-sm text-center text-muted-foreground">
-                  Tap anywhere on the 3D map to set your drop-off location
-                </p>
+            <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search for drop-off location..."
+                      value={mapState.searchQuery}
+                      onChange={(e) => {
+                        setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
+                        if (e.target.value.length > 2) {
+                          searchLocation(e.target.value);
+                        }
+                      }}
+                      className="pl-10 bg-input border-border"
+                    />
+                    {mapState.isSearching && (
+                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                  
+                  {/* Search Results */}
+                  {mapState.searchResults.length > 0 && (
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {mapState.searchResults.map((result, index) => (
+                        <Button
+                          key={index}
+                          variant="ghost"
+                          className="w-full justify-start text-left p-2 h-auto"
+                          onClick={() => selectSearchResult(result)}
+                        >
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
+                          <span className="text-sm truncate">{result.place_name}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    Tap on the map or search to set your drop-off location
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
         {/* Booking Panel */}
-        <div className="lg:col-span-1 bg-white border-l p-4 overflow-y-auto">
-          <div className="space-y-6">
-            {/* Selected Locations */}
-            <Card>
+        <div className="w-full lg:w-80 xl:w-96 order-1 lg:order-2 bg-card border-b lg:border-b-0 lg:border-l border-border">
+          <div className="p-4 space-y-4 max-h-screen overflow-y-auto">
+            {/* Trip Summary */}
+            <Card className="bg-muted/50">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Your Trip</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Car className="h-5 w-5 text-primary" />
+                  {selectedCategory.name}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Pickup */}
-                <div className="flex items-start gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mt-1.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">PICKUP</p>
-                    <p className="text-sm truncate">
-                      {locationData.pickupAddress || 'Tap map to select'}
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Capacity</span>
+                  <span className="font-medium">{selectedCategory.passenger_capacity} passengers</span>
                 </div>
-                
-                {/* Dropoff */}
-                <div className="flex items-start gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500 mt-1.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">DROP-OFF</p>
-                    <p className="text-sm truncate">
-                      {locationData.dropoffAddress || 'Tap map to select'}
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Base Fare</span>
+                  <span className="font-medium">{formatCurrency(selectedCategory.base_fare)}</span>
                 </div>
+                <Separator />
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Estimated Fare</span>
+                  <span className="font-bold text-primary text-lg">
+                    {locationData.pickupLocation && locationData.dropoffLocation 
+                      ? formatCurrency(calculateFare())
+                      : '---'
+                    }
+                  </span>
+                </div>
+                {locationData.pickupLocation && locationData.dropoffLocation && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>Distance: {calculateDistance().toFixed(2)} km</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Car Details */}
+            {/* Location Details */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Selected Car</CardTitle>
+                <CardTitle className="text-lg">Trip Details</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <div className="space-y-2">
-                  <h3 className="font-semibold">{selectedCategory.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedCategory.description}</p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Car className="h-4 w-4" />
-                    <span>{selectedCategory.passenger_capacity} passengers</span>
+                  <div className="flex items-center gap-3 p-2 rounded-md bg-emerald-50 dark:bg-emerald-950/20">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Pickup</p>
+                      <p className="text-sm font-medium truncate">
+                        {locationData.pickupAddress || 'Current Location'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-2 rounded-md bg-red-50 dark:bg-red-950/20">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Drop-off</p>
+                      <p className="text-sm font-medium truncate">
+                        {locationData.dropoffAddress || 'Select destination'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -603,62 +640,41 @@ const RideBooking = () => {
             {/* Payment Method */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Payment Method</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Payment Method
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <PaymentMethodSelector
                   paymentMethod={locationData.paymentMethod}
-                  onPaymentMethodChange={(method) => 
-                    setLocationData(prev => ({ ...prev, paymentMethod: method }))
-                  }
+                  onPaymentMethodChange={(method) => setLocationData(prev => ({ ...prev, paymentMethod: method }))}
                 />
               </CardContent>
             </Card>
-
-            {/* Fare Estimate */}
-            {locationData.pickupLocation && locationData.dropoffLocation && (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Distance:</span>
-                      <span className="text-sm font-medium">{calculateDistance().toFixed(1)} km</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Estimated Time:</span>
-                      <span className="text-sm font-medium">{Math.round(calculateDistance() / 30 * 60)} min</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Total Fare:</span>
-                      <span className="text-xl font-bold text-primary">
-                        {formatCurrency(calculateFare())}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Book Button */}
             <Button
               onClick={handleBookRide}
               disabled={!locationData.pickupLocation || !locationData.dropoffLocation || isBooking}
-              className="w-full"
-              size="lg"
+              className="w-full h-12 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isBooking ? (
                 <>
-                  <Clock className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Booking...
                 </>
               ) : (
                 <>
-                  <Car className="h-4 w-4 mr-2" />
-                  Book Ride • {locationData.pickupLocation && locationData.dropoffLocation ? formatCurrency(calculateFare()) : '---'}
+                  <Car className="h-5 w-5 mr-2" />
+                  Book Ride
                 </>
               )}
             </Button>
+            
+            <p className="text-xs text-muted-foreground text-center">
+              By booking, you agree to our terms and conditions
+            </p>
           </div>
         </div>
       </div>
