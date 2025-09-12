@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,11 +51,7 @@ const CarCategorySelector = ({
   const [categories, setCategories] = useState<CarCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('car_categories')
@@ -79,7 +75,11 @@ const CarCategorySelector = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const calculateFare = (category: CarCategory, distanceKm: number) => {
     // Calculate fare: base_fare + (distance * base_price_per_km)
@@ -95,7 +95,7 @@ const CarCategorySelector = ({
     return <Shield className="h-3 w-3" />;
   };
 
-  const getCarImages = (categoryName: string) => {
+  const getCarImages = useCallback((categoryName: string) => {
     if (categoryName.includes('Standard 4-Seat')) return [standardCarImg, heroCar, taxiCabHero];
     if (categoryName.includes('Comfortable 4-Seat')) return [comfortableCarImg, standardCarImg, heroCar];
     if (categoryName.includes('Standard 7-Seat') || categoryName.includes('Comfortable 7-Seat')) return [standardSuvImg, vanImg, comfortableCarImg];
@@ -103,7 +103,7 @@ const CarCategorySelector = ({
     if (categoryName.includes('Premium')) return [premiumCarImg, luxuryCarImg, heroCar];
     if (categoryName.includes('Luxury')) return [luxuryCarImg, premiumCarImg, taxiCabHero];
     return [standardCarImg, heroCar, taxiCabHero];
-  };
+  }, []);
 
   const getPricingTier = (pricePerKm: number) => {
     if (pricePerKm <= 600) return 'Standard';
@@ -122,11 +122,13 @@ const CarCategorySelector = ({
     }
   };
 
-  // Filter categories based on seat selection
-  const filteredCategories = categories.filter(category => {
-    if (seatFilter.length === 0) return true;
-    return seatFilter.includes(category.passenger_capacity);
-  });
+  // Filter categories based on seat selection with memoization
+  const filteredCategories = useMemo(() => {
+    return categories.filter(category => {
+      if (seatFilter.length === 0) return true;
+      return seatFilter.includes(category.passenger_capacity);
+    });
+  }, [categories, seatFilter]);
 
   const formatCurrency = (amount: number) => {
     return `${amount.toLocaleString()} RWF`;
@@ -165,6 +167,7 @@ const CarCategorySelector = ({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {filteredCategories.map((category) => {
             const tier = getPricingTier(category.base_price_per_km);
+            const categoryImages = getCarImages(category.name);
             return (
               <div
                 key={category.id}
@@ -197,12 +200,14 @@ const CarCategorySelector = ({
                   <div className="relative">
                     <Carousel className="w-full">
                       <CarouselContent>
-                        {getCarImages(category.name).map((image, index) => (
-                          <CarouselItem key={index}>
+                        {categoryImages.map((image, index) => (
+                          <CarouselItem key={`${category.id}-${index}`}>
                             <img
                               src={image}
                               alt={`${category.name} - Image ${index + 1}`}
-                              className="w-full h-32 object-cover rounded-md bg-gray-50"
+                              className="w-full h-32 object-cover rounded-md bg-muted"
+                              loading="lazy"
+                              decoding="async"
                             />
                           </CarouselItem>
                         ))}
