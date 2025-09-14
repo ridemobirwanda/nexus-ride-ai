@@ -1,0 +1,134 @@
+/* 3D Map Pin Drop Animations */
+@keyframes pinDrop {
+  0% {
+    transform: translateY(-100px) scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(10px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.dropoff-marker {
+  animation: pinDrop 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.dropoff-marker:hover {
+  animation: bounce 1s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.pickup-marker {
+  animation: pulse 2s infinite;
+}
+
+/* Enhanced Mapbox Controls */
+.mapboxgl-ctrl-group {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mapboxgl-ctrl-group button {
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Enhanced Popup Styles */
+.mapboxgl-popup-content {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 12px 16px !important;
+  font-family: inherit !important;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* 3D Map Loading Animation */
+.map-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+  animation: mapLoading 1.5s infinite;
+  z-index: 1;
+}
+
+@keyframes mapLoading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive Map Container */
+@media (max-width: 768px) {
+  .dropoff-marker,
+  .pickup-marker {
+    transform: scale(0.8);
+  }
+  
+  .mapboxgl-popup-content {
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Custom Map Cursor */
+.mapboxgl-canvas-container {
+  cursor: crosshair !important;
+}
+
+.mapboxgl-canvas-container:hover {
+  cursor: copy !important;
+}
