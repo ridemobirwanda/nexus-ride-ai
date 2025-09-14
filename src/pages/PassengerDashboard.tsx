@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import LiveDriverMap from '@/components/LiveDriverMap';
-import { LogOut } from 'lucide-react';
+import { LogOut, MapPin, Users, Loader2 } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import Map from '@/components/Map';
 import CarCategorySelector from '@/components/CarCategorySelector';
 import SeatFilterSelector from '@/components/SeatFilterSelector';
-import RideBookingCard from '@/components/RideBookingCard';
-import QuickActionsGrid from '@/components/QuickActionsGrid';
 
 interface Passenger {
   id: string;
@@ -20,13 +17,22 @@ interface Passenger {
   profile_pic?: string;
 }
 
-interface Driver {
+interface Location {
+  lat: number;
+  lng: number;
+  address: string;
+}
+
+interface CarCategory {
   id: string;
   name: string;
-  phone: string;
-  car_model: string;
-  car_plate: string;
-  is_available: boolean;
+  description: string;
+  base_fare: number;
+  base_price_per_km: number;
+  minimum_fare: number;
+  passenger_capacity: number;
+  features: string[];
+  image_url?: string;
 }
 
 const PassengerDashboard = () => {
@@ -34,39 +40,71 @@ const PassengerDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [passenger, setPassenger] = useState<Passenger | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentRide, setCurrentRide] = useState<any>(null);
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(true);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<CarCategory | null>(null);
   const navigate = useNavigate();
 
-  const [rideData, setRideData] = useState({
-    pickupAddress: '',
-    dropoffAddress: '',
-    estimatedFare: 0,
-    paymentMethod: 'cash' as 'cash' | 'mobile_money' | 'card',
-    pickupLocation: null as { lat: number; lng: number; address: string } | null,
-    dropoffLocation: null as { lat: number; lng: number; address: string } | null,
-    selectedCarCategory: null as any,
-    selectedSeats: [] as number[]
-  });
-
-  // Auth state listener - Allow browsing without auth
+  // Auth state and location detection
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        // Don't redirect - allow browsing
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initializeApp = async () => {
+      // Check auth
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
-      // Don't redirect - allow browsing
-    });
+      
+      // Auto-detect location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            
+            try {
+              // Reverse geocoding using a simple approach
+              const location: Location = {
+                lat: latitude,
+                lng: longitude,
+                address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+              };
+              
+              setCurrentLocation(location);
+              toast({
+                title: "Location Detected",
+                description: "Your current location has been set as pickup point"
+              });
+            } catch (error) {
+              console.error('Geocoding error:', error);
+              setCurrentLocation({
+                lat: latitude,
+                lng: longitude,
+                address: 'Current Location'
+              });
+            }
+            setIsDetectingLocation(false);
+          },
+          (error) => {
+            console.error('Location error:', error);
+            toast({
+              title: "Location Access",
+              description: "Please enable location access for better experience",
+              variant: "destructive"
+            });
+            setIsDetectingLocation(false);
+          }
+        );
+      } else {
+        setIsDetectingLocation(false);
+        toast({
+          title: "Location Not Available",
+          description: "Geolocation is not supported by this browser",
+          variant: "destructive"
+        });
+      }
+    };
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    initializeApp();
+  }, []);
 
   // Fetch passenger profile
   useEffect(() => {
@@ -99,30 +137,11 @@ const PassengerDashboard = () => {
     fetchPassengerProfile();
   }, [user]);
 
-  // Check for active rides
-  useEffect(() => {
-    const fetchActiveRide = async () => {
-      if (!passenger) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('rides')
-          .select('*')
-          .eq('passenger_id', passenger.id)
-          .in('status', ['pending', 'accepted', 'in_progress'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) throw error;
-        setCurrentRide(data);
-      } catch (error: any) {
-        console.error('Error fetching active ride:', error);
-      }
-    };
-
-    fetchActiveRide();
-  }, [passenger]);
+  const handleCategorySelect = (category: CarCategory) => {
+    setSelectedCategory(category);
+    // Navigate to booking page with selected category and location
+    navigate(`/passenger/book-ride?category=${category.id}&lat=${currentLocation?.lat}&lng=${currentLocation?.lng}&address=${encodeURIComponent(currentLocation?.address || '')}`);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -137,114 +156,129 @@ const PassengerDashboard = () => {
     }
   };
 
-  const calculateDistance = () => {
-    if (!rideData.pickupLocation || !rideData.dropoffLocation) return 0;
-    
-    // Calculate distance using Haversine formula
-    const toRad = (value: number) => (value * Math.PI) / 180;
-    const R = 6371; // Radius of Earth in km
-    
-    const lat1 = rideData.pickupLocation.lat;
-    const lon1 = rideData.pickupLocation.lng;
-    const lat2 = rideData.dropoffLocation.lat;
-    const lon2 = rideData.dropoffLocation.lng;
-    
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
-  };
-
-  if (isLoading) {
+  if (isLoading || isDetectingLocation) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">
+              {isDetectingLocation ? 'Detecting Your Location...' : 'Loading RideNow...'}
+            </h2>
+            <p className="text-muted-foreground">
+              {isDetectingLocation ? 'Please allow location access for better experience' : 'Setting up your ride experience'}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen rider-bg">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* Header */}
-      <header className="bg-card/80 backdrop-blur-lg border-b px-4 py-3 sticky top-0 z-50">
-        <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold gradient-hero bg-clip-text text-transparent">RideNow</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {passenger?.name || user?.email}
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+      <header className="bg-card/95 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                RideNow
+              </h1>
+              <Badge variant="secondary" className="text-xs">Passenger</Badge>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                Welcome, {passenger?.name || user?.email || 'Guest'}
+              </span>
+              {user && (
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Live Driver Map */}
-        <Card>
-          <CardContent className="p-0">
-            <Map
-              onLocationSelect={!currentRide ? (location, type) => {
-                if (type === 'pickup') {
-                  setRideData({ 
-                    ...rideData, 
-                    pickupLocation: location, 
-                    pickupAddress: location.address 
-                  });
-                } else {
-                  setRideData({ 
-                    ...rideData, 
-                    dropoffLocation: location, 
-                    dropoffAddress: location.address 
-                  });
-                }
-              } : undefined}
-              pickupLocation={rideData.pickupLocation}
-              dropoffLocation={rideData.dropoffLocation}
-              assignedDriverId={currentRide?.driver_id}
-              showAllDrivers={!currentRide}
-              className="h-80"
-            />
-          </CardContent>
-        </Card>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="space-y-6">
+          {/* Current Location Display */}
+          {currentLocation && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Your Current Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{currentLocation.address}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  This will be used as your pickup location
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Car Category Selection */}
-        {!currentRide && (
-          <>
-            <SeatFilterSelector
-              selectedSeats={rideData.selectedSeats}
-              onSeatChange={(seats) => setRideData({ ...rideData, selectedSeats: seats })}
-            />
-            
-            <CarCategorySelector
-              selectedCategoryId={rideData.selectedCarCategory?.id}
-              onCategorySelect={(category) => setRideData({ ...rideData, selectedCarCategory: category })}
-              showPricing={true}
-              distance={calculateDistance()}
-              seatFilter={rideData.selectedSeats}
-            />
-          </>
-        )}
+          {/* Step 1: Passenger Capacity Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Step 1: How many passengers?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SeatFilterSelector
+                selectedSeats={selectedSeats}
+                onSeatChange={setSelectedSeats}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Ride Booking */}
-        <RideBookingCard
-          passenger={passenger}
-          currentRide={currentRide}
-          rideData={rideData}
-          setRideData={setRideData}
-        />
+          {/* Step 2: Car Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                Choose Your Ride
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CarCategorySelector
+                selectedCategoryId={selectedCategory?.id}
+                onCategorySelect={handleCategorySelect}
+                showPricing={false}
+                seatFilter={selectedSeats}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Live Drivers Map */}
-        <LiveDriverMap className="mb-6" />
-
-        {/* Quick Actions */}
-        <QuickActionsGrid />
+          {/* Help Section */}
+          <Card className="bg-muted/50">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-2">
+                <h3 className="font-semibold text-lg">How it works</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold">1</div>
+                    <p className="text-sm text-muted-foreground">Select passenger count</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold">2</div>
+                    <p className="text-sm text-muted-foreground">Choose your car type</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold">3</div>
+                    <p className="text-sm text-muted-foreground">Set destination & book</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

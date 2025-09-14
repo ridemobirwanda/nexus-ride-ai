@@ -182,7 +182,10 @@ const CarCategorySelector = ({
                 onClick={() => {
                   if (!readonly) {
                     onCategorySelect(category);
-                    navigate(`/passenger/book-ride?category=${category.id}`);
+                    // Only navigate if not in booking mode (when showPricing is false, it means we're on dashboard)
+                    if (!showPricing) {
+                      navigate(`/passenger/book-ride?category=${category.id}`);
+                    }
                   }
                 }}
               >
@@ -273,12 +276,14 @@ const CarCategorySelector = ({
                     <Button
                       variant={selectedCategoryId === category.id ? "default" : "outline"}
                       className="w-full text-xs h-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onCategorySelect(category);
-                        // Navigate to ride booking page with selected category
-                        navigate(`/passenger/book-ride?category=${category.id}`);
-                      }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCategorySelect(category);
+                    // Only navigate if not in booking mode
+                    if (!readonly) {
+                      navigate(`/passenger/book-ride?category=${category.id}`);
+                    }
+                  }}
                     >
                       {selectedCategoryId === category.id ? 'Selected' : 'Select'}
                     </Button>

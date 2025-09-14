@@ -76,7 +76,7 @@ const RideBooking = () => {
     checkAuth();
     fetchCategoryFromUrl();
     initializeMap();
-    getCurrentLocation();
+    getLocationFromUrl();
   }, []);
 
   // Get Mapbox token from Supabase secrets
@@ -184,6 +184,39 @@ const RideBooking = () => {
     
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+  };
+
+  const getLocationFromUrl = () => {
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const address = searchParams.get('address');
+    
+    if (lat && lng && address) {
+      const location: Location = {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        address: decodeURIComponent(address)
+      };
+      
+      setLocationData(prev => ({
+        ...prev,
+        pickupLocation: location,
+        pickupAddress: location.address
+      }));
+      
+      // Center map on pickup location
+      if (map.current) {
+        map.current.flyTo({
+          center: [location.lng, location.lat],
+          zoom: 14
+        });
+      }
+      
+      addPickupMarker(location.lng, location.lat);
+    } else {
+      // Fallback to current location detection
+      getCurrentLocation();
+    }
   };
 
   const getCurrentLocation = () => {
