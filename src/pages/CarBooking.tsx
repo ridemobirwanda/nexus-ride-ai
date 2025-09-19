@@ -64,10 +64,6 @@ const CarBooking = () => {
     }
   }, [id]);
 
-  useEffect(() => {
-    calculateDuration();
-  }, [bookingData.rentalStart, bookingData.rentalEnd, bookingData.durationType]);
-
   const checkAuth = async () => {
     // Allow browsing without authentication
     const { data: { user } } = await supabase.auth.getUser();
@@ -97,31 +93,27 @@ const CarBooking = () => {
     }
   };
 
-  const calculateDuration = () => {
-    if (!bookingData.rentalStart || !bookingData.rentalEnd) {
-      setBookingData(prev => ({ ...prev, durationValue: 0 }));
-      return;
+  const calculateDuration = (startDate: string, endDate: string, durationType: 'hourly' | 'daily') => {
+    if (!startDate || !endDate) {
+      return 0;
     }
 
-    const start = new Date(bookingData.rentalStart);
-    const end = new Date(bookingData.rentalEnd);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
     
     // Check if dates are valid
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      setBookingData(prev => ({ ...prev, durationValue: 0 }));
-      return;
+      return 0;
     }
 
     const diffMs = end.getTime() - start.getTime();
 
     if (diffMs <= 0) {
-      // Set duration to 0 for invalid ranges
-      setBookingData(prev => ({ ...prev, durationValue: 0 }));
-      return;
+      return 0;
     }
 
     let duration;
-    if (bookingData.durationType === 'hourly') {
+    if (durationType === 'hourly') {
       // For hourly: minimum 1 hour, round up to nearest hour
       duration = Math.ceil(diffMs / (1000 * 60 * 60));
     } else {
@@ -129,11 +121,51 @@ const CarBooking = () => {
       duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     }
 
-    // Update duration immediately
-    const newDuration = Math.max(1, duration);
-    setBookingData(prev => ({ ...prev, durationValue: newDuration }));
+    return Math.max(1, duration);
+  };
+
+  // Update duration whenever dates or type changes
+  useEffect(() => {
+    const newDuration = calculateDuration(
+      bookingData.rentalStart, 
+      bookingData.rentalEnd, 
+      bookingData.durationType
+    );
     
-    console.log('Duration calculated:', newDuration, bookingData.durationType);
+    setBookingData(prev => ({ ...prev, durationValue: newDuration }));
+  }, [bookingData.rentalStart, bookingData.rentalEnd, bookingData.durationType]);
+
+  const validateDates = (startDate: string, endDate: string) => {
+    if (!startDate || !endDate) return { isValid: false, message: "Please select both start and end dates" };
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const now = new Date();
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { isValid: false, message: "Invalid date format" };
+    }
+    
+    if (start < now) {
+      return { isValid: false, message: "Start date cannot be in the past" };
+    }
+    
+    if (end <= start) {
+      return { isValid: false, message: "End date must be after start date" };
+    }
+    
+    return { isValid: true, message: "" };
+  };
+
+  const handleDateChange = (field: 'rentalStart' | 'rentalEnd', value: string) => {
+    const newBookingData = { ...bookingData, [field]: value };
+    setBookingData(newBookingData);
+  };
+
+  const formatDuration = (duration: number, type: 'hourly' | 'daily') => {
+    if (duration === 0) return "Invalid duration";
+    const unit = type === 'hourly' ? (duration === 1 ? 'hour' : 'hours') : (duration === 1 ? 'day' : 'days');
+    return `${duration} ${unit}`;
   };
 
   const calculateTotalPrice = () => {
@@ -160,32 +192,30 @@ const CarBooking = () => {
 
     if (!car) return;
 
-    // Validation
-    if (!bookingData.rentalStart || !bookingData.rentalEnd) {
+    // Enhanced validation
+    const dateValidation = validateDates(bookingData.rentalStart, bookingData.rentalEnd);
+    if (!dateValidation.isValid) {
       toast({
         title: "Invalid Dates",
-        description: "Please select valid rental dates",
+        description: dateValidation.message,
         variant: "destructive"
       });
       return;
     }
 
-    if (!bookingData.driverLicenseNumber || !bookingData.contactPhone) {
+    if (!bookingData.driverLicenseNumber?.trim() || !bookingData.contactPhone?.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please fill in your driver's license number and contact phone",
         variant: "destructive"
       });
       return;
     }
 
-    const start = new Date(bookingData.rentalStart);
-    const end = new Date(bookingData.rentalEnd);
-    
-    if (end <= start) {
+    if (bookingData.durationValue <= 0) {
       toast({
-        title: "Invalid Dates",
-        description: "End date must be after start date",
+        title: "Invalid Duration",
+        description: "Please select a valid rental period",
         variant: "destructive"
       });
       return;
@@ -317,10 +347,7 @@ const CarBooking = () => {
                         type="datetime-local"
                         min={getMinDate()}
                         value={bookingData.rentalStart}
-                        onChange={(e) => {
-                          const newBookingData = { ...bookingData, rentalStart: e.target.value };
-                          setBookingData(newBookingData);
-                        }}
+                        onChange={(e) => handleDateChange('rentalStart', e.target.value)}
                         required
                       />
                     </div>
@@ -332,10 +359,7 @@ const CarBooking = () => {
                         type="datetime-local"
                         min={bookingData.rentalStart || getMinDate()}
                         value={bookingData.rentalEnd}
-                        onChange={(e) => {
-                          const newBookingData = { ...bookingData, rentalEnd: e.target.value };
-                          setBookingData(newBookingData);
-                        }}
+                        onChange={(e) => handleDateChange('rentalEnd', e.target.value)}
                         required
                       />
                     </div>
@@ -369,37 +393,52 @@ const CarBooking = () => {
 
                   {/* Duration Display */}
                   {bookingData.rentalStart && bookingData.rentalEnd && (
-                    <div className={`p-3 rounded-lg ${
+                    <div className={`p-4 rounded-lg border-2 ${
                       bookingData.durationValue > 0 
-                        ? 'bg-primary/10 border border-primary/20' 
-                        : 'bg-destructive/10 border border-destructive/20'
+                        ? 'bg-primary/10 border-primary/30 shadow-sm' 
+                        : 'bg-destructive/10 border-destructive/30'
                     }`}>
                       {bookingData.durationValue > 0 ? (
-                        <div className="text-sm text-center">
-                          <p className="font-semibold text-primary">
-                            Duration: {bookingData.durationValue} {bookingData.durationType === 'hourly' ? 'hour(s)' : 'day(s)'}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {bookingData.durationType === 'hourly' 
-                              ? `Total: ${formatPrice(car.price_per_hour * bookingData.durationValue)}`
-                              : `Total: ${formatPrice(car.price_per_day * bookingData.durationValue)}`
-                            }
-                          </p>
+                        <div className="text-center space-y-2">
+                          <div className="flex items-center justify-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-primary" />
+                            <p className="font-semibold text-primary text-lg">
+                              Duration: {formatDuration(bookingData.durationValue, bookingData.durationType)}
+                            </p>
+                          </div>
+                          <div className="text-sm bg-white/50 rounded-md p-2">
+                            <p className="text-muted-foreground">
+                              Rate: {formatPrice(bookingData.durationType === 'hourly' ? car.price_per_hour : car.price_per_day)}
+                              /{bookingData.durationType === 'hourly' ? 'hour' : 'day'}
+                            </p>
+                            <p className="font-medium text-primary mt-1">
+                              Total: {formatPrice(calculateTotalPrice())}
+                            </p>
+                          </div>
                         </div>
                       ) : (
-                        <p className="text-sm text-center text-destructive">
-                          Invalid date range - End date must be after start date
-                        </p>
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <AlertCircle className="h-5 w-5 text-destructive" />
+                            <p className="font-medium text-destructive">Invalid Date Range</p>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {validateDates(bookingData.rentalStart, bookingData.rentalEnd).message}
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}
 
                   {/* Show helper text when no dates selected */}
                   {(!bookingData.rentalStart || !bookingData.rentalEnd) && (
-                    <div className="p-3 bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30">
-                      <p className="text-sm text-center text-muted-foreground">
-                        Select start and end dates to calculate duration
-                      </p>
+                    <div className="p-4 bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30">
+                      <div className="text-center">
+                        <Calendar className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground font-medium">
+                          Select rental dates to calculate duration and pricing
+                        </p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
