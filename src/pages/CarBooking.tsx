@@ -99,24 +99,34 @@ const CarBooking = () => {
 
   const calculateDuration = () => {
     if (!bookingData.rentalStart || !bookingData.rentalEnd) {
-      setBookingData(prev => ({ ...prev, durationValue: 1 }));
+      setBookingData(prev => ({ ...prev, durationValue: 0 }));
       return;
     }
 
     const start = new Date(bookingData.rentalStart);
     const end = new Date(bookingData.rentalEnd);
+    
+    // Check if dates are valid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setBookingData(prev => ({ ...prev, durationValue: 0 }));
+      return;
+    }
+
     const diffMs = end.getTime() - start.getTime();
 
     if (diffMs <= 0) {
-      setBookingData(prev => ({ ...prev, durationValue: 1 }));
+      // Set duration to 0 for invalid ranges, will show error
+      setBookingData(prev => ({ ...prev, durationValue: 0 }));
       return;
     }
 
     let duration;
     if (bookingData.durationType === 'hourly') {
-      duration = Math.ceil(diffMs / (1000 * 60 * 60)); // hours
+      // For hourly: minimum 1 hour, round up to nearest hour
+      duration = Math.ceil(diffMs / (1000 * 60 * 60));
     } else {
-      duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // days
+      // For daily: minimum 1 day, round up to nearest day
+      duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     }
 
     setBookingData(prev => ({ ...prev, durationValue: Math.max(1, duration) }));
@@ -347,12 +357,38 @@ const CarBooking = () => {
                     </RadioGroup>
                   </div>
 
-                  {bookingData.durationValue > 0 && (
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm text-center">
-                        Duration: <span className="font-semibold">
-                          {bookingData.durationValue} {bookingData.durationType === 'hourly' ? 'hours' : 'days'}
-                        </span>
+                  {/* Duration Display */}
+                  {bookingData.rentalStart && bookingData.rentalEnd && (
+                    <div className={`p-3 rounded-lg ${
+                      bookingData.durationValue > 0 
+                        ? 'bg-primary/10 border border-primary/20' 
+                        : 'bg-destructive/10 border border-destructive/20'
+                    }`}>
+                      {bookingData.durationValue > 0 ? (
+                        <div className="text-sm text-center">
+                          <p className="font-semibold text-primary">
+                            Duration: {bookingData.durationValue} {bookingData.durationType === 'hourly' ? 'hour(s)' : 'day(s)'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {bookingData.durationType === 'hourly' 
+                              ? `Total: ${formatPrice(car.price_per_hour * bookingData.durationValue)}`
+                              : `Total: ${formatPrice(car.price_per_day * bookingData.durationValue)}`
+                            }
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-center text-destructive">
+                          Invalid date range - End date must be after start date
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Show helper text when no dates selected */}
+                  {(!bookingData.rentalStart || !bookingData.rentalEnd) && (
+                    <div className="p-3 bg-muted/30 rounded-lg border-2 border-dashed border-muted-foreground/30">
+                      <p className="text-sm text-center text-muted-foreground">
+                        Select start and end dates to calculate duration
                       </p>
                     </div>
                   )}
