@@ -115,7 +115,7 @@ const CarBooking = () => {
     const diffMs = end.getTime() - start.getTime();
 
     if (diffMs <= 0) {
-      // Set duration to 0 for invalid ranges, will show error
+      // Set duration to 0 for invalid ranges
       setBookingData(prev => ({ ...prev, durationValue: 0 }));
       return;
     }
@@ -125,11 +125,15 @@ const CarBooking = () => {
       // For hourly: minimum 1 hour, round up to nearest hour
       duration = Math.ceil(diffMs / (1000 * 60 * 60));
     } else {
-      // For daily: minimum 1 day, round up to nearest day
+      // For daily: minimum 1 day, calculate exact days
       duration = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     }
 
-    setBookingData(prev => ({ ...prev, durationValue: Math.max(1, duration) }));
+    // Update duration immediately
+    const newDuration = Math.max(1, duration);
+    setBookingData(prev => ({ ...prev, durationValue: newDuration }));
+    
+    console.log('Duration calculated:', newDuration, bookingData.durationType);
   };
 
   const calculateTotalPrice = () => {
@@ -313,7 +317,10 @@ const CarBooking = () => {
                         type="datetime-local"
                         min={getMinDate()}
                         value={bookingData.rentalStart}
-                        onChange={(e) => setBookingData({ ...bookingData, rentalStart: e.target.value })}
+                        onChange={(e) => {
+                          const newBookingData = { ...bookingData, rentalStart: e.target.value };
+                          setBookingData(newBookingData);
+                        }}
                         required
                       />
                     </div>
@@ -325,7 +332,10 @@ const CarBooking = () => {
                         type="datetime-local"
                         min={bookingData.rentalStart || getMinDate()}
                         value={bookingData.rentalEnd}
-                        onChange={(e) => setBookingData({ ...bookingData, rentalEnd: e.target.value })}
+                        onChange={(e) => {
+                          const newBookingData = { ...bookingData, rentalEnd: e.target.value };
+                          setBookingData(newBookingData);
+                        }}
                         required
                       />
                     </div>
