@@ -62,6 +62,25 @@ const PassengerRideStatus = () => {
         },
         (payload) => {
           setRide(prev => prev ? { ...prev, ...payload.new } : null);
+          
+          // Show toast notification when driver is assigned
+          if (payload.new.status === 'accepted' && payload.old?.status === 'pending') {
+            toast({
+              title: "🎉 Driver Found!",
+              description: "A driver has accepted your ride request"
+            });
+          }
+          
+          // Show toast when ride starts
+          if (payload.new.status === 'in_progress' && payload.old?.status === 'accepted') {
+            toast({
+              title: "🚗 Ride Started!",
+              description: "Your driver is on the way"
+            });
+          }
+          
+          // Reload full ride data to get driver details
+          fetchRideDetails();
         }
       )
       .subscribe();
@@ -93,11 +112,19 @@ const PassengerRideStatus = () => {
       )
       .subscribe();
 
+    // Auto-refresh ride details every 5 seconds if still pending
+    const interval = setInterval(() => {
+      if (ride?.status === 'pending') {
+        fetchRideDetails();
+      }
+    }, 5000);
+
     return () => {
       supabase.removeChannel(rideChannel);
       supabase.removeChannel(driverChannel);
+      clearInterval(interval);
     };
-  }, [rideId]);
+  }, [rideId, ride?.status]);
 
   const fetchRideDetails = async () => {
     if (!rideId) return;
@@ -164,11 +191,11 @@ const PassengerRideStatus = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return 'Looking for Driver';
-      case 'accepted': return 'Driver Assigned';
-      case 'in_progress': return 'Ride in Progress';
-      case 'completed': return 'Ride Completed';
-      case 'cancelled': return 'Ride Cancelled';
+      case 'pending': return '🔍 Looking for Driver...';
+      case 'accepted': return '✅ Driver Assigned';
+      case 'in_progress': return '🚗 Ride in Progress';
+      case 'completed': return '✔️ Ride Completed';
+      case 'cancelled': return '❌ Ride Cancelled';
       default: return status;
     }
   };
@@ -247,17 +274,32 @@ const PassengerRideStatus = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Status Message for Pending Rides */}
+            {ride.status === 'pending' && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
+                  <span className="font-medium text-amber-800 dark:text-amber-200">
+                    Searching for Drivers
+                  </span>
+                </div>
+                <p className="text-sm text-amber-600 dark:text-amber-300">
+                  We're matching you with the best available driver nearby. This usually takes 30-60 seconds.
+                </p>
+              </div>
+            )}
+            
             <div className="flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-green-500 mt-1" />
-              <div>
+              <MapPin className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
+              <div className="flex-1">
                 <p className="font-medium">Pickup</p>
                 <p className="text-sm text-muted-foreground">{ride.pickup_address}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Navigation className="h-5 w-5 text-red-500 mt-1" />
-              <div>
-                <p className="font-medium">Dropoff</p>
+              <Navigation className="h-5 w-5 text-red-500 mt-1 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium">Drop-off</p>
                 <p className="text-sm text-muted-foreground">{ride.dropoff_address}</p>
               </div>
             </div>
@@ -267,7 +309,10 @@ const PassengerRideStatus = () => {
                 <span className="font-medium">Fare</span>
               </div>
               <span className="text-lg font-bold text-primary">
-                ${ride.final_fare || ride.estimated_fare}
+                {ride.final_fare 
+                  ? `${Math.round(ride.final_fare).toLocaleString()} RWF`
+                  : `${Math.round(ride.estimated_fare).toLocaleString()} RWF`
+                }
               </span>
             </div>
             {ride.payment_method && (

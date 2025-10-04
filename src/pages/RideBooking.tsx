@@ -553,7 +553,8 @@ const RideBooking = () => {
     setIsBooking(true);
 
     try {
-      const { data, error } = await supabase
+      // Step 1: Create the ride
+      const { data: rideData, error: rideError } = await supabase
         .from('rides')
         .insert({
           passenger_id: passenger.id,
@@ -562,6 +563,7 @@ const RideBooking = () => {
           pickup_location: `POINT(${locationData.pickupLocation.lng} ${locationData.pickupLocation.lat})`,
           dropoff_location: `POINT(${locationData.dropoffLocation.lng} ${locationData.dropoffLocation.lat})`,
           estimated_fare: calculateFare(),
+          distance_km: calculateDistance(),
           payment_method: locationData.paymentMethod,
           car_category_id: selectedCategory.id,
           status: 'pending'
@@ -569,20 +571,60 @@ const RideBooking = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (rideError) throw rideError;
 
       toast({
-        title: "Ride Booked Successfully!",
-        description: `Finding drivers nearby. Fare: ${formatCurrency(calculateFare())}`
+        title: "🚗 Ride Request Sent!",
+        description: "Searching for available drivers nearby..."
       });
 
-      navigate(`/passenger/ride/${data.id}`);
+      // Step 2: Call smart driver matching function
+      try {
+        const { data: matchData, error: matchError } = await supabase.functions.invoke(
+          'smart-driver-matching',
+          {
+            body: {
+              ride_id: rideData.id,
+              pickup_lat: locationData.pickupLocation.lat,
+              pickup_lng: locationData.pickupLocation.lng,
+              car_category_id: selectedCategory.id,
+              max_distance_km: 15,
+              limit: 10
+            }
+          }
+        );
+
+        if (matchError) {
+          console.error('Driver matching error:', matchError);
+          // Don't fail the booking, just log the error
+        } else if (matchData?.matched_drivers?.length > 0) {
+          toast({
+            title: "✅ Drivers Found!",
+            description: `${matchData.matched_drivers.length} drivers nearby. Best match: ${matchData.matched_drivers[0].name} (ETA: ${matchData.matched_drivers[0].estimated_arrival_minutes}min)`
+          });
+        } else {
+          toast({
+            title: "⏳ Searching...",
+            description: "No drivers found yet. We'll keep looking for you.",
+            variant: "default"
+          });
+        }
+      } catch (matchErr) {
+        console.error('Matching function error:', matchErr);
+      }
+
+      // Step 3: Navigate to ride status page
+      setTimeout(() => {
+        navigate(`/passenger/ride/${rideData.id}`);
+      }, 1500);
+
     } catch (error: any) {
       toast({
         title: "Booking Failed",
-        description: error.message,
+        description: error.message || "Unable to create ride. Please try again.",
         variant: "destructive"
       });
+      console.error('Booking error:', error);
     } finally {
       setIsBooking(false);
     }
