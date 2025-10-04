@@ -70,7 +70,8 @@ const RideBooking = () => {
   const [mapState, setMapState] = useState({
     searchQuery: '',
     isSearching: false,
-    searchResults: [] as any[]
+    searchResults: [] as any[],
+    activeSelection: 'pickup' as 'pickup' | 'dropoff' | null
   });
 
   useEffect(() => {
@@ -290,25 +291,22 @@ const RideBooking = () => {
   };
 
   const handleMapClick = async (e: any) => {
-    const { lng, lat } = e.lngLat;
-    
-    // Add pin drop animation
-    if (map.current) {
-      // Fly to the clicked location with smooth animation
-      map.current.flyTo({
-        center: [lng, lat],
-        zoom: Math.max(map.current.getZoom(), 16),
-        pitch: 45,
-        duration: 1500,
-        essential: true
+    if (!mapState.activeSelection) {
+      toast({
+        title: "Select Location Type",
+        description: "Please choose pickup or dropoff first",
+        variant: "destructive"
       });
+      return;
     }
+
+    const { lng, lat } = e.lngLat;
     
     try {
       // Show loading state
       toast({
-        title: "Dropping Pin...",
-        description: "Getting location details"
+        title: "📍 Getting location...",
+        description: "Please wait"
       });
       
       // Reverse geocoding to get address
@@ -321,36 +319,51 @@ const RideBooking = () => {
       
       const newLocation: Location = { lat, lng, address };
       
-      // Only allow dropoff selection with enhanced animation
-      setLocationData(prev => ({
-        ...prev,
-        dropoffLocation: newLocation,
-        dropoffAddress: address
-      }));
-      
-      // Add enhanced dropoff marker with animation
-      addDropoffMarker(lng, lat);
-      
-      // Calculate distance and fare in real-time
-      if (locationData.pickupLocation) {
-        const distance = calculateDistance();
-        const fare = calculateFare();
+      if (mapState.activeSelection === 'pickup') {
+        setLocationData(prev => ({
+          ...prev,
+          pickupLocation: newLocation,
+          pickupAddress: address
+        }));
+        addPickupMarker(lng, lat);
         
         toast({
-          title: "📍 Destination Selected!",
-          description: `${address}\n💰 Estimated fare: ${formatCurrency(fare)} (${distance.toFixed(1)} km)`
-        });
-      } else {
-        toast({
-          title: "📍 Destination Selected!",
+          title: "✅ Pickup Location Set",
           description: address
+        });
+        
+        // Auto-switch to dropoff selection
+        setMapState(prev => ({ ...prev, activeSelection: 'dropoff', searchQuery: '' }));
+      } else {
+        setLocationData(prev => ({
+          ...prev,
+          dropoffLocation: newLocation,
+          dropoffAddress: address
+        }));
+        addDropoffMarker(lng, lat);
+        
+        toast({
+          title: "✅ Dropoff Location Set",
+          description: address
+        });
+        
+        // Clear selection mode
+        setMapState(prev => ({ ...prev, activeSelection: null, searchQuery: '' }));
+      }
+
+      // Fly to location
+      if (map.current) {
+        map.current.flyTo({
+          center: [lng, lat],
+          zoom: 16,
+          duration: 1000
         });
       }
     } catch (error) {
       console.error('Geocoding error:', error);
       toast({
-        title: "Location Selected",
-        description: "Unable to get address details, but location saved",
+        title: "Error",
+        description: "Unable to get location details",
         variant: "destructive"
       });
     }
@@ -481,6 +494,8 @@ const RideBooking = () => {
   };
 
   const selectSearchResult = (feature: any) => {
+    if (!mapState.activeSelection) return;
+
     const [lng, lat] = feature.center;
     const address = feature.place_name;
     
@@ -493,19 +508,58 @@ const RideBooking = () => {
     
     const newLocation: Location = { lat, lng, address };
     
-    // Only allow dropoff selection
+    if (mapState.activeSelection === 'pickup') {
+      setLocationData(prev => ({
+        ...prev,
+        pickupLocation: newLocation,
+        pickupAddress: address
+      }));
+      addPickupMarker(lng, lat);
+      setMapState(prev => ({ ...prev, activeSelection: 'dropoff', searchQuery: '', searchResults: [] }));
+      
+      toast({
+        title: "✅ Pickup Location Set",
+        description: address
+      });
+    } else {
+      setLocationData(prev => ({
+        ...prev,
+        dropoffLocation: newLocation,
+        dropoffAddress: address
+      }));
+      addDropoffMarker(lng, lat);
+      setMapState(prev => ({ ...prev, activeSelection: null, searchQuery: '', searchResults: [] }));
+      
+      toast({
+        title: "✅ Dropoff Location Set",
+        description: address
+      });
+    }
+  };
+
+  const swapLocations = () => {
+    if (!locationData.pickupLocation || !locationData.dropoffLocation) return;
+    
     setLocationData(prev => ({
       ...prev,
-      dropoffLocation: newLocation,
-      dropoffAddress: address
+      pickupLocation: prev.dropoffLocation,
+      dropoffLocation: prev.pickupLocation,
+      pickupAddress: prev.dropoffAddress,
+      dropoffAddress: prev.pickupAddress
     }));
-    addDropoffMarker(lng, lat);
     
-    setMapState(prev => ({ 
-      ...prev, 
-      searchQuery: '',
-      searchResults: []
-    }));
+    // Update markers
+    if (locationData.pickupLocation) {
+      addDropoffMarker(locationData.pickupLocation.lng, locationData.pickupLocation.lat);
+    }
+    if (locationData.dropoffLocation) {
+      addPickupMarker(locationData.dropoffLocation.lng, locationData.dropoffLocation.lat);
+    }
+    
+    toast({
+      title: "Locations Swapped",
+      description: "Pickup and dropoff locations have been swapped"
+    });
   };
 
   const calculateDistance = () => {
@@ -697,81 +751,131 @@ const RideBooking = () => {
             className="w-full h-[50vh] sm:h-[60vh] lg:h-screen"
           />
           
-          {/* Enhanced Map Instructions Overlay */}
+          {/* Location Selection Controls */}
           <div className="absolute top-4 left-4 right-4 z-10">
             <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-sm font-medium text-foreground">📍 Pickup: Current Location</span>
-                    </div>
-                    <Separator orientation="vertical" className="h-4" />
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${locationData.dropoffLocation ? 'bg-red-500' : 'bg-gray-400 animate-pulse'}`} />
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {locationData.dropoffLocation ? '🎯 Destination Set' : '👆 Tap map to drop pin'}
-                      </span>
-                    </div>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold">Set Your Locations</h3>
+                    {locationData.pickupLocation && locationData.dropoffLocation && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={swapLocations}
+                        className="h-8 px-2"
+                      >
+                        <Navigation className="h-4 w-4 rotate-90" />
+                      </Button>
+                    )}
                   </div>
-                  {!locationData.dropoffLocation && (
-                    <Badge variant="outline" className="text-xs animate-bounce">
-                      3D Map Ready
-                    </Badge>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant={mapState.activeSelection === 'pickup' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setMapState(prev => ({ ...prev, activeSelection: 'pickup', searchQuery: '', searchResults: [] }))}
+                      className="flex-1 h-auto py-3"
+                    >
+                      <div className="flex flex-col items-start gap-1 w-full">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <span className="text-xs font-semibold">Pickup</span>
+                        </div>
+                        <span className="text-xs text-left line-clamp-1">
+                          {locationData.pickupAddress || 'Tap to set'}
+                        </span>
+                      </div>
+                    </Button>
+                    
+                    <Button
+                      variant={mapState.activeSelection === 'dropoff' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setMapState(prev => ({ ...prev, activeSelection: 'dropoff', searchQuery: '', searchResults: [] }))}
+                      className="flex-1 h-auto py-3"
+                    >
+                      <div className="flex flex-col items-start gap-1 w-full">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-red-500" />
+                          <span className="text-xs font-semibold">Dropoff</span>
+                        </div>
+                        <span className="text-xs text-left line-clamp-1">
+                          {locationData.dropoffAddress || 'Tap to set'}
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
+
+                  {mapState.activeSelection && (
+                    <div className="text-center p-2 bg-primary/10 rounded-md animate-fade-in">
+                      <p className="text-xs font-medium text-primary">
+                        {mapState.activeSelection === 'pickup' ? '📍 Tap map to set pickup location' : '🎯 Tap map to set dropoff location'}
+                      </p>
+                    </div>
                   )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Search Overlay */}
-          <div className="absolute bottom-4 left-4 right-4 z-10">
-            <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search for drop-off location..."
-                      value={mapState.searchQuery}
-                      onChange={(e) => {
-                        setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
-                        if (e.target.value.length > 2) {
-                          searchLocation(e.target.value);
-                        }
-                      }}
-                      className="pl-10 bg-input border-border"
-                    />
-                    {mapState.isSearching && (
-                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                  
-                  {/* Search Results */}
-                  {mapState.searchResults.length > 0 && (
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {mapState.searchResults.map((result, index) => (
-                        <Button
-                          key={index}
-                          variant="ghost"
-                          className="w-full justify-start text-left p-2 h-auto"
-                          onClick={() => selectSearchResult(result)}
-                        >
-                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
-                          <span className="text-sm truncate">{result.place_name}</span>
-                        </Button>
-                      ))}
+          {/* Search Box */}
+          {mapState.activeSelection && (
+            <div className="absolute bottom-4 left-4 right-4 z-10 animate-fade-in">
+              <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder={`Search for ${mapState.activeSelection} location...`}
+                        value={mapState.searchQuery}
+                        onChange={(e) => {
+                          setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
+                          if (e.target.value.length > 2) {
+                            searchLocation(e.target.value);
+                          } else {
+                            setMapState(prev => ({ ...prev, searchResults: [] }));
+                          }
+                        }}
+                        className="pl-10 bg-input border-border"
+                      />
+                      {mapState.isSearching && (
+                        <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
                     </div>
-                  )}
-                  
-                  <p className="text-xs text-muted-foreground text-center">
-                    Tap on the map or search to set your drop-off location
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    
+                    {/* Search Results */}
+                    {mapState.searchResults.length > 0 && (
+                      <div className="max-h-48 overflow-y-auto space-y-1 animate-fade-in">
+                        {mapState.searchResults.map((result, index) => (
+                          <Button
+                            key={index}
+                            variant="ghost"
+                            className="w-full justify-start text-left p-3 h-auto hover:bg-accent"
+                            onClick={() => selectSearchResult(result)}
+                          >
+                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
+                            <span className="text-sm truncate">{result.place_name}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={getCurrentLocation}
+                      className="w-full"
+                      disabled={mapState.activeSelection !== 'pickup'}
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Use Current Location
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
         {/* Booking Panel */}
