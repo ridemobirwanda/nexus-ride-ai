@@ -251,9 +251,18 @@ const RideBooking = () => {
   };
 
   const getCurrentLocation = () => {
+    if (!mapState.activeSelection) {
+      toast({
+        title: "Select Location Type",
+        description: "Please choose pickup or dropoff first",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
           
           if (map.current) {
@@ -263,26 +272,54 @@ const RideBooking = () => {
             });
           }
           
-          // Set as pickup location
-          const currentLocation: Location = {
-            lat: latitude,
-            lng: longitude,
-            address: 'Current Location'
-          };
-          
-          setLocationData(prev => ({
-            ...prev,
-            pickupLocation: currentLocation,
-            pickupAddress: 'Current Location'
-          }));
-          
-          addPickupMarker(longitude, latitude);
+          // Get address
+          try {
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}&country=RW&types=address,poi`
+            );
+            const data = await response.json();
+            const address = data.features[0]?.place_name || 'Current Location';
+            
+            const currentLocation: Location = {
+              lat: latitude,
+              lng: longitude,
+              address: address
+            };
+            
+            if (mapState.activeSelection === 'pickup') {
+              setLocationData(prev => ({
+                ...prev,
+                pickupLocation: currentLocation,
+                pickupAddress: address
+              }));
+              addPickupMarker(longitude, latitude);
+              setMapState(prev => ({ ...prev, activeSelection: 'dropoff' }));
+              toast({
+                title: "✅ Pickup Set to Current Location",
+                description: address
+              });
+            } else {
+              setLocationData(prev => ({
+                ...prev,
+                dropoffLocation: currentLocation,
+                dropoffAddress: address
+              }));
+              addDropoffMarker(longitude, latitude);
+              setMapState(prev => ({ ...prev, activeSelection: null }));
+              toast({
+                title: "✅ Dropoff Set to Current Location",
+                description: address
+              });
+            }
+          } catch (error) {
+            console.error('Geocoding error:', error);
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
           toast({
-            title: "Location Access",
-            description: "Unable to get your current location. Please select pickup manually.",
+            title: "Location Access Denied",
+            description: "Please enable location access or select location manually",
             variant: "destructive"
           });
         }
@@ -721,23 +758,23 @@ const RideBooking = () => {
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/passenger')}
-              className="flex items-center gap-2 h-10"
+              className="flex items-center gap-1.5 h-8 sm:h-10 px-2 sm:px-3"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline text-xs">Back</span>
             </Button>
             <div className="flex flex-col items-center">
-              <h1 className="text-lg font-semibold text-foreground">Book Your Ride</h1>
-              <Badge variant="secondary" className="text-xs">
+              <h1 className="text-xs sm:text-sm font-semibold text-foreground">Book Your Ride</h1>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                 {selectedCategory.name}
               </Badge>
             </div>
-            <div className="w-10" /> {/* Spacer for centering */}
+            <div className="w-8 sm:w-10" /> {/* Spacer for centering */}
           </div>
         </div>
       </div>
@@ -752,20 +789,21 @@ const RideBooking = () => {
           />
           
           {/* Location Selection Controls */}
-          <div className="absolute top-4 left-4 right-4 z-10">
+          <div className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-10">
             <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold">Set Your Locations</h3>
+              <CardContent className="p-3 sm:p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-semibold">Select Locations</h3>
                     {locationData.pickupLocation && locationData.dropoffLocation && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={swapLocations}
-                        className="h-8 px-2"
+                        className="h-7 px-2"
+                        title="Swap locations"
                       >
-                        <Navigation className="h-4 w-4 rotate-90" />
+                        <Navigation className="h-3 w-3 rotate-90" />
                       </Button>
                     )}
                   </div>
@@ -775,15 +813,15 @@ const RideBooking = () => {
                       variant={mapState.activeSelection === 'pickup' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setMapState(prev => ({ ...prev, activeSelection: 'pickup', searchQuery: '', searchResults: [] }))}
-                      className="flex-1 h-auto py-3"
+                      className="flex-1 h-auto py-2 px-2"
                     >
-                      <div className="flex flex-col items-start gap-1 w-full">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <div className="flex flex-col items-start gap-0.5 w-full min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
                           <span className="text-xs font-semibold">Pickup</span>
                         </div>
-                        <span className="text-xs text-left line-clamp-1">
-                          {locationData.pickupAddress || 'Tap to set'}
+                        <span className="text-[10px] sm:text-xs text-left line-clamp-1 w-full opacity-90">
+                          {locationData.pickupAddress || 'Not set'}
                         </span>
                       </div>
                     </Button>
@@ -792,15 +830,15 @@ const RideBooking = () => {
                       variant={mapState.activeSelection === 'dropoff' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setMapState(prev => ({ ...prev, activeSelection: 'dropoff', searchQuery: '', searchResults: [] }))}
-                      className="flex-1 h-auto py-3"
+                      className="flex-1 h-auto py-2 px-2"
                     >
-                      <div className="flex flex-col items-start gap-1 w-full">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <div className="flex flex-col items-start gap-0.5 w-full min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
                           <span className="text-xs font-semibold">Dropoff</span>
                         </div>
-                        <span className="text-xs text-left line-clamp-1">
-                          {locationData.dropoffAddress || 'Tap to set'}
+                        <span className="text-[10px] sm:text-xs text-left line-clamp-1 w-full opacity-90">
+                          {locationData.dropoffAddress || 'Not set'}
                         </span>
                       </div>
                     </Button>
@@ -808,8 +846,8 @@ const RideBooking = () => {
 
                   {mapState.activeSelection && (
                     <div className="text-center p-2 bg-primary/10 rounded-md animate-fade-in">
-                      <p className="text-xs font-medium text-primary">
-                        {mapState.activeSelection === 'pickup' ? '📍 Tap map to set pickup location' : '🎯 Tap map to set dropoff location'}
+                      <p className="text-[11px] sm:text-xs font-medium text-primary">
+                        {mapState.activeSelection === 'pickup' ? '📍 Tap map or search below' : '🎯 Tap map or search below'}
                       </p>
                     </div>
                   )}
@@ -820,14 +858,14 @@ const RideBooking = () => {
 
           {/* Search Box */}
           {mapState.activeSelection && (
-            <div className="absolute bottom-4 left-4 right-4 z-10 animate-fade-in">
+            <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-10 animate-fade-in">
               <Card className="bg-card/95 backdrop-blur-sm border-border shadow-lg">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="space-y-2">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                       <Input
-                        placeholder={`Search for ${mapState.activeSelection} location...`}
+                        placeholder={`Search ${mapState.activeSelection} location...`}
                         value={mapState.searchQuery}
                         onChange={(e) => {
                           setMapState(prev => ({ ...prev, searchQuery: e.target.value }));
@@ -837,25 +875,25 @@ const RideBooking = () => {
                             setMapState(prev => ({ ...prev, searchResults: [] }));
                           }
                         }}
-                        className="pl-10 bg-input border-border"
+                        className="pl-8 pr-3 h-9 text-xs bg-input border-border"
                       />
                       {mapState.isSearching && (
-                        <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                        <Loader2 className="absolute right-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />
                       )}
                     </div>
                     
                     {/* Search Results */}
                     {mapState.searchResults.length > 0 && (
-                      <div className="max-h-48 overflow-y-auto space-y-1 animate-fade-in">
+                      <div className="max-h-40 overflow-y-auto space-y-0.5 animate-fade-in">
                         {mapState.searchResults.map((result, index) => (
                           <Button
                             key={index}
                             variant="ghost"
-                            className="w-full justify-start text-left p-3 h-auto hover:bg-accent"
+                            className="w-full justify-start text-left p-2 h-auto hover:bg-accent"
                             onClick={() => selectSearchResult(result)}
                           >
-                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
-                            <span className="text-sm truncate">{result.place_name}</span>
+                            <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground" />
+                            <span className="text-xs truncate">{result.place_name}</span>
                           </Button>
                         ))}
                       </div>
@@ -865,11 +903,10 @@ const RideBooking = () => {
                       variant="outline"
                       size="sm"
                       onClick={getCurrentLocation}
-                      className="w-full"
-                      disabled={mapState.activeSelection !== 'pickup'}
+                      className="w-full h-9 text-xs"
                     >
-                      <Navigation className="h-4 w-4 mr-2" />
-                      Use Current Location
+                      <Navigation className="h-3.5 w-3.5 mr-2" />
+                      Use Current Location {mapState.activeSelection === 'dropoff' && 'as Dropoff'}
                     </Button>
                   </div>
                 </CardContent>
@@ -880,30 +917,30 @@ const RideBooking = () => {
 
         {/* Booking Panel */}
         <div className="w-full lg:w-80 xl:w-96 order-2 lg:order-2 bg-card border-b lg:border-b-0 lg:border-l border-border">
-          <div className="p-4 space-y-4 max-h-screen overflow-y-auto">
+          <div className="p-3 sm:p-4 space-y-3 max-h-screen overflow-y-auto">
             {/* Enhanced Trip Summary with Real-time Updates */}
             <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Car className="h-5 w-5 text-primary" />
-                  {selectedCategory.name}
-                  <Badge variant="secondary" className="ml-auto text-xs">
+              <CardHeader className="pb-2 px-3 pt-3">
+                <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
+                  <Car className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="truncate">{selectedCategory.name}</span>
+                  <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 flex-shrink-0">
                     {selectedCategory.passenger_capacity} seats
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 px-3 pb-3">
                 {/* Real-time Fare Display */}
-                <div className="text-center p-4 bg-card rounded-lg border border-primary/20">
-                  <div className="text-sm text-muted-foreground mb-1">Estimated Fare</div>
-                  <div className="text-3xl font-bold text-primary">
+                <div className="text-center p-3 bg-card rounded-lg border border-primary/20">
+                  <div className="text-xs text-muted-foreground mb-1">Estimated Fare</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-primary">
                     {locationData.pickupLocation && locationData.dropoffLocation 
                       ? formatCurrency(calculateFare())
                       : '---'
                     }
                   </div>
                   {locationData.pickupLocation && locationData.dropoffLocation && (
-                    <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                    <div className="flex justify-center gap-3 mt-2 text-[10px] sm:text-xs text-muted-foreground">
                       <span>📏 {calculateDistance().toFixed(1)} km</span>
                       <span>⏱️ ~{Math.ceil(calculateDistance() * 2)} min</span>
                     </div>
@@ -912,26 +949,26 @@ const RideBooking = () => {
 
                 {/* Fare Breakdown */}
                 {locationData.pickupLocation && locationData.dropoffLocation && (
-                  <div className="space-y-2 p-3 bg-muted/30 rounded-md">
-                    <div className="flex justify-between text-sm">
+                  <div className="space-y-1.5 p-2.5 bg-muted/30 rounded-md">
+                    <div className="flex justify-between text-xs">
                       <span>Base fare</span>
                       <span className="font-medium">{formatCurrency(selectedCategory.base_fare)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs">
                       <span>Distance ({calculateDistance().toFixed(1)} km)</span>
                       <span className="font-medium">
                         {formatCurrency(calculateDistance() * selectedCategory.base_price_per_km)}
                       </span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between font-semibold">
+                    <div className="flex justify-between text-xs font-semibold">
                       <span>Total</span>
                       <span className="text-primary">{formatCurrency(calculateFare())}</span>
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Rate per km</span>
                   <span className="font-medium">{formatCurrency(selectedCategory.base_price_per_km)}</span>
                 </div>
@@ -940,26 +977,26 @@ const RideBooking = () => {
 
             {/* Location Details */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Trip Details</CardTitle>
+              <CardHeader className="pb-2 px-3 pt-3">
+                <CardTitle className="text-xs sm:text-sm">Trip Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 p-2 rounded-md bg-emerald-50 dark:bg-emerald-950/20">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              <CardContent className="space-y-2 px-3 pb-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-emerald-50 dark:bg-emerald-950/20">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">Pickup</p>
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-[10px] text-muted-foreground">Pickup</p>
+                      <p className="text-xs font-medium truncate">
                         {locationData.pickupAddress || 'Current Location'}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 p-2 rounded-md bg-red-50 dark:bg-red-950/20">
-                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-red-50 dark:bg-red-950/20">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">Drop-off</p>
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-[10px] text-muted-foreground">Drop-off</p>
+                      <p className="text-xs font-medium truncate">
                         {locationData.dropoffAddress || 'Select destination'}
                       </p>
                     </div>
@@ -970,13 +1007,13 @@ const RideBooking = () => {
 
             {/* Payment Method */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
+              <CardHeader className="pb-2 px-3 pt-3">
+                <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 flex-shrink-0" />
                   Payment Method
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 pb-3">
                 <PaymentMethodSelector
                   paymentMethod={locationData.paymentMethod}
                   onPaymentMethodChange={(method) => setLocationData(prev => ({ ...prev, paymentMethod: method }))}
@@ -985,23 +1022,23 @@ const RideBooking = () => {
             </Card>
 
             {/* Enhanced Book Button Section */}
-            <div className="space-y-4 pt-4 border-t">
+            <div className="space-y-3 pt-2 border-t">
               {/* Booking Status Indicator */}
               {!locationData.dropoffLocation ? (
-                <div className="text-center p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                  <div className="text-amber-800 dark:text-amber-200 text-sm font-medium mb-2">
+                <div className="text-center p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="text-amber-800 dark:text-amber-200 text-xs font-medium mb-1">
                     📍 Select Your Destination
                   </div>
-                  <div className="text-amber-600 dark:text-amber-300 text-xs">
+                  <div className="text-amber-600 dark:text-amber-300 text-[10px]">
                     Use the 3D map above - click anywhere to drop your destination pin
                   </div>
                 </div>
               ) : (
-                <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="text-green-800 dark:text-green-200 text-sm font-medium">
+                <div className="text-center p-2.5 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="text-green-800 dark:text-green-200 text-xs font-medium">
                     ✅ Ready to Book!
                   </div>
-                  <div className="text-green-600 dark:text-green-300 text-xs mt-1">
+                  <div className="text-green-600 dark:text-green-300 text-[10px] mt-0.5">
                     Fare: {formatCurrency(calculateFare())} • Distance: {calculateDistance().toFixed(1)} km
                   </div>
                 </div>
@@ -1010,7 +1047,7 @@ const RideBooking = () => {
               <Button
                 onClick={handleBookRide}
                 disabled={!locationData.pickupLocation || !locationData.dropoffLocation || isBooking}
-                className={`w-full h-14 text-lg font-semibold transition-all ${
+                className={`w-full h-12 sm:h-14 text-sm sm:text-base font-semibold transition-all ${
                   locationData.pickupLocation && locationData.dropoffLocation && !isBooking
                     ? 'bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
                     : 'bg-muted text-muted-foreground'
@@ -1018,23 +1055,23 @@ const RideBooking = () => {
               >
                 {isBooking ? (
                   <>
-                    <Loader2 className="h-6 w-6 mr-2 animate-spin" />
-                    Finding Driver...
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" />
+                    <span className="text-xs sm:text-sm">Finding Driver...</span>
                   </>
                 ) : locationData.pickupLocation && locationData.dropoffLocation ? (
                   <>
-                    <Car className="h-6 w-6 mr-2" />
-                    Book Ride • {formatCurrency(calculateFare())}
+                    <Car className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    <span className="text-xs sm:text-sm">Book Ride • {formatCurrency(calculateFare())}</span>
                   </>
                 ) : (
                   <>
-                    <MapPin className="h-6 w-6 mr-2" />
-                    Drop Pin on Map First
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    <span className="text-xs sm:text-sm">Select Locations First</span>
                   </>
                 )}
               </Button>
               
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground text-center">
                 💳 Pay with {locationData.paymentMethod} • Safe & Secure Rides
               </p>
             </div>
