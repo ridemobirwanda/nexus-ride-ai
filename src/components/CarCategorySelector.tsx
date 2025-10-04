@@ -96,12 +96,17 @@ const CarCategorySelector = ({
   };
 
   const getCarImages = useCallback((categoryName: string) => {
-    if (categoryName.includes('Standard 4-Seat')) return [standardCarImg, heroCar, taxiCabHero];
-    if (categoryName.includes('Comfortable 4-Seat')) return [comfortableCarImg, standardCarImg, heroCar];
-    if (categoryName.includes('Standard 7-Seat') || categoryName.includes('Comfortable 7-Seat')) return [standardSuvImg, vanImg, comfortableCarImg];
-    if (categoryName.includes('Standard 10-Seat')) return [vanImg, standardSuvImg, luxuryCarImg];
-    if (categoryName.includes('Premium')) return [premiumCarImg, luxuryCarImg, heroCar];
-    if (categoryName.includes('Luxury')) return [luxuryCarImg, premiumCarImg, taxiCabHero];
+    const name = categoryName.toLowerCase();
+    
+    // Match by car type and model
+    if (name.includes('van') || name.includes('hiace')) return [vanImg, standardSuvImg, luxuryCarImg];
+    if (name.includes('economy') || name.includes('corolla')) return [standardCarImg, heroCar, taxiCabHero];
+    if (name.includes('suv') || name.includes('prado') || name.includes('x5')) return [standardSuvImg, vanImg, comfortableCarImg];
+    if (name.includes('comfort') || name.includes('accord')) return [comfortableCarImg, standardCarImg, heroCar];
+    if (name.includes('premium') || name.includes('bmw')) return [premiumCarImg, luxuryCarImg, heroCar];
+    if (name.includes('luxury') || name.includes('mercedes') || name.includes('vip')) return [luxuryCarImg, premiumCarImg, taxiCabHero];
+    
+    // Default fallback
     return [standardCarImg, heroCar, taxiCabHero];
   }, []);
 
