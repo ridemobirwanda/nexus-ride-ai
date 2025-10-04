@@ -115,9 +115,8 @@ const RideBooking = () => {
   const initializeMap = async () => {
     if (!mapContainer.current) return;
 
-    // Get Mapbox token from Supabase secrets
-    const { data } = await supabase.functions.invoke('get-mapbox-token');
-    const token = data?.token || 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZkangifQ.-g_vE53SD2WrJ6tFX7QHmA';
+    // Use the working Mapbox token
+    const token = 'pk.eyJ1Ijoia3J3aWJ1dHNvIiwiYSI6ImNtZXNhMWl5aTAwbG8yanM5NzBpdHdyZnQifQ.LekbGpZ0ndO2MQSPq0jYMA';
     
     mapboxgl.accessToken = token;
     setMapboxToken(token);
