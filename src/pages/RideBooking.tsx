@@ -691,7 +691,7 @@ const RideBooking = () => {
       {/* Mobile-First Layout */}
       <div className="flex flex-col lg:flex-row">
         {/* Map Section */}
-        <div className="relative flex-1 order-2 lg:order-1">
+        <div className="relative flex-1 order-1 lg:order-1">
           <div 
             ref={mapContainer} 
             className="w-full h-[50vh] sm:h-[60vh] lg:h-screen"
@@ -775,7 +775,7 @@ const RideBooking = () => {
         </div>
 
         {/* Booking Panel */}
-        <div className="w-full lg:w-80 xl:w-96 order-1 lg:order-2 bg-card border-b lg:border-b-0 lg:border-l border-border">
+        <div className="w-full lg:w-80 xl:w-96 order-2 lg:order-2 bg-card border-b lg:border-b-0 lg:border-l border-border">
           <div className="p-4 space-y-4 max-h-screen overflow-y-auto">
             {/* Enhanced Trip Summary with Real-time Updates */}
             <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
