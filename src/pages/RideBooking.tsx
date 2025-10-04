@@ -75,10 +75,18 @@ const RideBooking = () => {
   });
 
   useEffect(() => {
+    console.log('🚀 RideBooking component mounted');
     checkAuth();
     fetchCategoryFromUrl();
-    initializeMap();
+    
+    // Delay map initialization slightly to ensure DOM is ready
+    const timer = setTimeout(() => {
+      initializeMap();
+    }, 100);
+    
     getLocationFromUrl();
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Get Mapbox token from Supabase secrets
@@ -114,36 +122,60 @@ const RideBooking = () => {
   };
 
   const initializeMap = async () => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current) {
+      console.log('❌ Map container ref not available');
+      return;
+    }
 
-    // Use the working Mapbox token
-    const token = 'pk.eyJ1Ijoia3J3aWJ1dHNvIiwiYSI6ImNtZXNhMWl5aTAwbG8yanM5NzBpdHdyZnQifQ.LekbGpZ0ndO2MQSPq0jYMA';
-    
-    mapboxgl.accessToken = token;
-    setMapboxToken(token);
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: [30.0588, -1.9414], // Kigali, Rwanda
-      zoom: 15,
-      pitch: 60,
-      bearing: -15,
-      antialias: true,
-      projection: 'globe'
-    });
+    console.log('🗺️ Initializing map...');
+
+    try {
+      // Use the working Mapbox token
+      const token = 'pk.eyJ1Ijoia3J3aWJ1dHNvIiwiYSI6ImNtZXNhMWl5aTAwbG8yanM5NzBpdHdyZnQifQ.LekbGpZ0ndO2MQSPq0jYMA';
+      
+      mapboxgl.accessToken = token;
+      setMapboxToken(token);
+      
+      console.log('✅ Mapbox token set, creating map instance...');
+      
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [30.0588, -1.9414], // Kigali, Rwanda
+        zoom: 15,
+        pitch: 60,
+        bearing: -15,
+        antialias: true,
+        projection: 'globe'
+      });
+
+      console.log('✅ Map instance created');
+    } catch (error) {
+      console.error('❌ Error initializing map:', error);
+      toast({
+        title: "Map Error",
+        description: "Failed to load map. Please refresh the page.",
+        variant: "destructive"
+      });
+    }
 
     // Add 3D terrain and buildings
     map.current.on('load', () => {
+      console.log('✅ Map loaded successfully');
       if (!map.current) return;
       
-      // Add terrain source
-      map.current.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
-      });
+      try {
+        // Add terrain source
+        map.current.addSource('mapbox-dem', {
+          'type': 'raster-dem',
+          'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          'tileSize': 512,
+          'maxzoom': 14
+        });
+        console.log('✅ Terrain source added');
+      } catch (error) {
+        console.error('❌ Error adding terrain:', error);
+      }
       
       // Set terrain with higher exaggeration for 3D effect
       map.current.setTerrain({ 
@@ -208,13 +240,20 @@ const RideBooking = () => {
           map.current?.addImage('destination-pin', image);
         }
       });
+      
+      // Add click handler for location selection AFTER map loads
+      map.current.on('click', handleMapClick);
+      console.log('✅ Click handler attached');
     });
 
-    // Add click handler for location selection
-    map.current.on('click', handleMapClick);
-    
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    console.log('✅ Navigation controls added');
+    
+    // Add error handler
+    map.current.on('error', (e) => {
+      console.error('❌ Map error:', e);
+    });
   };
 
   const getLocationFromUrl = () => {
@@ -782,11 +821,22 @@ const RideBooking = () => {
       {/* Mobile-First Layout */}
       <div className="flex flex-col lg:flex-row">
         {/* Map Section */}
-        <div className="relative flex-1 order-1 lg:order-1">
+        <div className="relative flex-1 order-1 lg:order-1 bg-muted">
           <div 
             ref={mapContainer} 
             className="w-full h-[50vh] sm:h-[60vh] lg:h-screen"
+            style={{ minHeight: '400px' }}
           />
+          
+          {/* Loading indicator */}
+          {!map.current && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Loading map...</p>
+              </div>
+            </div>
+          )}
           
           {/* Location Selection Controls */}
           <div className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-10">
