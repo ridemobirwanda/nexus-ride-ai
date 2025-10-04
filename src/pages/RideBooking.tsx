@@ -275,10 +275,10 @@ const RideBooking = () => {
           // Get address
           try {
             const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}&country=RW&types=address,poi`
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&country=RW&types=address,poi`
             );
             const data = await response.json();
-            const address = data.features[0]?.place_name || 'Current Location';
+            const address = data.features?.[0]?.place_name || 'Current Location';
             
             const currentLocation: Location = {
               lat: latitude,
@@ -348,10 +348,10 @@ const RideBooking = () => {
       
       // Reverse geocoding to get address
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}&country=RW&types=address,poi`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&country=RW&types=address,poi`
       );
       const data = await response.json();
-      const feature = data.features[0];
+      const feature = data.features?.[0];
       const address = feature?.place_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
       
       const newLocation: Location = { lat, lng, address };
@@ -515,7 +515,7 @@ const RideBooking = () => {
     
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&country=RW&proximity=30.0588,-1.9414&limit=5`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&country=RW&proximity=30.0588,-1.9414&limit=5`
       );
       const data = await response.json();
       
