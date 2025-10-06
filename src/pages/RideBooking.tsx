@@ -17,7 +17,8 @@ import {
   DollarSign,
   Clock,
   Car,
-  Loader2
+  Loader2,
+  User
 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -44,6 +45,8 @@ interface CarCategory {
 interface Passenger {
   id: string;
   name: string;
+  phone?: string;
+  user_id: string;
 }
 
 const RideBooking = () => {
@@ -64,7 +67,9 @@ const RideBooking = () => {
     dropoffLocation: null as Location | null,
     pickupAddress: '',
     dropoffAddress: '',
-    paymentMethod: 'cash' as 'cash' | 'mobile_money' | 'card'
+    paymentMethod: 'cash' as 'cash' | 'mobile_money' | 'card',
+    tempName: '',
+    tempPhone: ''
   });
 
   const [mapState, setMapState] = useState({
@@ -667,6 +672,81 @@ const RideBooking = () => {
   const handleBookRide = async () => {
     if (!passenger) {
       setShowRegistration(true);
+      toast({
+        title: "Quick Details Needed",
+        description: "Please enter your name and phone to book"
+      });
+      return;
+    }
+    
+    await proceedWithBooking();
+  };
+
+  const handleQuickRegister = async (name: string, phone: string) => {
+    setIsBooking(true);
+    try {
+      const tempEmail = `${phone.replace(/\D/g, '')}@temp.ridenext.com`;
+      const tempPassword = `temp_${Date.now()}`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: tempEmail,
+        password: tempPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            user_type: 'passenger',
+            name: name,
+            phone: phone,
+            is_anonymous: true
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('passengers')
+          .insert({
+            user_id: data.user.id,
+            name: name,
+            phone: phone
+          });
+
+        if (profileError && !profileError.message.includes('duplicate')) {
+          throw profileError;
+        }
+
+        setPassenger({ id: data.user.id, name, phone, user_id: data.user.id });
+        setShowRegistration(false);
+        
+        toast({
+          title: "✅ Account Created",
+          description: "Now booking your ride..."
+        });
+
+        // Continue with booking after registration
+        await proceedWithBooking(data.user.id, name);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Registration Error",
+        description: error.message || "Please try again",
+        variant: "destructive"
+      });
+      setIsBooking(false);
+    }
+  };
+
+  const proceedWithBooking = async (passengerId?: string, passengerName?: string) => {
+    const bookingPassengerId = passengerId || passenger?.id;
+    
+    if (!bookingPassengerId) {
+      toast({
+        title: "Error",
+        description: "Please enter your details to continue",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -686,7 +766,7 @@ const RideBooking = () => {
       const { data: rideData, error: rideError } = await supabase
         .from('rides')
         .insert({
-          passenger_id: passenger.id,
+          passenger_id: bookingPassengerId,
           pickup_address: locationData.pickupAddress,
           dropoff_address: locationData.dropoffAddress,
           pickup_location: `POINT(${locationData.pickupLocation.lng} ${locationData.pickupLocation.lat})`,
@@ -773,25 +853,6 @@ const RideBooking = () => {
     );
   }
 
-  if (showRegistration && !passenger) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-md mx-auto">
-            <InlineRegistration
-              onRegistrationComplete={(user) => {
-                setShowRegistration(false);
-                // Refresh passenger data
-                checkAuth();
-              }}
-              title="Quick Registration"
-              description="Just enter your details to book your ride"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -1073,6 +1134,62 @@ const RideBooking = () => {
 
             {/* Enhanced Book Button Section */}
             <div className="space-y-3 pt-2 border-t">
+              {/* Quick Registration Form - Inline */}
+              {!passenger && showRegistration && (
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardHeader className="pb-2 px-3 pt-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Your Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 px-3 pb-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="quick-name" className="text-xs">Full Name</Label>
+                      <Input
+                        id="quick-name"
+                        placeholder="Enter your name"
+                        value={locationData.tempName || ''}
+                        onChange={(e) => setLocationData(prev => ({ ...prev, tempName: e.target.value }))}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quick-phone" className="text-xs">Phone Number</Label>
+                      <Input
+                        id="quick-phone"
+                        type="tel"
+                        placeholder="07XX XXX XXX"
+                        value={locationData.tempPhone || ''}
+                        onChange={(e) => setLocationData(prev => ({ ...prev, tempPhone: e.target.value }))}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        if (locationData.tempName && locationData.tempPhone) {
+                          handleQuickRegister(locationData.tempName, locationData.tempPhone);
+                        }
+                      }}
+                      disabled={!locationData.tempName || !locationData.tempPhone || isBooking}
+                      className="w-full h-10"
+                    >
+                      {isBooking ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        <>
+                          <User className="h-4 w-4 mr-2" />
+                          Continue & Book Ride
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Booking Status Indicator */}
               {!locationData.dropoffLocation ? (
                 <div className="text-center p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
