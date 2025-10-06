@@ -78,16 +78,16 @@ const RideBooking = () => {
     console.log('🚀 RideBooking component mounted');
     checkAuth();
     fetchCategoryFromUrl();
-    
-    // Delay map initialization slightly to ensure DOM is ready
-    const timer = setTimeout(() => {
-      initializeMap();
-    }, 100);
-    
     getLocationFromUrl();
-    
-    return () => clearTimeout(timer);
   }, []);
+
+  // Separate effect for map initialization that waits for the ref
+  useEffect(() => {
+    if (mapContainer.current && !map.current) {
+      console.log('🗺️ Map container ready, initializing...');
+      initializeMap();
+    }
+  }, [mapContainer.current]);
 
   // Get Mapbox token from Supabase secrets
   const [mapboxToken, setMapboxToken] = useState<string>('');
