@@ -45,6 +45,9 @@ const PassengerRideStatus = () => {
   const navigate = useNavigate();
   const [ride, setRide] = useState<Ride | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [driverETA, setDriverETA] = useState<number | null>(null);
+  const [hasNotifiedArrival, setHasNotifiedArrival] = useState(false);
+  const [showArrivalConfirm, setShowArrivalConfirm] = useState(false);
 
   useEffect(() => {
     fetchRideDetails();
@@ -230,9 +233,85 @@ const PassengerRideStatus = () => {
     return { lat, lng };
   };
 
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
   const pickupCoords = parseLocation(ride.pickup_location);
   const dropoffCoords = parseLocation(ride.dropoff_location);
   const driverCoords = ride.driver?.current_location ? parseLocation(ride.driver.current_location) : null;
+
+  // Calculate ETA when driver location updates
+  useEffect(() => {
+    if (!driverCoords || !pickupCoords || ride.status !== 'accepted') {
+      setDriverETA(null);
+      return;
+    }
+
+    const distance = calculateDistance(
+      driverCoords.lat, 
+      driverCoords.lng, 
+      pickupCoords.lat, 
+      pickupCoords.lng
+    );
+    
+    // Calculate ETA: distance / average speed (30 km/h) * 60 min
+    const eta = Math.ceil((distance / 30) * 60);
+    setDriverETA(eta);
+
+    // Check if driver is close (within 100 meters)
+    const distanceInMeters = distance * 1000;
+    if (distanceInMeters <= 100 && !hasNotifiedArrival) {
+      setHasNotifiedArrival(true);
+      setShowArrivalConfirm(true);
+      
+      toast({
+        title: "🎉 Driver Has Arrived!",
+        description: "Your driver is at the pickup location",
+        duration: 10000,
+      });
+
+      // Browser notification if permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Driver Arrived!', {
+          body: 'Your driver is waiting at the pickup location',
+          icon: '/pin-icon.png'
+        });
+      }
+    }
+  }, [driverCoords, pickupCoords, ride.status, hasNotifiedArrival]);
+
+  const handleConfirmPickup = async () => {
+    try {
+      const { error } = await supabase
+        .from('rides')
+        .update({ status: 'in_progress' })
+        .eq('id', rideId);
+
+      if (error) throw error;
+
+      setShowArrivalConfirm(false);
+      toast({
+        title: "✅ Ride Started",
+        description: "Enjoy your ride!"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -330,7 +409,7 @@ const PassengerRideStatus = () => {
             <CardHeader>
               <CardTitle>Driver Details</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar>
@@ -362,6 +441,43 @@ const PassengerRideStatus = () => {
                   </Button>
                 </div>
               </div>
+
+              {/* ETA Display */}
+              {driverETA !== null && ride.status === 'accepted' && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-blue-800 dark:text-blue-200">
+                      Estimated Arrival: {driverETA} min
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                    Driver is on the way to pick you up
+                  </p>
+                </div>
+              )}
+
+              {/* Arrival Confirmation */}
+              {showArrivalConfirm && ride.status === 'accepted' && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="font-medium text-green-800 dark:text-green-200">
+                      Driver Has Arrived!
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-600 dark:text-green-300">
+                    Your driver is waiting at the pickup location. Please confirm when you're in the car.
+                  </p>
+                  <Button 
+                    onClick={handleConfirmPickup}
+                    className="w-full"
+                    size="lg"
+                  >
+                    ✅ I'm in the car - Start Ride
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
