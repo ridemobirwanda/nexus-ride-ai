@@ -30,14 +30,18 @@ interface Driver {
   car_model: string;
   car_plate: string;
   is_available: boolean;
+  current_location?: any; // PostgreSQL point type
 }
 
 interface Ride {
   id: string;
   pickup_address: string;
   dropoff_address: string;
+  pickup_location: any; // PostgreSQL point type
+  dropoff_location: any;
   status: string;
   estimated_fare: number;
+  distance_km: number;
   created_at: string;
   passenger: {
     name: string;
@@ -172,13 +176,31 @@ const DriverDashboard = () => {
     fetchDriverProfile();
   }, [user]);
 
+  // Calculate distance between two points (Haversine formula)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Calculate ETA in minutes (assuming average speed of 30 km/h in city)
+  const calculateETA = (distanceKm: number): number => {
+    return Math.round((distanceKm / 30) * 60);
+  };
+
   // Fetch pending rides and active ride
   useEffect(() => {
     const fetchRides = async () => {
       if (!driver) return;
 
       try {
-        // Fetch pending rides
+        // Fetch pending rides with location data
         const { data: pending, error: pendingError } = await supabase
           .from('rides')
           .select(`
@@ -461,45 +483,108 @@ const DriverDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pendingRides.map((ride) => (
-                  <div key={ride.id} className="p-4 bg-muted/30 rounded-lg space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-start gap-3">
-                        <MapPin className="h-4 w-4 text-green-500 mt-1" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">Pickup</p>
-                          <p className="text-sm text-muted-foreground">{ride.pickup_address}</p>
+                {pendingRides.map((ride) => {
+                  // Parse pickup location
+                  let pickupLat = 0, pickupLng = 0;
+                  if (ride.pickup_location) {
+                    const match = ride.pickup_location.match(/\(([^,]+),([^)]+)\)/);
+                    if (match) {
+                      pickupLng = parseFloat(match[1]);
+                      pickupLat = parseFloat(match[2]);
+                    }
+                  }
+
+                  // Calculate distance and ETA to pickup location
+                  let distanceToPickup = 0;
+                  let etaMinutes = 0;
+                  if (driver?.current_location && pickupLat && pickupLng) {
+                    const driverMatch = driver.current_location.match(/\(([^,]+),([^)]+)\)/);
+                    if (driverMatch) {
+                      const driverLng = parseFloat(driverMatch[1]);
+                      const driverLat = parseFloat(driverMatch[2]);
+                      distanceToPickup = calculateDistance(driverLat, driverLng, pickupLat, pickupLng);
+                      etaMinutes = calculateETA(distanceToPickup);
+                    }
+                  }
+
+                  return (
+                    <div key={ride.id} className="p-4 bg-muted/30 rounded-lg space-y-4 border border-border/50 hover:border-primary/50 transition-colors">
+                      {/* Distance and ETA Badge */}
+                      {distanceToPickup > 0 && (
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs gap-1.5">
+                            <Navigation className="h-3 w-3" />
+                            {distanceToPickup.toFixed(1)} km away
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs gap-1.5">
+                            <Clock className="h-3 w-3" />
+                            ~{etaMinutes} min to pickup
+                          </Badge>
+                        </div>
+                      )}
+
+                      {/* Passenger Info */}
+                      <div className="flex items-center gap-3 pb-3 border-b">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{ride.passenger.name}</p>
+                          <p className="text-xs text-muted-foreground">{ride.passenger.phone}</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <Navigation className="h-4 w-4 text-red-500 mt-1" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">Dropoff</p>
-                          <p className="text-sm text-muted-foreground">{ride.dropoff_address}</p>
+
+                      {/* Locations */}
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground mb-0.5">PICKUP LOCATION</p>
+                            <p className="text-sm font-medium leading-tight">{ride.pickup_address}</p>
+                          </div>
                         </div>
+                        <div className="flex items-start gap-3">
+                          <Navigation className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground mb-0.5">DROPOFF LOCATION</p>
+                            <p className="text-sm leading-tight">{ride.dropoff_address}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Trip Details */}
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Car className="h-4 w-4 text-muted-foreground" />
+                          <span>{ride.distance_km?.toFixed(1) || 'N/A'} km</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-semibold">${ride.estimated_fare?.toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2">
+                        <Button 
+                          onClick={() => acceptRide(ride.id)}
+                          className="flex-1"
+                          size="lg"
+                        >
+                          <Navigation className="h-4 w-4 mr-2" />
+                          Accept & Start Navigation
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="lg"
+                          onClick={() => window.open(`tel:${ride.passenger.phone}`, '_self')}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" />
-                          <span className="font-medium">${ride.estimated_fare}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          <span className="text-sm">{ride.passenger.name}</span>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => acceptRide(ride.id)}
-                        size="sm"
-                      >
-                        Accept
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
