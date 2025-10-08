@@ -176,16 +176,20 @@ const CarBooking = () => {
   };
 
   const calculateTotalPrice = () => {
-    if (!car) return 0;
+    if (!car || !bookingData.durationValue || bookingData.durationValue <= 0) return 0;
     const rate = bookingData.durationType === 'hourly' ? car.price_per_hour : car.price_per_day;
-    return rate * bookingData.durationValue;
+    const total = rate * bookingData.durationValue;
+    return Math.round(total); // Ensure whole number for RWF
   };
 
   const formatPrice = (price: number) => {
+    if (!price || isNaN(price)) return 'RWF 0';
     return new Intl.NumberFormat('en-RW', {
       style: 'currency',
-      currency: 'RWF'
-    }).format(price);
+      currency: 'RWF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.round(price));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -613,17 +617,26 @@ const CarBooking = () => {
 
                   <Button 
                     onClick={handleSubmit}
-                    disabled={isSubmitting || calculateTotalPrice() === 0}
+                    disabled={
+                      isSubmitting || 
+                      !bookingData.rentalStart || 
+                      !bookingData.rentalEnd || 
+                      bookingData.durationValue <= 0 ||
+                      !bookingData.driverLicenseNumber?.trim() ||
+                      !bookingData.contactPhone?.trim()
+                    }
                     className="w-full gradient-primary text-lg py-6"
                   >
                     {isSubmitting ? (
                       'Processing Booking...'
                     ) : !user ? (
                       'Register & Confirm Booking'
+                    ) : calculateTotalPrice() === 0 ? (
+                      'Select Dates to Continue'
                     ) : (
                       <>
                         <CreditCard className="h-5 w-5 mr-2" />
-                        Confirm Booking
+                        Confirm Booking • {formatPrice(calculateTotalPrice())}
                       </>
                     )}
                   </Button>
