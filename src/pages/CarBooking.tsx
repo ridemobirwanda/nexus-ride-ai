@@ -81,6 +81,13 @@ const CarBooking = () => {
 
       if (error) throw error;
       setCar(data);
+      
+      // Auto-set pickup and return locations to car's location
+      setBookingData(prev => ({
+        ...prev,
+        pickupLocation: data.location_address || '',
+        returnLocation: data.location_address || ''
+      }));
     } catch (error) {
       console.error('Error fetching car:', error);
       toast({
@@ -453,28 +460,34 @@ const CarBooking = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pickup">Pickup Location</Label>
-                    <Input
-                      id="pickup"
-                      placeholder="Enter pickup address or leave blank for car location"
-                      value={bookingData.pickupLocation}
-                      onChange={(e) => setBookingData({ ...bookingData, pickupLocation: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Default: {car.location_address}
-                    </p>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <Label className="text-sm font-semibold mb-1 block">Pickup Location</Label>
+                        <p className="text-sm">{bookingData.pickupLocation}</p>
+                        <Badge variant="secondary" className="mt-2">
+                          Set by car owner
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3 p-4 bg-secondary/5 border border-secondary/20 rounded-lg">
+                      <MapPin className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <Label className="text-sm font-semibold mb-1 block">Return Location</Label>
+                        <p className="text-sm">{bookingData.returnLocation}</p>
+                        <Badge variant="secondary" className="mt-2">
+                          Same as pickup
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="return">Return Location</Label>
-                    <Input
-                      id="return"
-                      placeholder="Enter return address or leave blank for same as pickup"
-                      value={bookingData.returnLocation}
-                      onChange={(e) => setBookingData({ ...bookingData, returnLocation: e.target.value })}
-                    />
-                  </div>
+                  <p className="text-xs text-muted-foreground flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>The pickup and return locations are set by the car owner based on where the vehicle is located. Please ensure you can access this location during your rental period.</span>
+                  </p>
                 </CardContent>
               </Card>
 
