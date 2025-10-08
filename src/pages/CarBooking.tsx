@@ -44,6 +44,7 @@ const CarBooking = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [showRegistration, setShowRegistration] = useState(false);
+  const [shouldAutoSubmit, setShouldAutoSubmit] = useState(false);
 
   const [bookingData, setBookingData] = useState({
     rentalStart: '',
@@ -192,16 +193,8 @@ const CarBooking = () => {
     }).format(Math.round(price));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // If no user, show registration
-    if (!user) {
-      setShowRegistration(true);
-      return;
-    }
-
-    if (!car) return;
+  const processBooking = async () => {
+    if (!car || !user) return;
 
     // Enhanced validation
     const dateValidation = validateDates(bookingData.rentalStart, bookingData.rentalEnd);
@@ -269,8 +262,29 @@ const CarBooking = () => {
       });
     } finally {
       setIsSubmitting(false);
+      setShouldAutoSubmit(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // If no user, show registration and set flag to auto-submit after
+    if (!user) {
+      setShouldAutoSubmit(true);
+      setShowRegistration(true);
+      return;
+    }
+
+    await processBooking();
+  };
+
+  // Auto-submit booking after registration completes
+  useEffect(() => {
+    if (user && shouldAutoSubmit && !showRegistration) {
+      processBooking();
+    }
+  }, [user, shouldAutoSubmit, showRegistration]);
 
   const getMinDate = () => {
     return new Date().toISOString().slice(0, 16);
