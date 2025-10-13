@@ -162,38 +162,9 @@ const DriverAuth = () => {
 
       if (error) throw error;
 
-      // Wait a moment for the trigger to create the driver profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get the newly created driver ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: driverData } = await supabase
-          .from('drivers')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (driverData) {
-          // Create verification request automatically
-          const { error: verificationError } = await supabase
-            .from('driver_verification_requests')
-            .insert({
-              driver_id: driverData.id,
-              status: 'pending',
-              documents: [],
-              submitted_at: new Date().toISOString()
-            });
-
-          if (verificationError) {
-            console.error('Error creating verification request:', verificationError);
-          }
-        }
-      }
-
       toast({
         title: "Account Created!",
-        description: "Your account is pending verification. Our team will review your application and notify you once approved.",
+        description: "Your account is pending verification. Our team will review your application and notify you once approved. Please check your email to verify your account.",
       });
     } catch (error: any) {
       toast({
