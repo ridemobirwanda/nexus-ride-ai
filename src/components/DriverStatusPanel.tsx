@@ -64,7 +64,7 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
           .from('drivers')
           .select('status')
           .eq('user_id', userAuth.user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         if (data?.status) {
