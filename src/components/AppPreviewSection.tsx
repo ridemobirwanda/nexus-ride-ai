@@ -20,10 +20,12 @@ import {
 } from 'lucide-react';
 import mapBgImage from '@/assets/map-bg.jpg';
 import { useToast } from '@/hooks/use-toast';
+import { usePWA } from '@/hooks/usePWA';
 
 const AppPreviewSection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isInstallable, isInstalled, installApp } = usePWA();
   const [activeTab, setActiveTab] = useState('passenger');
   const [destination, setDestination] = useState('');
   const [selectedRideType, setSelectedRideType] = useState('standard');
@@ -126,20 +128,51 @@ const AppPreviewSection = () => {
     }
   };
 
-  const handlePassengerDownload = (store?: 'ios' | 'android') => {
+  const handlePassengerDownload = async (store?: 'ios' | 'android') => {
     if (store === 'ios') {
-      // Replace with your actual App Store URL when published
-      window.open('https://apps.apple.com/app/nexus-ride-passenger', '_blank');
+      // iOS - Guide to install PWA
+      if (platform === 'ios') {
+        toast({
+          title: "Install Nexus Ride",
+          description: "Tap the Share button, then 'Add to Home Screen' to install the app",
+          duration: 8000,
+        });
+      } else {
+        window.open('https://apps.apple.com/app/nexus-ride-passenger', '_blank');
+      }
     } else if (store === 'android') {
-      // Replace with your actual Google Play URL when published
-      window.open('https://play.google.com/store/apps/details?id=app.lovable.nexusride.passenger', '_blank');
+      // Android - Show install prompt or link to Play Store
+      if (isInstallable) {
+        const installed = await installApp();
+        if (installed) {
+          toast({
+            title: "App Installed! 🎉",
+            description: "Nexus Ride has been added to your home screen",
+          });
+        }
+      } else {
+        window.open('https://play.google.com/store/apps/details?id=app.lovable.nexusride.passenger', '_blank');
+      }
     } else {
-      // Web version - redirect to passenger booking
-      toast({
-        title: "Welcome! 🚗",
-        description: "Sign up to start booking rides instantly",
-      });
-      navigate('/passenger/auth');
+      // Direct install for PWA or redirect to booking
+      if (isInstallable && !isInstalled) {
+        const installed = await installApp();
+        if (installed) {
+          toast({
+            title: "App Installed! 🎉",
+            description: "Nexus Ride has been added to your home screen",
+          });
+          setTimeout(() => navigate('/passenger/auth'), 1000);
+        }
+      } else if (isInstalled) {
+        navigate('/passenger/auth');
+      } else {
+        toast({
+          title: "Welcome! 🚗",
+          description: "Sign up to start booking rides instantly",
+        });
+        navigate('/passenger/auth');
+      }
     }
   };
 
@@ -485,7 +518,7 @@ const AppPreviewSection = () => {
                   onClick={() => handlePassengerDownload()}
                 >
                   <Download className="h-5 w-5" />
-                  Book a Ride Now
+                  {isInstallable ? 'Install App' : isInstalled ? 'Open App' : 'Book a Ride Now'}
                 </Button>
               </div>
             </div>

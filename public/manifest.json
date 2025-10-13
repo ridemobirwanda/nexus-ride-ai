@@ -1,0 +1,41 @@
+{
+  "name": "Nexus Ride - Book Your Ride",
+  "short_name": "Nexus Ride",
+  "description": "AI-powered ride booking app for passengers and drivers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0F1C",
+  "theme_color": "#6366f1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pin-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pin-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["transportation", "travel"],
+  "shortcuts": [
+    {
+      "name": "Book a Ride",
+      "short_name": "Book Ride",
+      "description": "Book a ride instantly",
+      "url": "/passenger/auth",
+      "icons": [{ "src": "/pin-icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Driver Login",
+      "short_name": "Driver",
+      "description": "Login as a driver",
+      "url": "/driver/auth",
+      "icons": [{ "src": "/pin-icon.png", "sizes": "192x192" }]
+    }
+  ]
+}
