@@ -53,6 +53,31 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
   const [isOnlineTime, setIsOnlineTime] = useState(0);
   const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
 
+  // Fetch initial driver status
+  useEffect(() => {
+    const fetchDriverStatus = async () => {
+      try {
+        const { data: userAuth } = await supabase.auth.getUser();
+        if (!userAuth.user) return;
+
+        const { data, error } = await supabase
+          .from('drivers')
+          .select('status')
+          .eq('user_id', userAuth.user.id)
+          .single();
+
+        if (error) throw error;
+        if (data?.status) {
+          setDriverStatus(data.status);
+        }
+      } catch (error: any) {
+        console.error('Error fetching driver status:', error);
+      }
+    };
+
+    fetchDriverStatus();
+  }, []);
+
   // Fetch driver earnings
   useEffect(() => {
     const fetchEarnings = async () => {
