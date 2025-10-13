@@ -285,20 +285,29 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
             Review and approve driver verification documents
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Driver</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Documents</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.map((request) => (
+              <CardContent>
+          {requests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Clock className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No verification requests</h3>
+              <p className="text-sm text-muted-foreground max-w-md">
+                There are no driver verification requests at this time. New driver registrations will appear here for approval.
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Driver</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Documents</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell className="font-medium">{request.driver_name}</TableCell>
                   <TableCell>{request.driver_phone || "Not provided"}</TableCell>
@@ -459,6 +468,7 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
     </div>

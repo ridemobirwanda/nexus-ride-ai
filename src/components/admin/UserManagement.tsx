@@ -102,103 +102,120 @@ export function UserManagement({ userRole }: UserManagementProps) {
     (driver.phone && driver.phone.includes(searchTerm))
   );
 
-  const UserTable = ({ users, type }: { users: User[], type: 'passenger' | 'driver' }) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Phone</TableHead>
-          {type === 'driver' && (
-            <>
-              <TableHead>Status</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead>Trips</TableHead>
-            </>
-          )}
-          <TableHead>Joined</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell className="font-medium">{user.name}</TableCell>
-            <TableCell>{user.phone || "Not provided"}</TableCell>
+  const UserTable = ({ users, type }: { users: User[], type: 'passenger' | 'driver' }) => {
+    if (users.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <UserCheck className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No {type}s found</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            {searchTerm 
+              ? `No ${type}s match your search criteria. Try adjusting your search.`
+              : `There are no ${type}s registered in the system yet.`
+            }
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Phone</TableHead>
             {type === 'driver' && (
               <>
-                <TableCell>
-                  <Badge 
-                    variant={user.status === 'available' ? 'default' : 'secondary'}
-                    className="capitalize"
-                  >
-                    {user.status || 'offline'}
-                  </Badge>
-                </TableCell>
-                <TableCell>{user.rating?.toFixed(1) || 'N/A'}</TableCell>
-                <TableCell>{user.total_trips || 0}</TableCell>
+                <TableHead>Status</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Trips</TableHead>
               </>
             )}
-            <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-            <TableCell>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>User Details</DialogTitle>
-                    <DialogDescription>
-                      Manage {user.name}'s account
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium">Name</h4>
-                        <p className="text-sm text-muted-foreground">{user.name}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Phone</h4>
-                        <p className="text-sm text-muted-foreground">{user.phone || "Not provided"}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">User Type</h4>
-                        <Badge variant="outline" className="capitalize">{user.user_type}</Badge>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Member Since</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleSuspendUser(user)}
-                        disabled={userRole !== 'super_admin'}
-                      >
-                        <UserX className="w-4 h-4 mr-2" />
-                        Suspend User
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Shield className="w-4 h-4 mr-2" />
-                        View Activity
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </TableCell>
+            <TableHead>Joined</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell>{user.phone || "Not provided"}</TableCell>
+              {type === 'driver' && (
+                <>
+                  <TableCell>
+                    <Badge 
+                      variant={user.status === 'available' ? 'default' : 'secondary'}
+                      className="capitalize"
+                    >
+                      {user.status || 'offline'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{user.rating?.toFixed(1) || 'N/A'}</TableCell>
+                  <TableCell>{user.total_trips || 0}</TableCell>
+                </>
+              )}
+              <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>User Details</DialogTitle>
+                      <DialogDescription>
+                        Manage {user.name}'s account
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium">Name</h4>
+                          <p className="text-sm text-muted-foreground">{user.name}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Phone</h4>
+                          <p className="text-sm text-muted-foreground">{user.phone || "Not provided"}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">User Type</h4>
+                          <Badge variant="outline" className="capitalize">{user.user_type}</Badge>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Member Since</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleSuspendUser(user)}
+                          disabled={userRole !== 'super_admin'}
+                        >
+                          <UserX className="w-4 h-4 mr-2" />
+                          Suspend User
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Shield className="w-4 h-4 mr-2" />
+                          View Activity
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
 
   if (loading) {
     return (

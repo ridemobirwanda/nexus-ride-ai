@@ -139,21 +139,37 @@ export function RideManagement({ userRole }: RideManagementProps) {
     cancelled: filteredRides.filter(r => r.status === 'cancelled'),
   };
 
-  const RideTable = ({ rides }: { rides: Ride[] }) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Passenger</TableHead>
-          <TableHead>Driver</TableHead>
-          <TableHead>Route</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Fare</TableHead>
-          <TableHead>Created</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rides.map((ride) => (
+  const RideTable = ({ rides }: { rides: Ride[] }) => {
+    if (rides.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <MapPin className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No rides found</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            {searchTerm 
+              ? "No rides match your search criteria. Try adjusting your search."
+              : "There are no rides in the system yet. Rides will appear here once passengers start booking."
+            }
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Passenger</TableHead>
+            <TableHead>Driver</TableHead>
+            <TableHead>Route</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Fare</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rides.map((ride) => (
           <TableRow key={ride.id}>
             <TableCell className="font-medium">{ride.passenger_name}</TableCell>
             <TableCell>{ride.driver_name || "Not assigned"}</TableCell>
@@ -309,7 +325,8 @@ export function RideManagement({ userRole }: RideManagementProps) {
         ))}
       </TableBody>
     </Table>
-  );
+    );
+  };
 
   if (loading) {
     return (
