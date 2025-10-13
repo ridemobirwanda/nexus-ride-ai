@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
 import { 
   Smartphone, 
   Car, 
@@ -13,11 +14,16 @@ import {
   Clock,
   Star,
   Loader2,
-  Crosshair
+  Crosshair,
+  Apple,
+  Download
 } from 'lucide-react';
 import mapBgImage from '@/assets/map-bg.jpg';
+import { useToast } from '@/hooks/use-toast';
 
 const AppPreviewSection = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('passenger');
   const [destination, setDestination] = useState('');
   const [selectedRideType, setSelectedRideType] = useState('standard');
@@ -25,6 +31,19 @@ const AppPreviewSection = () => {
   const [currentLocation, setCurrentLocation] = useState<string>('');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationCoords, setLocationCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other');
+
+  // Detect platform
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor;
+    if (/iPad|iPhone|iPod/.test(userAgent)) {
+      setPlatform('ios');
+    } else if (/android/i.test(userAgent)) {
+      setPlatform('android');
+    } else {
+      setPlatform('other');
+    }
+  }, []);
 
   // Real-time location tracking
   useEffect(() => {
@@ -105,6 +124,24 @@ const AppPreviewSection = () => {
     if (destination.length > 2) {
       setShowEstimate(true);
     }
+  };
+
+  const handlePassengerDownload = () => {
+    // For now, redirect to passenger auth/booking
+    toast({
+      title: "Welcome! 🚗",
+      description: "Sign up to start booking rides instantly",
+    });
+    navigate('/passenger/auth');
+  };
+
+  const handleDriverDownload = () => {
+    // For now, redirect to driver auth
+    toast({
+      title: "Join Our Driver Network! 🚘",
+      description: "Complete registration to start earning",
+    });
+    navigate('/driver/auth');
   };
 
   const passengerFeatures = [
@@ -388,19 +425,101 @@ const AppPreviewSection = () => {
 
         {/* Download CTA */}
         <div className="text-center mt-16">
-          <div className="space-y-4">
-            <h3 className="text-2xl font-bold">Ready to get started?</h3>
-            <p className="text-muted-foreground">Download the app and experience the future of mobility</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero" size="lg" className="gap-2">
-                <Smartphone className="h-5 w-5" />
-                Download Passenger App
-              </Button>
-              <Button variant="accent" size="lg" className="gap-2">
-                <Car className="h-5 w-5" />
-                Download Driver App
-              </Button>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Ready to get started?</h3>
+              <p className="text-muted-foreground">Start riding or driving today</p>
             </div>
+            
+            {/* Passenger Download */}
+            <div className="max-w-2xl mx-auto">
+              <h4 className="text-lg font-semibold mb-3 flex items-center justify-center gap-2">
+                <Smartphone className="h-5 w-5 text-primary" />
+                For Passengers
+              </h4>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                {platform === 'ios' || platform === 'other' ? (
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="gap-2 min-w-[180px]"
+                    onClick={handlePassengerDownload}
+                  >
+                    <Apple className="h-5 w-5" />
+                    Get on iOS
+                  </Button>
+                ) : null}
+                {platform === 'android' || platform === 'other' ? (
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="gap-2 min-w-[180px]"
+                    onClick={handlePassengerDownload}
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                    </svg>
+                    Get on Android
+                  </Button>
+                ) : null}
+                <Button 
+                  variant="hero" 
+                  size="lg" 
+                  className="gap-2 min-w-[180px]"
+                  onClick={handlePassengerDownload}
+                >
+                  <Download className="h-5 w-5" />
+                  Book a Ride Now
+                </Button>
+              </div>
+            </div>
+
+            {/* Driver Download */}
+            <div className="max-w-2xl mx-auto pt-6 border-t border-border/50">
+              <h4 className="text-lg font-semibold mb-3 flex items-center justify-center gap-2">
+                <Car className="h-5 w-5 text-accent" />
+                For Drivers
+              </h4>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                {platform === 'ios' || platform === 'other' ? (
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="gap-2 min-w-[180px]"
+                    onClick={handleDriverDownload}
+                  >
+                    <Apple className="h-5 w-5" />
+                    Get on iOS
+                  </Button>
+                ) : null}
+                {platform === 'android' || platform === 'other' ? (
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="gap-2 min-w-[180px]"
+                    onClick={handleDriverDownload}
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                    </svg>
+                    Get on Android
+                  </Button>
+                ) : null}
+                <Button 
+                  variant="accent" 
+                  size="lg" 
+                  className="gap-2 min-w-[180px]"
+                  onClick={handleDriverDownload}
+                >
+                  <Download className="h-5 w-5" />
+                  Start Driving
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground pt-4">
+              Available on iOS, Android, and Web
+            </p>
           </div>
         </div>
       </div>
