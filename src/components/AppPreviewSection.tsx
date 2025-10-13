@@ -126,22 +126,38 @@ const AppPreviewSection = () => {
     }
   };
 
-  const handlePassengerDownload = () => {
-    // For now, redirect to passenger auth/booking
-    toast({
-      title: "Welcome! 🚗",
-      description: "Sign up to start booking rides instantly",
-    });
-    navigate('/passenger/auth');
+  const handlePassengerDownload = (store?: 'ios' | 'android') => {
+    if (store === 'ios') {
+      // Replace with your actual App Store URL when published
+      window.open('https://apps.apple.com/app/nexus-ride-passenger', '_blank');
+    } else if (store === 'android') {
+      // Replace with your actual Google Play URL when published
+      window.open('https://play.google.com/store/apps/details?id=app.lovable.nexusride.passenger', '_blank');
+    } else {
+      // Web version - redirect to passenger booking
+      toast({
+        title: "Welcome! 🚗",
+        description: "Sign up to start booking rides instantly",
+      });
+      navigate('/passenger/auth');
+    }
   };
 
-  const handleDriverDownload = () => {
-    // For now, redirect to driver auth
-    toast({
-      title: "Join Our Driver Network! 🚘",
-      description: "Complete registration to start earning",
-    });
-    navigate('/driver/auth');
+  const handleDriverDownload = (store?: 'ios' | 'android') => {
+    if (store === 'ios') {
+      // Replace with your actual App Store URL when published
+      window.open('https://apps.apple.com/app/nexus-ride-driver', '_blank');
+    } else if (store === 'android') {
+      // Replace with your actual Google Play URL when published
+      window.open('https://play.google.com/store/apps/details?id=app.lovable.nexusride.driver', '_blank');
+    } else {
+      // Web version - redirect to driver registration
+      toast({
+        title: "Join Our Driver Network! 🚘",
+        description: "Complete registration to start earning",
+      });
+      navigate('/driver/auth');
+    }
   };
 
   const passengerFeatures = [
@@ -443,10 +459,10 @@ const AppPreviewSection = () => {
                     variant="outline" 
                     size="lg" 
                     className="gap-2 min-w-[180px]"
-                    onClick={handlePassengerDownload}
+                    onClick={() => handlePassengerDownload('ios')}
                   >
                     <Apple className="h-5 w-5" />
-                    Get on iOS
+                    App Store
                   </Button>
                 ) : null}
                 {platform === 'android' || platform === 'other' ? (
@@ -454,19 +470,19 @@ const AppPreviewSection = () => {
                     variant="outline" 
                     size="lg" 
                     className="gap-2 min-w-[180px]"
-                    onClick={handlePassengerDownload}
+                    onClick={() => handlePassengerDownload('android')}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
                     </svg>
-                    Get on Android
+                    Google Play
                   </Button>
                 ) : null}
                 <Button 
                   variant="hero" 
                   size="lg" 
                   className="gap-2 min-w-[180px]"
-                  onClick={handlePassengerDownload}
+                  onClick={() => handlePassengerDownload()}
                 >
                   <Download className="h-5 w-5" />
                   Book a Ride Now
@@ -486,10 +502,10 @@ const AppPreviewSection = () => {
                     variant="outline" 
                     size="lg" 
                     className="gap-2 min-w-[180px]"
-                    onClick={handleDriverDownload}
+                    onClick={() => handleDriverDownload('ios')}
                   >
                     <Apple className="h-5 w-5" />
-                    Get on iOS
+                    App Store
                   </Button>
                 ) : null}
                 {platform === 'android' || platform === 'other' ? (
@@ -497,19 +513,19 @@ const AppPreviewSection = () => {
                     variant="outline" 
                     size="lg" 
                     className="gap-2 min-w-[180px]"
-                    onClick={handleDriverDownload}
+                    onClick={() => handleDriverDownload('android')}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
                     </svg>
-                    Get on Android
+                    Google Play
                   </Button>
                 ) : null}
                 <Button 
                   variant="accent" 
                   size="lg" 
                   className="gap-2 min-w-[180px]"
-                  onClick={handleDriverDownload}
+                  onClick={() => handleDriverDownload()}
                 >
                   <Download className="h-5 w-5" />
                   Start Driving
