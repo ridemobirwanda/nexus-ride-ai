@@ -122,6 +122,8 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+    font-size: 10px;
+    font-weight: 400;
   }
 }
 
