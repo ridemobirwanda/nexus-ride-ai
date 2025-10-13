@@ -1203,7 +1203,7 @@ export type Database = {
               p_user_id: string
               p_user_type: string
             }
-        Returns: string
+        Returns: undefined
       }
       point_distance: {
         Args: { p1: unknown; p2: unknown }
@@ -1219,7 +1219,7 @@ export type Database = {
       }
       request_admin_password_reset: {
         Args: Record<PropertyKey, never> | { admin_email: string }
-        Returns: string
+        Returns: undefined
       }
       setup_admin_user: {
         Args: Record<PropertyKey, never>
