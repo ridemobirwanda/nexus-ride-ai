@@ -95,7 +95,17 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
 
   const handleApprove = async (requestId: string) => {
     try {
-      const { error } = await supabase
+      // Get the driver_id from the verification request
+      const { data: verificationData, error: fetchError } = await supabase
+        .from("driver_verification_requests")
+        .select("driver_id")
+        .eq("id", requestId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update verification request status
+      const { error: verificationError } = await supabase
         .from("driver_verification_requests")
         .update({
           status: "approved",
@@ -103,11 +113,24 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
         })
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (verificationError) throw verificationError;
+
+      // Update driver status to available
+      if (verificationData?.driver_id) {
+        const { error: driverError } = await supabase
+          .from("drivers")
+          .update({
+            status: "available",
+            is_available: true
+          })
+          .eq("id", verificationData.driver_id);
+
+        if (driverError) throw driverError;
+      }
 
       toast({
         title: "Success",
-        description: "Driver verification approved successfully.",
+        description: "Driver verification approved successfully. Driver can now start accepting rides.",
       });
 
       fetchVerificationRequests();
@@ -131,7 +154,17 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
     }
 
     try {
-      const { error } = await supabase
+      // Get the driver_id from the verification request
+      const { data: verificationData, error: fetchError } = await supabase
+        .from("driver_verification_requests")
+        .select("driver_id")
+        .eq("id", requestId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update verification request status
+      const { error: verificationError } = await supabase
         .from("driver_verification_requests")
         .update({
           status: "rejected",
@@ -140,11 +173,24 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
         })
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (verificationError) throw verificationError;
+
+      // Keep driver status as offline so they cannot accept rides
+      if (verificationData?.driver_id) {
+        const { error: driverError } = await supabase
+          .from("drivers")
+          .update({
+            status: "offline",
+            is_available: false
+          })
+          .eq("id", verificationData.driver_id);
+
+        if (driverError) throw driverError;
+      }
 
       toast({
         title: "Success",
-        description: "Driver verification rejected.",
+        description: "Driver verification rejected. Driver has been notified.",
       });
 
       setRejectionReason("");
