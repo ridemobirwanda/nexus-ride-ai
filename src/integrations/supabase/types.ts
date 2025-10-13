@@ -1133,6 +1133,10 @@ export type Database = {
       }
     }
     Functions: {
+      create_admin_user: {
+        Args: { p_email: string; p_name?: string; p_password: string }
+        Returns: string
+      }
       find_nearest_driver: {
         Args: {
           p_limit?: number
@@ -1207,6 +1211,10 @@ export type Database = {
       }
       process_payment: {
         Args: { p_amount: number; p_method: string; p_ride_id: string }
+        Returns: string
+      }
+      promote_user_to_admin: {
+        Args: { p_user_email: string }
         Returns: string
       }
       request_admin_password_reset: {
