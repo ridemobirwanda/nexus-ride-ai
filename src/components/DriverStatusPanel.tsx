@@ -53,7 +53,7 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
   const [isOnlineTime, setIsOnlineTime] = useState(0);
   const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
 
-  // Fetch initial driver status
+  // Fetch initial driver status and listen for real-time updates
   useEffect(() => {
     const fetchDriverStatus = async () => {
       try {
@@ -76,7 +76,31 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
     };
 
     fetchDriverStatus();
-  }, []);
+
+    // Listen for real-time status changes
+    const statusChannel = supabase
+      .channel('driver-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'drivers',
+          filter: `user_id=eq.${driverId}`
+        },
+        (payload: any) => {
+          if (payload.new?.status) {
+            console.log('Driver status updated:', payload.new.status);
+            setDriverStatus(payload.new.status);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(statusChannel);
+    };
+  }, [driverId]);
 
   // Fetch driver earnings
   useEffect(() => {
@@ -141,24 +165,31 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
   }, [driverId]);
 
   const updateDriverStatus = async (status: typeof driverStatus) => {
+    console.log('Updating driver status to:', status);
     setIsStatusLoading(true);
+    
     try {
-      const { error } = await supabase.rpc('update_driver_status', {
+      const { data, error } = await supabase.rpc('update_driver_status', {
         p_status: status
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating driver status:', error);
+        throw error;
+      }
 
+      console.log('Driver status updated successfully:', data);
       setDriverStatus(status);
       
       toast({
         title: "Status Updated",
-        description: `Driver status set to ${status.replace('_', ' ')}`,
+        description: `You are now ${status === 'available' ? 'available' : 'offline'}`,
       });
     } catch (error: any) {
+      console.error('Failed to update driver status:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to update status',
         variant: "destructive"
       });
     } finally {
