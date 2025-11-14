@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, Users, Car, DollarSign, Clock, Star, MapPin, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TrendingUp, Users, Car, DollarSign, Clock, Star, MapPin, Calendar, TrendingDown, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface ReportsAnalyticsProps {
   userRole: string | null;
@@ -16,8 +18,14 @@ interface AnalyticsData {
   avgRideDuration: number;
   avgRating: number;
   topPickupLocations: Array<{ location: string; count: number }>;
-  dailyStats: Array<{ date: string; rides: number; revenue: number }>;
+  dailyStats: Array<{ date: string; rides: number; revenue: number; passengers: number }>;
   driverStats: Array<{ name: string; rides: number; earnings: number; rating: number }>;
+  ridesByCategory: Array<{ name: string; value: number }>;
+  passengerGrowth: Array<{ date: string; total: number; new: number }>;
+  hourlyDistribution: Array<{ hour: string; rides: number }>;
+  revenueGrowth: number;
+  ridesGrowth: number;
+  passengersGrowth: number;
 }
 
 export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
@@ -30,9 +38,15 @@ export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
     topPickupLocations: [],
     dailyStats: [],
     driverStats: [],
+    ridesByCategory: [],
+    passengerGrowth: [],
+    hourlyDistribution: [],
+    revenueGrowth: 0,
+    ridesGrowth: 0,
+    passengersGrowth: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("7d"); // 7d, 30d, 90d
+  const [timeRange, setTimeRange] = useState("30d"); // 7d, 30d, 90d, 1y
 
   useEffect(() => {
     fetchAnalytics();
@@ -40,11 +54,16 @@ export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
 
   const fetchAnalytics = async () => {
     try {
-      const daysAgo = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+      setLoading(true);
+      const daysAgo = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysAgo);
 
-      // Fetch completed rides
+      // Calculate previous period for growth comparison
+      const prevStartDate = new Date(startDate);
+      prevStartDate.setDate(prevStartDate.getDate() - daysAgo);
+
+      // Fetch completed rides for current period
       const { data: rides, error: ridesError } = await supabase
         .from("rides")
         .select(`
@@ -55,6 +74,9 @@ export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
           rating,
           pickup_address,
           created_at,
+          passenger_id,
+          car_category_id,
+          car_categories(name),
           drivers!inner(name)
         `)
         .eq("status", "completed")
@@ -62,9 +84,40 @@ export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
 
       if (ridesError) throw ridesError;
 
+      // Fetch previous period rides for growth calculation
+      const { data: prevRides } = await supabase
+        .from("rides")
+        .select("id, final_fare")
+        .eq("status", "completed")
+        .gte("created_at", prevStartDate.toISOString())
+        .lt("created_at", startDate.toISOString());
+
+      // Fetch passenger data
+      const { data: passengers } = await supabase
+        .from("passengers")
+        .select("id, created_at")
+        .gte("created_at", prevStartDate.toISOString());
+
+      const currentPassengers = passengers?.filter(p => new Date(p.created_at) >= startDate) || [];
+      const prevPassengers = passengers?.filter(p => new Date(p.created_at) < startDate) || [];
+
       // Calculate basic stats
       const totalRides = rides?.length || 0;
       const totalRevenue = rides?.reduce((sum, ride) => sum + (ride.final_fare || 0), 0) || 0;
+      const prevTotalRides = prevRides?.length || 0;
+      const prevTotalRevenue = prevRides?.reduce((sum, ride) => sum + (ride.final_fare || 0), 0) || 0;
+
+      // Calculate growth percentages
+      const revenueGrowth = prevTotalRevenue > 0 
+        ? ((totalRevenue - prevTotalRevenue) / prevTotalRevenue) * 100 
+        : 0;
+      const ridesGrowth = prevTotalRides > 0 
+        ? ((totalRides - prevTotalRides) / prevTotalRides) * 100 
+        : 0;
+      const passengersGrowth = prevPassengers.length > 0 
+        ? ((currentPassengers.length - prevPassengers.length) / prevPassengers.length) * 100 
+        : 0;
+
       const avgRideDistance = rides?.length 
         ? rides.reduce((sum, ride) => sum + (ride.distance_km || 0), 0) / rides.length 
         : 0;
@@ -86,20 +139,68 @@ export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
         .slice(0, 5)
         .map(([location, count]) => ({ location, count }));
 
-      // Daily stats
-      const dailyStats: { [key: string]: { rides: number; revenue: number } } = {};
+      // Daily stats with passenger tracking
+      const dailyStats: { [key: string]: { rides: number; revenue: number; passengers: Set<string> } } = {};
       rides?.forEach(ride => {
-        const date = new Date(ride.created_at).toDateString();
+        const date = new Date(ride.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         if (!dailyStats[date]) {
-          dailyStats[date] = { rides: 0, revenue: 0 };
+          dailyStats[date] = { rides: 0, revenue: 0, passengers: new Set() };
         }
         dailyStats[date].rides += 1;
         dailyStats[date].revenue += ride.final_fare || 0;
+        dailyStats[date].passengers.add(ride.passenger_id);
       });
 
       const dailyStatsArray = Object.entries(dailyStats)
-        .map(([date, stats]) => ({ date, ...stats }))
+        .map(([date, stats]) => ({ 
+          date, 
+          rides: stats.rides, 
+          revenue: Number(stats.revenue.toFixed(2)),
+          passengers: stats.passengers.size 
+        }))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      // Passenger growth tracking
+      const passengerGrowthData: { [key: string]: { total: number; new: number } } = {};
+      let cumulativePassengers = prevPassengers.length;
+      
+      passengers?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        .forEach(passenger => {
+          const date = new Date(passenger.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          if (new Date(passenger.created_at) >= startDate) {
+            if (!passengerGrowthData[date]) {
+              cumulativePassengers++;
+              passengerGrowthData[date] = { total: cumulativePassengers, new: 1 };
+            } else {
+              cumulativePassengers++;
+              passengerGrowthData[date].total = cumulativePassengers;
+              passengerGrowthData[date].new += 1;
+            }
+          }
+        });
+
+      const passengerGrowth = Object.entries(passengerGrowthData)
+        .map(([date, stats]) => ({ date, ...stats }));
+
+      // Rides by category
+      const categoryStats: { [key: string]: number } = {};
+      rides?.forEach(ride => {
+        const category = ride.car_categories?.name || 'Standard';
+        categoryStats[category] = (categoryStats[category] || 0) + 1;
+      });
+      const ridesByCategory = Object.entries(categoryStats)
+        .map(([name, value]) => ({ name, value }));
+
+      // Hourly distribution
+      const hourlyStats: { [key: number]: number } = {};
+      rides?.forEach(ride => {
+        const hour = new Date(ride.created_at).getHours();
+        hourlyStats[hour] = (hourlyStats[hour] || 0) + 1;
+      });
+      const hourlyDistribution = Array.from({ length: 24 }, (_, i) => ({
+        hour: `${i}:00`,
+        rides: hourlyStats[i] || 0,
+      }));
 
       // Driver stats
       const driverStats: { [key: string]: { rides: number; earnings: number; ratings: number[] } } = {};
@@ -136,6 +237,12 @@ export function ReportsAnalytics({ userRole }: ReportsAnalyticsProps) {
         topPickupLocations,
         dailyStats: dailyStatsArray,
         driverStats: driverStatsArray,
+        ridesByCategory,
+        passengerGrowth,
+        hourlyDistribution,
+        revenueGrowth,
+        ridesGrowth,
+        passengersGrowth,
       });
     } catch (error) {
       console.error("Error fetching analytics:", error);
