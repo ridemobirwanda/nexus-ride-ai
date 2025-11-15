@@ -1,0 +1,715 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Car, Plus, Edit, Trash2, Image as ImageIcon, Calendar, DollarSign, Users, MapPin } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+interface RentalCar {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  car_type: string;
+  fuel_type: string;
+  seating_capacity: number;
+  price_per_hour: number;
+  price_per_day: number;
+  availability_status: string;
+  is_active: boolean;
+  description: string | null;
+  features: any;
+  plate_number: string | null;
+  location_address: string | null;
+  owner_name: string | null;
+  owner_phone: string | null;
+}
+
+interface RentalCarImage {
+  id: string;
+  car_id: string;
+  image_url: string;
+  is_primary: boolean;
+  caption: string | null;
+  display_order: number | null;
+}
+
+interface CarRental {
+  id: string;
+  rental_start: string;
+  rental_end: string;
+  status: string;
+  total_price: number;
+  user_id: string;
+  car_id: string;
+  pickup_location: string | null;
+  return_location: string | null;
+}
+
+interface RentalCarsManagementProps {
+  userRole: string | null;
+}
+
+export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
+  const [cars, setCars] = useState<RentalCar[]>([]);
+  const [rentals, setRentals] = useState<CarRental[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingCar, setEditingCar] = useState<RentalCar | null>(null);
+  const [deletingCarId, setDeletingCarId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
+    brand: "",
+    model: "",
+    year: new Date().getFullYear(),
+    car_type: "Sedan",
+    fuel_type: "Petrol",
+    seating_capacity: 5,
+    price_per_hour: 0,
+    price_per_day: 0,
+    availability_status: "available",
+    is_active: true,
+    description: "",
+    plate_number: "",
+    location_address: "",
+    owner_name: "",
+    owner_phone: "",
+    features: [] as string[],
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [carsResponse, rentalsResponse] = await Promise.all([
+        supabase.from("rental_cars").select("*").order("created_at", { ascending: false }),
+        supabase.from("car_rentals").select("*").order("created_at", { ascending: false }),
+      ]);
+
+      if (carsResponse.error) throw carsResponse.error;
+      if (rentalsResponse.error) throw rentalsResponse.error;
+
+      setCars(carsResponse.data || []);
+      setRentals(rentalsResponse.data || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load rental cars data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const carData = {
+        brand: formData.brand,
+        model: formData.model,
+        year: formData.year,
+        car_type: formData.car_type,
+        fuel_type: formData.fuel_type,
+        seating_capacity: formData.seating_capacity,
+        price_per_hour: formData.price_per_hour,
+        price_per_day: formData.price_per_day,
+        availability_status: formData.availability_status,
+        is_active: formData.is_active,
+        description: formData.description,
+        plate_number: formData.plate_number,
+        location_address: formData.location_address,
+        owner_name: formData.owner_name,
+        owner_phone: formData.owner_phone,
+        features: formData.features,
+      };
+
+      if (editingCar) {
+        const { error } = await supabase
+          .from("rental_cars")
+          .update(carData)
+          .eq("id", editingCar.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Rental car updated successfully",
+        });
+      } else {
+        const { error } = await supabase
+          .from("rental_cars")
+          .insert([carData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Rental car added successfully",
+        });
+      }
+
+      setIsAddDialogOpen(false);
+      setEditingCar(null);
+      resetForm();
+      fetchData();
+    } catch (error) {
+      console.error("Error saving car:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save rental car",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCarId) return;
+
+    try {
+      const { error } = await supabase
+        .from("rental_cars")
+        .delete()
+        .eq("id", deletingCarId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Rental car deleted successfully",
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete rental car",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCarId(null);
+    }
+  };
+
+  const handleEdit = (car: RentalCar) => {
+    setEditingCar(car);
+    setFormData({
+      brand: car.brand,
+      model: car.model,
+      year: car.year,
+      car_type: car.car_type,
+      fuel_type: car.fuel_type,
+      seating_capacity: car.seating_capacity,
+      price_per_hour: car.price_per_hour,
+      price_per_day: car.price_per_day,
+      availability_status: car.availability_status,
+      is_active: car.is_active,
+      description: car.description || "",
+      plate_number: car.plate_number || "",
+      location_address: car.location_address || "",
+      owner_name: car.owner_name || "",
+      owner_phone: car.owner_phone || "",
+      features: Array.isArray(car.features) ? car.features : [],
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      brand: "",
+      model: "",
+      year: new Date().getFullYear(),
+      car_type: "Sedan",
+      fuel_type: "Petrol",
+      seating_capacity: 5,
+      price_per_hour: 0,
+      price_per_day: 0,
+      availability_status: "available",
+      is_active: true,
+      description: "",
+      plate_number: "",
+      location_address: "",
+      owner_name: "",
+      owner_phone: "",
+      features: [],
+    });
+  };
+
+  const filteredCars = cars.filter(car => {
+    const matchesSearch = 
+      car.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      car.plate_number?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = 
+      filterStatus === "all" ||
+      (filterStatus === "active" && car.is_active) ||
+      (filterStatus === "inactive" && !car.is_active) ||
+      car.availability_status === filterStatus;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  const stats = {
+    total: cars.length,
+    active: cars.filter(c => c.is_active).length,
+    available: cars.filter(c => c.availability_status === "available").length,
+    rented: cars.filter(c => c.availability_status === "rented").length,
+    totalBookings: rentals.length,
+    activeBookings: rentals.filter(r => r.status === "active").length,
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Rental Cars Management</h2>
+          <p className="text-muted-foreground">Manage your rental car fleet and bookings</p>
+        </div>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            setEditingCar(null);
+            resetForm();
+          }
+        }}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Rental Car
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingCar ? "Edit" : "Add"} Rental Car</DialogTitle>
+              <DialogDescription>
+                {editingCar ? "Update" : "Add"} rental car details to your fleet
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Brand</Label>
+                  <Input
+                    id="brand"
+                    value={formData.brand}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="model">Model</Label>
+                  <Input
+                    id="model"
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="year">Year</Label>
+                  <Input
+                    id="year"
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="car_type">Type</Label>
+                  <Select value={formData.car_type} onValueChange={(value) => setFormData({ ...formData, car_type: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sedan">Sedan</SelectItem>
+                      <SelectItem value="SUV">SUV</SelectItem>
+                      <SelectItem value="Hatchback">Hatchback</SelectItem>
+                      <SelectItem value="Luxury">Luxury</SelectItem>
+                      <SelectItem value="Van">Van</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fuel_type">Fuel Type</Label>
+                  <Select value={formData.fuel_type} onValueChange={(value) => setFormData({ ...formData, fuel_type: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Petrol">Petrol</SelectItem>
+                      <SelectItem value="Diesel">Diesel</SelectItem>
+                      <SelectItem value="Electric">Electric</SelectItem>
+                      <SelectItem value="Hybrid">Hybrid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="seating_capacity">Seats</Label>
+                  <Input
+                    id="seating_capacity"
+                    type="number"
+                    value={formData.seating_capacity}
+                    onChange={(e) => setFormData({ ...formData, seating_capacity: parseInt(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price_per_hour">Price/Hour ($)</Label>
+                  <Input
+                    id="price_per_hour"
+                    type="number"
+                    step="0.01"
+                    value={formData.price_per_hour}
+                    onChange={(e) => setFormData({ ...formData, price_per_hour: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price_per_day">Price/Day ($)</Label>
+                  <Input
+                    id="price_per_day"
+                    type="number"
+                    step="0.01"
+                    value={formData.price_per_day}
+                    onChange={(e) => setFormData({ ...formData, price_per_day: parseFloat(e.target.value) })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="plate_number">Plate Number</Label>
+                  <Input
+                    id="plate_number"
+                    value={formData.plate_number}
+                    onChange={(e) => setFormData({ ...formData, plate_number: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="availability_status">Status</Label>
+                  <Select value={formData.availability_status} onValueChange={(value) => setFormData({ ...formData, availability_status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">Available</SelectItem>
+                      <SelectItem value="rented">Rented</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location_address">Location Address</Label>
+                <Input
+                  id="location_address"
+                  value={formData.location_address}
+                  onChange={(e) => setFormData({ ...formData, location_address: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="owner_name">Owner Name</Label>
+                  <Input
+                    id="owner_name"
+                    value={formData.owner_name}
+                    onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="owner_phone">Owner Phone</Label>
+                  <Input
+                    id="owner_phone"
+                    value={formData.owner_phone}
+                    onChange={(e) => setFormData({ ...formData, owner_phone: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="is_active">Active</Label>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingCar ? "Update" : "Add"} Car
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Cars</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Active Cars</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats.available}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Currently Rented</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{stats.rented}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalBookings}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Active Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.activeBookings}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="cars" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="cars">Rental Cars</TabsTrigger>
+          <TabsTrigger value="bookings">Bookings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="cars" className="space-y-4">
+          <div className="flex gap-4">
+            <Input
+              placeholder="Search by brand, model, or plate..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="rented">Rented</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Car</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Year</TableHead>
+                  <TableHead>Seats</TableHead>
+                  <TableHead>Price/Hour</TableHead>
+                  <TableHead>Price/Day</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Active</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCars.map((car) => (
+                  <TableRow key={car.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{car.brand} {car.model}</div>
+                        <div className="text-sm text-muted-foreground">{car.plate_number}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{car.car_type}</TableCell>
+                    <TableCell>{car.year}</TableCell>
+                    <TableCell>{car.seating_capacity}</TableCell>
+                    <TableCell>${car.price_per_hour}</TableCell>
+                    <TableCell>${car.price_per_day}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          car.availability_status === "available"
+                            ? "default"
+                            : car.availability_status === "rented"
+                            ? "secondary"
+                            : "outline"
+                        }
+                      >
+                        {car.availability_status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={car.is_active ? "default" : "outline"}>
+                        {car.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(car)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeletingCarId(car.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bookings" className="space-y-4">
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Booking ID</TableHead>
+                  <TableHead>Car</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Total Price</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pickup</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rentals.map((rental) => {
+                  const car = cars.find(c => c.id === rental.car_id);
+                  return (
+                    <TableRow key={rental.id}>
+                      <TableCell className="font-mono text-sm">{rental.id.slice(0, 8)}</TableCell>
+                      <TableCell>
+                        {car ? `${car.brand} ${car.model}` : "Unknown"}
+                      </TableCell>
+                      <TableCell>{new Date(rental.rental_start).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(rental.rental_end).toLocaleDateString()}</TableCell>
+                      <TableCell>${rental.total_price}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            rental.status === "active"
+                              ? "default"
+                              : rental.status === "completed"
+                              ? "secondary"
+                              : "outline"
+                          }
+                        >
+                          {rental.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {rental.pickup_location || "N/A"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <AlertDialog open={!!deletingCarId} onOpenChange={() => setDeletingCarId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this rental car. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

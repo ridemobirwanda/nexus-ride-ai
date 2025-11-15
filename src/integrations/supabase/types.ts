@@ -406,7 +406,7 @@ export type Database = {
           car_plate: string | null
           car_year: number | null
           created_at: string
-          current_location: unknown | null
+          current_location: unknown
           id: string
           is_available: boolean | null
           last_activity_at: string | null
@@ -428,7 +428,7 @@ export type Database = {
           car_plate?: string | null
           car_year?: number | null
           created_at?: string
-          current_location?: unknown | null
+          current_location?: unknown
           id?: string
           is_available?: boolean | null
           last_activity_at?: string | null
@@ -450,7 +450,7 @@ export type Database = {
           car_plate?: string | null
           car_year?: number | null
           created_at?: string
-          current_location?: unknown | null
+          current_location?: unknown
           id?: string
           is_available?: boolean | null
           last_activity_at?: string | null
@@ -1048,7 +1048,7 @@ export type Database = {
           activity_type: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string
           user_type: string
@@ -1058,7 +1058,7 @@ export type Database = {
           activity_type: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id: string
           user_type: string
@@ -1068,7 +1068,7 @@ export type Database = {
           activity_type?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string
           user_type?: string
@@ -1155,18 +1155,9 @@ export type Database = {
           total_trips: number
         }[]
       }
-      get_admin_dashboard_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_current_driver_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_passenger_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_admin_dashboard_stats: { Args: never; Returns: undefined }
+      get_current_driver_id: { Args: never; Returns: string }
+      get_current_passenger_id: { Args: never; Returns: string }
       get_driver_earnings_summary: {
         Args: { p_days?: number; p_driver_user_id: string }
         Returns: {
@@ -1184,18 +1175,12 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_driver: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      log_user_activity: {
-        Args:
-          | Record<PropertyKey, never>
-          | {
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_driver: { Args: { user_id: string }; Returns: boolean }
+      log_user_activity:
+        | { Args: never; Returns: undefined }
+        | {
+            Args: {
               p_activity_details?: Json
               p_activity_type: string
               p_ip_address?: unknown
@@ -1203,28 +1188,18 @@ export type Database = {
               p_user_id: string
               p_user_type: string
             }
-        Returns: undefined
-      }
-      point_distance: {
-        Args: { p1: unknown; p2: unknown }
-        Returns: number
-      }
+            Returns: string
+          }
+      point_distance: { Args: { p1: unknown; p2: unknown }; Returns: number }
       process_payment: {
         Args: { p_amount: number; p_method: string; p_ride_id: string }
         Returns: string
       }
-      promote_user_to_admin: {
-        Args: { p_user_email: string }
-        Returns: string
-      }
-      request_admin_password_reset: {
-        Args: Record<PropertyKey, never> | { admin_email: string }
-        Returns: undefined
-      }
-      setup_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      promote_user_to_admin: { Args: { p_user_email: string }; Returns: string }
+      request_admin_password_reset:
+        | { Args: never; Returns: undefined }
+        | { Args: { admin_email: string }; Returns: string }
+      setup_admin_user: { Args: never; Returns: undefined }
       update_driver_location: {
         Args: {
           p_accuracy?: number
@@ -1238,10 +1213,7 @@ export type Database = {
         Args: { p_status: Database["public"]["Enums"]["driver_status"] }
         Returns: boolean
       }
-      update_inactive_drivers: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      update_inactive_drivers: { Args: never; Returns: number }
     }
     Enums: {
       driver_status: "offline" | "available" | "on_trip" | "inactive"

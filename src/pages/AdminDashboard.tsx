@@ -7,6 +7,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { RideManagement } from "@/components/admin/RideManagement";
+import { RentalCarsManagement } from "@/components/admin/RentalCarsManagement";
 import { PricingControl } from "@/components/admin/PricingControl";
 import { DriverVerification } from "@/components/admin/DriverVerification";
 import { ReportsAnalytics } from "@/components/admin/ReportsAnalytics";
@@ -71,6 +72,8 @@ const AdminDashboard = () => {
         return <UserManagement userRole={userRole} />;
       case "rides":
         return <RideManagement userRole={userRole} />;
+      case "rental-cars":
+        return <RentalCarsManagement userRole={userRole} />;
       case "pricing":
         return <PricingControl userRole={userRole} />;
       case "verification":
