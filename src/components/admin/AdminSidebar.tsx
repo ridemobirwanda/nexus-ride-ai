@@ -1,4 +1,4 @@
-import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity, Settings, Banknote, FileText } from "lucide-react";
+import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity, Settings, Banknote, FileText, CarFront } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,7 @@ const menuItems = [
   { id: "overview", label: "Overview", icon: Home, requiredRole: ["super_admin", "admin", "support"] },
   { id: "users", label: "User Management", icon: Users, requiredRole: ["super_admin", "admin"] },
   { id: "rides", label: "Ride Management", icon: Car, requiredRole: ["super_admin", "admin", "support"] },
+  { id: "rental-cars", label: "Rental Cars", icon: CarFront, requiredRole: ["super_admin", "admin"] },
   { id: "pricing", label: "Pricing & Surge", icon: DollarSign, requiredRole: ["super_admin", "admin"] },
   { id: "verification", label: "Driver Verification", icon: CheckCircle, requiredRole: ["super_admin", "admin"] },
   { id: "analytics", label: "Reports & Analytics", icon: BarChart3, requiredRole: ["super_admin", "admin"] },
