@@ -1,4 +1,5 @@
 import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity, Settings, Banknote, FileText, CarFront } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Sidebar,
   SidebarContent,
@@ -17,24 +18,25 @@ interface AdminSidebarProps {
   userRole: string | null;
 }
 
-const menuItems = [
-  { id: "overview", label: "Overview", icon: Home, requiredRole: ["super_admin", "admin", "support"] },
-  { id: "users", label: "User Management", icon: Users, requiredRole: ["super_admin", "admin"] },
-  { id: "rides", label: "Ride Management", icon: Car, requiredRole: ["super_admin", "admin", "support"] },
-  { id: "rental-cars", label: "Rental Cars", icon: CarFront, requiredRole: ["super_admin", "admin"] },
-  { id: "pricing", label: "Pricing & Surge", icon: DollarSign, requiredRole: ["super_admin", "admin"] },
-  { id: "verification", label: "Driver Verification", icon: CheckCircle, requiredRole: ["super_admin", "admin"] },
-  { id: "analytics", label: "Reports & Analytics", icon: BarChart3, requiredRole: ["super_admin", "admin"] },
-  { id: "promos", label: "Promo Codes", icon: Tag, requiredRole: ["super_admin", "admin"] },
-  { id: "support", label: "Support Center", icon: MessageSquare, requiredRole: ["super_admin", "admin", "support"] },
-  { id: "activity", label: "Activity Tracking", icon: Activity, requiredRole: ["super_admin", "admin"] },
-  { id: "financial", label: "Financial Management", icon: Banknote, requiredRole: ["super_admin", "admin"] },
-  { id: "content", label: "Content Management", icon: FileText, requiredRole: ["super_admin", "admin", "support"] },
-  { id: "system", label: "System Settings", icon: Settings, requiredRole: ["super_admin"] },
-];
-
 export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebarProps) {
   const { open } = useSidebar();
+  const { t } = useTranslation();
+
+  const menuItems = [
+    { id: "overview", label: t('admin.overview'), icon: Home, requiredRole: ["super_admin", "admin", "support"] },
+    { id: "users", label: t('admin.userManagement'), icon: Users, requiredRole: ["super_admin", "admin"] },
+    { id: "rides", label: t('admin.rideManagement'), icon: Car, requiredRole: ["super_admin", "admin", "support"] },
+    { id: "rental-cars", label: t('admin.rentalCars'), icon: CarFront, requiredRole: ["super_admin", "admin"] },
+    { id: "pricing", label: t('admin.pricing'), icon: DollarSign, requiredRole: ["super_admin", "admin"] },
+    { id: "verification", label: t('admin.driverVerification'), icon: CheckCircle, requiredRole: ["super_admin", "admin"] },
+    { id: "analytics", label: t('admin.analytics'), icon: BarChart3, requiredRole: ["super_admin", "admin"] },
+    { id: "promos", label: t('admin.promoCodes'), icon: Tag, requiredRole: ["super_admin", "admin"] },
+    { id: "support", label: t('admin.support'), icon: MessageSquare, requiredRole: ["super_admin", "admin", "support"] },
+    { id: "activity", label: t('admin.activity'), icon: Activity, requiredRole: ["super_admin", "admin"] },
+    { id: "financial", label: t('admin.financial'), icon: Banknote, requiredRole: ["super_admin", "admin"] },
+    { id: "content", label: t('admin.content'), icon: FileText, requiredRole: ["super_admin", "admin", "support"] },
+    { id: "system", label: t('admin.systemSettings'), icon: Settings, requiredRole: ["super_admin"] },
+  ];
 
   const filteredMenuItems = menuItems.filter(item => 
     userRole && item.requiredRole.includes(userRole)
@@ -49,7 +51,7 @@ export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebar
           </div>
           {open && (
             <div>
-              <h2 className="font-bold text-foreground">Admin Panel</h2>
+              <h2 className="font-bold text-foreground">{t('admin.title')}</h2>
               <p className="text-xs text-muted-foreground capitalize">{userRole?.replace('_', ' ')}</p>
             </div>
           )}
@@ -58,7 +60,7 @@ export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebar
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('admin.title')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredMenuItems.map((item) => (
