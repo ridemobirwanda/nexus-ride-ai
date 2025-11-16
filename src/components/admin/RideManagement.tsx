@@ -21,8 +21,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Search, Eye, MapPin, Clock, DollarSign } from "lucide-react";
+import { Search, Eye, MapPin, Clock, DollarSign, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAutoDispatch } from "@/hooks/useAutoDispatch";
 
 interface RideManagementProps {
   userRole: string | null;
@@ -48,8 +49,9 @@ export function RideManagement({ userRole }: RideManagementProps) {
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRide, setSelectedRide] = useState<Ride | null>(null);
   const { toast } = useToast();
+  const { triggerAutoDispatch } = useAutoDispatch({ enabled: false }); // Manual control
+  const [selectedRide, setSelectedRide] = useState<Ride | null>(null);
 
   useEffect(() => {
     fetchRides();
@@ -201,11 +203,23 @@ export function RideManagement({ userRole }: RideManagementProps) {
             </TableCell>
             <TableCell>{new Date(ride.created_at).toLocaleDateString()}</TableCell>
             <TableCell>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedRide(ride)}>
-                    <Eye className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                {ride.status === 'pending' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => triggerAutoDispatch(ride.id)}
+                    className="h-8"
+                  >
+                    <Zap className="w-3 h-3 mr-1" />
+                    Auto-Assign
                   </Button>
+                )}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedRide(ride)}>
+                      <Eye className="w-4 h-4" />
+                    </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
@@ -320,6 +334,7 @@ export function RideManagement({ userRole }: RideManagementProps) {
                   )}
                 </DialogContent>
               </Dialog>
+              </div>
             </TableCell>
           </TableRow>
         ))}

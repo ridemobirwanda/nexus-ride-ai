@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.cleanup-inactive-drivers]
 verify_jwt = false
+
+[functions.auto-dispatch-ride]
+verify_jwt = false
