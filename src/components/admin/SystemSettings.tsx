@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ interface AppSettings {
 }
 
 export function SystemSettings({ userRole }: SystemSettingsProps) {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<AppSettings>({
     maintenanceMode: false,
     allowNewRegistrations: true,
@@ -92,8 +94,8 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
     } catch (error) {
       console.error('Error fetching settings:', error);
       toast({
-        title: "Error",
-        description: "Failed to load system settings",
+        title: t('errors.unknownError'),
+        description: t('errors.loadFailed'),
         variant: "destructive",
       });
     } finally {
@@ -104,8 +106,8 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
   const handleSaveSettings = async () => {
     if (userRole !== 'super_admin') {
       toast({
-        title: "Access Denied",
-        description: "Only super admins can modify system settings.",
+        title: t('errors.accessDenied'),
+        description: t('errors.noPermission'),
         variant: "destructive",
       });
       return;
@@ -142,14 +144,14 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
       }
       
       toast({
-        title: "Settings Updated",
-        description: "System settings have been saved successfully.",
+        title: t('settings.settingsUpdated'),
+        description: t('settings.settingsSaved'),
       });
     } catch (error) {
       console.error('Error saving settings:', error);
       toast({
-        title: "Error",
-        description: "Failed to update system settings.",
+        title: t('errors.unknownError'),
+        description: t('errors.saveFailed'),
         variant: "destructive",
       });
     } finally {
@@ -171,9 +173,9 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">System Settings</h1>
+          <h1 className="text-3xl font-bold">{t('admin.systemSettings')}</h1>
           <p className="text-muted-foreground">
-            Manage global application settings and configurations
+            {t('settings.title')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -183,10 +185,10 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
             disabled={loading}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            {t('common.refresh')}
           </Button>
           <Badge variant={settings.maintenanceMode ? "destructive" : "default"}>
-            {settings.maintenanceMode ? "Maintenance Mode" : "Operational"}
+            {settings.maintenanceMode ? t('admin.maintenanceMode') : t('admin.operational')}
           </Badge>
         </div>
       </div>
@@ -195,22 +197,23 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            General
+            {t('settings.general')}
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            Notifications
+            {t('settings.notifications')}
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Security
+            {t('settings.security')}
           </TabsTrigger>
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            System
+            {t('settings.system')}
           </TabsTrigger>
           <TabsTrigger value="dispatch" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
+            {t('settings.autoDispatch')}
             Auto-Dispatch
           </TabsTrigger>
         </TabsList>
@@ -524,14 +527,14 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
           disabled={saving}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
-          Reset
+          {t('settings.reset')}
         </Button>
         <Button 
           onClick={handleSaveSettings} 
           disabled={saving || isReadOnly}
           className="w-32"
         >
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? t('settings.saving') : t('settings.saveChanges')}
         </Button>
       </div>
     </div>

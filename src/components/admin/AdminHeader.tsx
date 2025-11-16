@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, LogOut, Settings, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface AdminHeaderProps {
   userRole: string | null;
@@ -22,6 +24,7 @@ export function AdminHeader({ userRole }: AdminHeaderProps) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -30,14 +33,14 @@ export function AdminHeader({ userRole }: AdminHeaderProps) {
       if (error) throw error;
       
       toast({
-        title: "Signed Out",
-        description: "You have been successfully signed out.",
+        title: t('auth.signOut'),
+        description: t('success.saved'),
       });
       navigate("/admin/auth");
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to sign out. Please try again.",
+        title: t('errors.unknownError'),
+        description: t('errors.saveFailed'),
         variant: "destructive",
       });
     } finally {
@@ -62,13 +65,15 @@ export function AdminHeader({ userRole }: AdminHeaderProps) {
     <header className="h-14 border-b border-border/20 bg-card/50 backdrop-blur-sm">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t('admin.title')}</h1>
           <Badge variant={getRoleBadgeVariant(userRole)} className="capitalize">
             {userRole?.replace('_', ' ')}
           </Badge>
         </div>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+          
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="w-4 h-4" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
@@ -78,20 +83,20 @@ export function AdminHeader({ userRole }: AdminHeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
-                <span className="hidden md:inline">Account</span>
+                <span className="hidden md:inline">{t('common.view')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('admin.title')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings className="w-4 h-4 mr-2" />
-                Settings
+                {t('settings.title')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} disabled={loading} className="text-destructive">
                 <LogOut className="w-4 h-4 mr-2" />
-                {loading ? "Signing out..." : "Sign out"}
+                {loading ? t('common.loading') : t('auth.signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
