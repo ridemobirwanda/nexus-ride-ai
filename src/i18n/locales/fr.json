@@ -18,7 +18,29 @@
     "close": "Fermer",
     "add": "Ajouter",
     "update": "Mettre à jour",
-    "create": "Créer"
+    "create": "Créer",
+    "continue": "Continuer",
+    "getStarted": "Commencer"
+  },
+  "nav": {
+    "features": "Fonctionnalités",
+    "carRentals": "Location de Voitures",
+    "safety": "Sécurité",
+    "pricing": "Tarification",
+    "passengerLogin": "Connexion Passager",
+    "driveWithUs": "Conduire avec nous"
+  },
+  "hero": {
+    "title": "Futur",
+    "subtitle": "de la Mobilité",
+    "description": "Découvrez la nouvelle génération de services de transport avec correspondance IA, suivi en temps réel et paiements transparents.",
+    "under3mins": "Moins de 3 min",
+    "safe100": "100% Sécurisé",
+    "liveTracking": "Suivi en Direct",
+    "smartAI": "IA Intelligente",
+    "bookRide": "Réserver une Course",
+    "rentCar": "Louer une Voiture",
+    "becomeDriver": "Devenir Chauffeur"
   },
   "auth": {
     "signIn": "Connexion",
@@ -29,7 +51,67 @@
     "forgotPassword": "Mot de passe oublié ?",
     "resetPassword": "Réinitialiser le mot de passe",
     "dontHaveAccount": "Vous n'avez pas de compte ?",
-    "alreadyHaveAccount": "Vous avez déjà un compte ?"
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "fullName": "Nom Complet",
+    "phoneNumber": "Numéro de Téléphone",
+    "welcomeBack": "Bon Retour",
+    "createAccount": "Créer un Compte"
+  },
+  "passenger": {
+    "dashboard": "Tableau de Bord Passager",
+    "bookRide": "Réserver une Course",
+    "myRides": "Mes Courses",
+    "profile": "Profil",
+    "history": "Historique",
+    "currentLocation": "Position Actuelle",
+    "pickupLocation": "Lieu de Prise en Charge",
+    "dropoffLocation": "Lieu de Dépose",
+    "selectCategory": "Sélectionner une Catégorie",
+    "estimatedFare": "Tarif Estimé",
+    "confirmBooking": "Confirmer la Réservation",
+    "rideStatus": "État de la Course",
+    "findingDriver": "Recherche de Chauffeur",
+    "driverAssigned": "Chauffeur Attribué",
+    "onTheWay": "En Route",
+    "arrived": "Arrivé",
+    "inProgress": "En Cours"
+  },
+  "driver": {
+    "dashboard": "Tableau de Bord Chauffeur",
+    "goOnline": "Se Connecter",
+    "goOffline": "Se Déconnecter",
+    "available": "Disponible",
+    "onTrip": "En Course",
+    "offline": "Hors Ligne",
+    "todayEarnings": "Gains d'Aujourd'hui",
+    "totalTrips": "Total des Courses",
+    "rating": "Note",
+    "acceptRide": "Accepter la Course",
+    "declineRide": "Refuser la Course",
+    "startTrip": "Commencer la Course",
+    "completeTrip": "Terminer la Course",
+    "carSetup": "Configuration Véhicule",
+    "carModel": "Modèle de Voiture",
+    "carPlate": "Plaque d'Immatriculation",
+    "carColor": "Couleur",
+    "carYear": "Année"
+  },
+  "booking": {
+    "title": "Réserver Votre Course",
+    "selectPickup": "Sélectionner le Point de Prise en Charge",
+    "selectDropoff": "Sélectionner le Point de Dépose",
+    "searchLocation": "Rechercher un lieu",
+    "useCurrentLocation": "Utiliser la Position Actuelle",
+    "selectOnMap": "Sélectionner sur la Carte",
+    "paymentMethod": "Mode de Paiement",
+    "cash": "Espèces",
+    "mobileMoney": "Mobile Money",
+    "card": "Carte Bancaire",
+    "bookNow": "Réserver Maintenant",
+    "fare": "Tarif",
+    "distance": "Distance",
+    "duration": "Durée",
+    "category": "Catégorie"
   },
   "admin": {
     "title": "Panneau d'Administration",
@@ -125,12 +207,16 @@
     "noPermission": "Vous n'avez pas la permission d'effectuer cette action",
     "loadFailed": "Échec du chargement des données",
     "saveFailed": "Échec de l'enregistrement des modifications",
-    "unknownError": "Une erreur inconnue s'est produite"
+    "unknownError": "Une erreur inconnue s'est produite",
+    "locationError": "Erreur d'Accès à la Position",
+    "authError": "Erreur d'Authentification"
   },
   "success": {
     "saved": "Modifications enregistrées avec succès",
     "created": "Créé avec succès",
     "updated": "Mis à jour avec succès",
-    "deleted": "Supprimé avec succès"
+    "deleted": "Supprimé avec succès",
+    "booked": "Course réservée avec succès",
+    "locationDetected": "Position Détectée"
   }
 }

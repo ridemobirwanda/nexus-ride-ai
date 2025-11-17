@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ import {
   Settings
 } from 'lucide-react';
 import DriverCarSetup from '@/components/DriverCarSetup';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface Driver {
@@ -58,6 +60,7 @@ const DriverDashboard = () => {
   const [pendingRides, setPendingRides] = useState<Ride[]>([]);
   const [showCarSetup, setShowCarSetup] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Auth state listener with driver verification
   useEffect(() => {
