@@ -1,6 +1,9 @@
 import { Car, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
+  const { t } = useTranslation();
+  
   return (
     <footer className="bg-muted/30 border-t border-border">
       <div className="container mx-auto px-4 py-16">
@@ -16,8 +19,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-muted-foreground">
-              The future of transportation is here. Experience seamless, 
-              safe, and smart rides with RideNext.
+              {t('footer.tagline')}
             </p>
             <div className="flex gap-4">
               <div className="p-2 rounded-lg bg-muted hover:bg-primary/20 transition-smooth cursor-pointer">
