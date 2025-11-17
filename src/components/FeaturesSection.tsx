@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { 
   Brain, 
   Mic, 
@@ -14,62 +15,64 @@ import {
 } from 'lucide-react';
 
 const FeaturesSection = () => {
+  const { t } = useTranslation();
+  
   const coreFeatures = [
     {
       icon: MapPin,
-      title: "Real-Time Tracking",
-      description: "Track your driver's location in real-time with precision GPS technology"
+      title: t('features.realTimeTracking'),
+      description: t('features.realTimeTrackingDesc')
     },
     {
       icon: Clock,
-      title: "Instant Booking",
-      description: "Book rides in seconds with our lightning-fast matching algorithm"
+      title: t('features.instantBooking'),
+      description: t('features.instantBookingDesc')
     },
     {
       icon: Shield,
-      title: "Safety First",
-      description: "SOS button, ride sharing, and driver verification for your peace of mind"
+      title: t('features.safetyFirst'),
+      description: t('features.safetyFirstDesc')
     },
     {
       icon: CreditCard,
-      title: "Multiple Payments",
-      description: "Cash, mobile money (MTN, Airtel), and card payments supported"
+      title: t('features.multiplePayments'),
+      description: t('features.multiplePaymentsDesc')
     },
     {
       icon: MessageCircle,
-      title: "In-App Chat",
-      description: "Communicate with your driver without sharing personal numbers"
+      title: t('features.inAppChat'),
+      description: t('features.inAppChatDesc')
     },
     {
       icon: Star,
-      title: "Driver Ratings",
-      description: "Rate and review drivers to maintain high service quality"
+      title: t('features.driverRatings'),
+      description: t('features.driverRatingsDesc')
     }
   ];
 
   const futuristicFeatures = [
     {
       icon: Brain,
-      title: "AI Fare Prediction",
-      description: "Smart pricing that adapts to traffic, weather, and demand patterns",
+      title: t('features.aiFarePrediction'),
+      description: t('features.aiFarePredictionDesc'),
       gradient: "gradient-primary"
     },
     {
       icon: Mic,
-      title: "Voice Assistant",
-      description: "Book rides hands-free with our intelligent voice booking system",
+      title: t('features.voiceAssistant'),
+      description: t('features.voiceAssistantDesc'),
       gradient: "gradient-accent"
     },
     {
       icon: Leaf,
-      title: "Eco-Friendly Routes",
-      description: "Get suggestions for shared rides and eco-friendly vehicle options",
+      title: t('features.ecoFriendly'),
+      description: t('features.ecoFriendlyDesc'),
       gradient: "gradient-primary"
     },
     {
       icon: Gift,
-      title: "Loyalty Rewards",
-      description: "Earn points for every ride and unlock exclusive benefits",
+      title: t('features.loyaltyRewards'),
+      description: t('features.loyaltyRewardsDesc'),
       gradient: "gradient-accent"
     }
   ];
@@ -80,14 +83,10 @@ const FeaturesSection = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
-            <span className="gradient-hero bg-clip-text text-transparent">
-              Revolutionary
-            </span>{" "}
-            Features
+            {t('features.title')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Experience the future of transportation with cutting-edge technology 
-            and user-centric design
+            {t('features.subtitle')}
           </p>
         </div>
 
@@ -112,12 +111,11 @@ const FeaturesSection = () => {
         <div className="text-center mb-12">
           <h3 className="text-3xl font-bold mb-4">
             <span className="gradient-accent bg-clip-text text-transparent">
-              AI-Powered
-            </span>{" "}
-            Innovations
+              {t('features.aiPowered')}
+            </span>
           </h3>
           <p className="text-lg text-muted-foreground">
-            Next-generation features that set us apart
+            {t('features.aiPoweredSubtitle')}
           </p>
         </div>
 
