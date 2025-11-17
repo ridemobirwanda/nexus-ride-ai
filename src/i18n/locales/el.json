@@ -18,7 +18,29 @@
     "close": "Κλείσιμο",
     "add": "Προσθήκη",
     "update": "Ενημέρωση",
-    "create": "Δημιουργία"
+    "create": "Δημιουργία",
+    "continue": "Συνέχεια",
+    "getStarted": "Ξεκινήστε"
+  },
+  "nav": {
+    "features": "Χαρακτηριστικά",
+    "carRentals": "Ενοικίαση Αυτοκινήτων",
+    "safety": "Ασφάλεια",
+    "pricing": "Τιμολόγηση",
+    "passengerLogin": "Σύνδεση Επιβάτη",
+    "driveWithUs": "Οδηγήστε μαζί μας"
+  },
+  "hero": {
+    "title": "Μέλλον",
+    "subtitle": "της Κινητικότητας",
+    "description": "Ανακαλύψτε την επόμενη γενιά υπηρεσιών μετακίνησης με αντιστοίχιση AI, παρακολούθηση σε πραγματικό χρόνο και απρόσκοπτες πληρωμές.",
+    "under3mins": "Κάτω από 3 λεπτά",
+    "safe100": "100% Ασφαλές",
+    "liveTracking": "Ζωντανή Παρακολούθηση",
+    "smartAI": "Έξυπνο AI",
+    "bookRide": "Κράτηση Διαδρομής",
+    "rentCar": "Ενοικίαση Αυτοκινήτου",
+    "becomeDriver": "Γίνετε Οδηγός"
   },
   "auth": {
     "signIn": "Σύνδεση",
@@ -29,7 +51,67 @@
     "forgotPassword": "Ξεχάσατε τον κωδικό;",
     "resetPassword": "Επαναφορά Κωδικού",
     "dontHaveAccount": "Δεν έχετε λογαριασμό;",
-    "alreadyHaveAccount": "Έχετε ήδη λογαριασμό;"
+    "alreadyHaveAccount": "Έχετε ήδη λογαριασμό;",
+    "fullName": "Πλήρες Όνομα",
+    "phoneNumber": "Αριθμός Τηλεφώνου",
+    "welcomeBack": "Καλώς Επιστρέψατε",
+    "createAccount": "Δημιουργία Λογαριασμού"
+  },
+  "passenger": {
+    "dashboard": "Πίνακας Επιβάτη",
+    "bookRide": "Κράτηση Διαδρομής",
+    "myRides": "Οι Διαδρομές μου",
+    "profile": "Προφίλ",
+    "history": "Ιστορικό",
+    "currentLocation": "Τρέχουσα Τοποθεσία",
+    "pickupLocation": "Σημείο Παραλαβής",
+    "dropoffLocation": "Σημείο Αποβίβασης",
+    "selectCategory": "Επιλογή Κατηγορίας",
+    "estimatedFare": "Εκτιμώμενο Κόμιστρο",
+    "confirmBooking": "Επιβεβαίωση Κράτησης",
+    "rideStatus": "Κατάσταση Διαδρομής",
+    "findingDriver": "Αναζήτηση Οδηγού",
+    "driverAssigned": "Οδηγός Ανατέθηκε",
+    "onTheWay": "Στον Δρόμο",
+    "arrived": "Έφτασε",
+    "inProgress": "Σε Εξέλιξη"
+  },
+  "driver": {
+    "dashboard": "Πίνακας Οδηγού",
+    "goOnline": "Σύνδεση",
+    "goOffline": "Αποσύνδεση",
+    "available": "Διαθέσιμος",
+    "onTrip": "Σε Διαδρομή",
+    "offline": "Εκτός Σύνδεσης",
+    "todayEarnings": "Κέρδη Σήμερα",
+    "totalTrips": "Συνολικές Διαδρομές",
+    "rating": "Αξιολόγηση",
+    "acceptRide": "Αποδοχή Διαδρομής",
+    "declineRide": "Απόρριψη Διαδρομής",
+    "startTrip": "Έναρξη Διαδρομής",
+    "completeTrip": "Ολοκλήρωση Διαδρομής",
+    "carSetup": "Ρύθμιση Αυτοκινήτου",
+    "carModel": "Μοντέλο Αυτοκινήτου",
+    "carPlate": "Πινακίδα",
+    "carColor": "Χρώμα",
+    "carYear": "Έτος"
+  },
+  "booking": {
+    "title": "Κράτηση Διαδρομής",
+    "selectPickup": "Επιλογή Παραλαβής",
+    "selectDropoff": "Επιλογή Αποβίβασης",
+    "searchLocation": "Αναζήτηση τοποθεσίας",
+    "useCurrentLocation": "Χρήση Τρέχουσας Τοποθεσίας",
+    "selectOnMap": "Επιλογή στον Χάρτη",
+    "paymentMethod": "Μέθοδος Πληρωμής",
+    "cash": "Μετρητά",
+    "mobileMoney": "Mobile Money",
+    "card": "Κάρτα",
+    "bookNow": "Κράτηση Τώρα",
+    "fare": "Κόμιστρο",
+    "distance": "Απόσταση",
+    "duration": "Διάρκεια",
+    "category": "Κατηγορία"
   },
   "admin": {
     "title": "Πίνακας Διαχείρισης",
@@ -125,12 +207,16 @@
     "noPermission": "Δεν έχετε άδεια για αυτή την ενέργεια",
     "loadFailed": "Αποτυχία φόρτωσης δεδομένων",
     "saveFailed": "Αποτυχία αποθήκευσης αλλαγών",
-    "unknownError": "Προέκυψε άγνωστο σφάλμα"
+    "unknownError": "Προέκυψε άγνωστο σφάλμα",
+    "locationError": "Σφάλμα Πρόσβασης Τοποθεσίας",
+    "authError": "Σφάλμα Ελέγχου Ταυτότητας"
   },
   "success": {
     "saved": "Οι αλλαγές αποθηκεύτηκαν επιτυχώς",
     "created": "Δημιουργήθηκε επιτυχώς",
     "updated": "Ενημερώθηκε επιτυχώς",
-    "deleted": "Διαγράφηκε επιτυχώς"
+    "deleted": "Διαγράφηκε επιτυχώς",
+    "booked": "Η διαδρομή κρατήθηκε επιτυχώς",
+    "locationDetected": "Τοποθεσία Εντοπίστηκε"
   }
 }

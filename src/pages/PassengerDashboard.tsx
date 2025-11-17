@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { LogOut, MapPin, Users, Loader2 } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import CarCategorySelector from '@/components/CarCategorySelector';
 import SeatFilterSelector from '@/components/SeatFilterSelector';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Passenger {
   id: string;
@@ -45,6 +47,7 @@ const PassengerDashboard = () => {
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CarCategory | null>(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Auth state and location detection
   useEffect(() => {

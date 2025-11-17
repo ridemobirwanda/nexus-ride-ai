@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Shield, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import heroCarImage from '@/assets/taxi-cab-hero.jpg';
 import appMockupImage from '@/assets/app-mockup.jpg';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -27,14 +29,13 @@ const HeroSection = () => {
             <div className="space-y-4">
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
                 <span className="gradient-hero bg-clip-text text-transparent">
-                  Future
+                  {t('hero.title')}
                 </span>
                 <br />
-                <span className="text-foreground">of Mobility</span>
+                <span className="text-foreground">{t('hero.subtitle')}</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-lg">
-                Experience the next generation of ride-hailing with AI-powered matching, 
-                real-time tracking, and seamless payments.
+                {t('hero.description')}
               </p>
             </div>
 
@@ -45,7 +46,7 @@ const HeroSection = () => {
                   <Clock className="h-5 w-5 text-primary" />
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Under 3 mins
+                  {t('hero.under3mins')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -53,7 +54,7 @@ const HeroSection = () => {
                   <Shield className="h-5 w-5 text-accent" />
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  100% Safe
+                  {t('hero.safe100')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -61,7 +62,7 @@ const HeroSection = () => {
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Live Tracking
+                  {t('hero.liveTracking')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -69,7 +70,7 @@ const HeroSection = () => {
                   <Smartphone className="h-5 w-5 text-accent" />
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Smart AI
+                  {t('hero.smartAI')}
                 </span>
               </div>
             </div>
@@ -83,7 +84,7 @@ const HeroSection = () => {
                 onClick={() => navigate('/passenger')}
               >
                 <MapPin className="h-5 w-5" />
-                Book a Ride
+                {t('hero.bookRide')}
               </Button>
               <Button 
                 size="lg" 
@@ -91,7 +92,7 @@ const HeroSection = () => {
                 className="text-lg px-8 py-6"
                 onClick={() => navigate('/cars')}
               >
-                Rent a Car
+                {t('hero.rentCar')}
               </Button>
               <Button 
                 size="lg" 
@@ -99,7 +100,7 @@ const HeroSection = () => {
                 className="text-lg px-8 py-6"
                 onClick={() => navigate('/driver/auth')}
               >
-                Become a Driver
+                {t('hero.becomeDriver')}
               </Button>
             </div>
 

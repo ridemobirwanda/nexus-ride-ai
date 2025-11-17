@@ -18,7 +18,29 @@
     "close": "Close",
     "add": "Add",
     "update": "Update",
-    "create": "Create"
+    "create": "Create",
+    "continue": "Continue",
+    "getStarted": "Get Started"
+  },
+  "nav": {
+    "features": "Features",
+    "carRentals": "Car Rentals",
+    "safety": "Safety",
+    "pricing": "Pricing",
+    "passengerLogin": "Passenger Login",
+    "driveWithUs": "Drive with us"
+  },
+  "hero": {
+    "title": "Future",
+    "subtitle": "of Mobility",
+    "description": "Experience the next generation of ride-hailing with AI-powered matching, real-time tracking, and seamless payments.",
+    "under3mins": "Under 3 mins",
+    "safe100": "100% Safe",
+    "liveTracking": "Live Tracking",
+    "smartAI": "Smart AI",
+    "bookRide": "Book a Ride",
+    "rentCar": "Rent a Car",
+    "becomeDriver": "Become a Driver"
   },
   "auth": {
     "signIn": "Sign In",
@@ -29,7 +51,67 @@
     "forgotPassword": "Forgot Password?",
     "resetPassword": "Reset Password",
     "dontHaveAccount": "Don't have an account?",
-    "alreadyHaveAccount": "Already have an account?"
+    "alreadyHaveAccount": "Already have an account?",
+    "fullName": "Full Name",
+    "phoneNumber": "Phone Number",
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account"
+  },
+  "passenger": {
+    "dashboard": "Passenger Dashboard",
+    "bookRide": "Book a Ride",
+    "myRides": "My Rides",
+    "profile": "Profile",
+    "history": "History",
+    "currentLocation": "Current Location",
+    "pickupLocation": "Pickup Location",
+    "dropoffLocation": "Dropoff Location",
+    "selectCategory": "Select Car Category",
+    "estimatedFare": "Estimated Fare",
+    "confirmBooking": "Confirm Booking",
+    "rideStatus": "Ride Status",
+    "findingDriver": "Finding Driver",
+    "driverAssigned": "Driver Assigned",
+    "onTheWay": "On the Way",
+    "arrived": "Arrived",
+    "inProgress": "In Progress"
+  },
+  "driver": {
+    "dashboard": "Driver Dashboard",
+    "goOnline": "Go Online",
+    "goOffline": "Go Offline",
+    "available": "Available",
+    "onTrip": "On Trip",
+    "offline": "Offline",
+    "todayEarnings": "Today's Earnings",
+    "totalTrips": "Total Trips",
+    "rating": "Rating",
+    "acceptRide": "Accept Ride",
+    "declineRide": "Decline Ride",
+    "startTrip": "Start Trip",
+    "completeTrip": "Complete Trip",
+    "carSetup": "Car Setup",
+    "carModel": "Car Model",
+    "carPlate": "License Plate",
+    "carColor": "Car Color",
+    "carYear": "Car Year"
+  },
+  "booking": {
+    "title": "Book Your Ride",
+    "selectPickup": "Select Pickup",
+    "selectDropoff": "Select Dropoff",
+    "searchLocation": "Search for a location",
+    "useCurrentLocation": "Use Current Location",
+    "selectOnMap": "Select on Map",
+    "paymentMethod": "Payment Method",
+    "cash": "Cash",
+    "mobileMoney": "Mobile Money",
+    "card": "Credit/Debit Card",
+    "bookNow": "Book Now",
+    "fare": "Fare",
+    "distance": "Distance",
+    "duration": "Duration",
+    "category": "Category"
   },
   "admin": {
     "title": "Admin Panel",
@@ -125,12 +207,16 @@
     "noPermission": "You don't have permission to perform this action",
     "loadFailed": "Failed to load data",
     "saveFailed": "Failed to save changes",
-    "unknownError": "An unknown error occurred"
+    "unknownError": "An unknown error occurred",
+    "locationError": "Location Access Error",
+    "authError": "Authentication Error"
   },
   "success": {
     "saved": "Changes saved successfully",
     "created": "Created successfully",
     "updated": "Updated successfully",
-    "deleted": "Deleted successfully"
+    "deleted": "Deleted successfully",
+    "booked": "Ride booked successfully",
+    "locationDetected": "Location Detected"
   }
 }
