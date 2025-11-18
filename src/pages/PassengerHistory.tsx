@@ -47,7 +47,7 @@ interface Ride {
 
 const PassengerHistory = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [rides, setRides] = useState<Ride[]>([]);
   const [filteredRides, setFilteredRides] = useState<Ride[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,7 +126,8 @@ const PassengerHistory = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    const locale = i18n.language || 'en';
+    return date.toLocaleDateString(locale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -222,13 +223,13 @@ const PassengerHistory = () => {
               <h3 className="text-lg font-medium mb-2">{t('history.noRides')}</h3>
               <p className="text-muted-foreground mb-4">
                 {rides.length === 0 
-                  ? "You haven't taken any rides yet"
-                  : "No rides match your search criteria"
+                  ? t('history.noRidesYet')
+                  : t('history.noMatchingRides')
                 }
               </p>
               {rides.length === 0 && (
                 <Button onClick={() => navigate('/passenger/dashboard')}>
-                  Book Your First Ride
+                  {t('history.bookFirstRide')}
                 </Button>
               )}
             </CardContent>
