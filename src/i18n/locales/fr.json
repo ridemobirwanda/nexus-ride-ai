@@ -28,7 +28,9 @@
     "safety": "Sécurité",
     "pricing": "Tarification",
     "passengerLogin": "Connexion Passager",
-    "driveWithUs": "Conduire avec nous"
+    "driveWithUs": "Conduire avec nous",
+    "mainNavigation": "Navigation principale",
+    "mobileMenu": "Menu mobile"
   },
   "hero": {
     "title": "Futur",
@@ -640,5 +642,29 @@
     "bookAgain": "Réserver à Nouveau",
     "rateDriver": "Évaluer le Chauffeur",
     "contactSupport": "Contacter le Support"
+  },
+  "accessibility": {
+    "skipToMainContent": "Aller au contenu principal",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "loading": "Chargement",
+    "languageSelector": "Sélectionner la langue",
+    "userMenu": "Menu utilisateur",
+    "notifications": "Notifications",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "sortBy": "Trier par",
+    "filter": "Filtrer",
+    "search": "Rechercher",
+    "clearSearch": "Effacer la recherche",
+    "selectDate": "Sélectionner une date",
+    "increaseValue": "Augmenter la valeur",
+    "decreaseValue": "Diminuer la valeur",
+    "closeDialog": "Fermer le dialogue",
+    "expandSection": "Développer la section",
+    "collapseSection": "Réduire la section",
+    "mapView": "Vue carte",
+    "listView": "Vue liste",
+    "currentLocation": "Position actuelle"
   }
 }

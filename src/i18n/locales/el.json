@@ -28,7 +28,9 @@
     "safety": "Ασφάλεια",
     "pricing": "Τιμολόγηση",
     "passengerLogin": "Σύνδεση Επιβάτη",
-    "driveWithUs": "Οδηγήστε μαζί μας"
+    "driveWithUs": "Οδηγήστε μαζί μας",
+    "mainNavigation": "Κύρια πλοήγηση",
+    "mobileMenu": "Μενού κινητού"
   },
   "hero": {
     "title": "Μέλλον",
@@ -640,5 +642,29 @@
     "bookAgain": "Κράτηση Ξανά",
     "rateDriver": "Αξιολόγηση Οδηγού",
     "contactSupport": "Επικοινωνία με Υποστήριξη"
+  },
+  "accessibility": {
+    "skipToMainContent": "Μετάβαση στο κύριο περιεχόμενο",
+    "openMenu": "Άνοιγμα μενού",
+    "closeMenu": "Κλείσιμο μενού",
+    "loading": "Φόρτωση",
+    "languageSelector": "Επιλογή γλώσσας",
+    "userMenu": "Μενού χρήστη",
+    "notifications": "Ειδοποιήσεις",
+    "previousPage": "Προηγούμενη σελίδα",
+    "nextPage": "Επόμενη σελίδα",
+    "sortBy": "Ταξινόμηση κατά",
+    "filter": "Φίλτρο",
+    "search": "Αναζήτηση",
+    "clearSearch": "Εκκαθάριση αναζήτησης",
+    "selectDate": "Επιλογή ημερομηνίας",
+    "increaseValue": "Αύξηση τιμής",
+    "decreaseValue": "Μείωση τιμής",
+    "closeDialog": "Κλείσιμο διαλόγου",
+    "expandSection": "Ανάπτυξη ενότητας",
+    "collapseSection": "Σύμπτυξη ενότητας",
+    "mapView": "Προβολή χάρτη",
+    "listView": "Προβολή λίστας",
+    "currentLocation": "Τρέχουσα τοποθεσία"
   }
 }
