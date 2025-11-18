@@ -73,8 +73,8 @@ const PassengerDashboard = () => {
               
               setCurrentLocation(location);
               toast({
-                title: "Location Detected",
-                description: "Your current location has been set as pickup point"
+                title: t('toast.locationDetected'),
+                description: t('toast.locationDetectedDesc')
               });
             } catch (error) {
               console.error('Geocoding error:', error);
@@ -89,8 +89,8 @@ const PassengerDashboard = () => {
           (error) => {
             console.error('Location error:', error);
             toast({
-              title: "Location Access",
-              description: "Please enable location access for better experience",
+              title: t('toast.locationAccess'),
+              description: t('toast.locationAccessDesc'),
               variant: "destructive"
             });
             setIsDetectingLocation(false);
@@ -99,8 +99,8 @@ const PassengerDashboard = () => {
       } else {
         setIsDetectingLocation(false);
         toast({
-          title: "Location Not Available",
-          description: "Geolocation is not supported by this browser",
+          title: t('toast.locationNotAvailable'),
+          description: t('toast.locationNotAvailableDesc'),
           variant: "destructive"
         });
       }

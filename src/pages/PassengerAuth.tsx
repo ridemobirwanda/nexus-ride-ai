@@ -36,8 +36,8 @@ const PassengerAuth = () => {
     e.preventDefault();
     if (signUpData.password !== signUpData.confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: t('toast.error'),
+        description: t('toast.passwordsDontMatch'),
         variant: "destructive"
       });
       return;
@@ -61,12 +61,12 @@ const PassengerAuth = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Please check your email to verify your account"
+        title: t('toast.success'),
+        description: t('toast.checkEmail')
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('toast.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -89,7 +89,7 @@ const PassengerAuth = () => {
       navigate('/passenger');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('toast.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -109,15 +109,15 @@ const PassengerAuth = () => {
       if (error) throw error;
 
       toast({
-        title: "Password Reset Email Sent",
-        description: "Check your email for a link to reset your password"
+        title: t('toast.passwordResetSent'),
+        description: t('toast.passwordResetDesc')
       });
       
       setShowForgotPassword(false);
       setResetEmail('');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('toast.error'),
         description: error.message,
         variant: "destructive"
       });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -25,6 +26,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     checkAdminAccess();
@@ -47,8 +49,8 @@ const AdminDashboard = () => {
 
       if (error || !roleData || !["super_admin", "admin", "support"].includes(roleData.role)) {
         toast({
-          title: "Access Denied",
-          description: "You don't have permission to access the admin panel.",
+          title: t('toast.accessDenied'),
+          description: t('toast.noAdminPermission'),
           variant: "destructive",
         });
         navigate("/");

@@ -39,57 +39,57 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Quick Links</h3>
+            <h3 className="text-lg font-semibold">{t('footer.quickLinks')}</h3>
             <div className="space-y-2">
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Book a Ride
+                {t('footer.bookRide')}
               </a>
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Become a Driver
+                {t('footer.becomeDriver')}
               </a>
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Help Center
+                {t('footer.helpCenter')}
               </a>
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Safety
+                {t('footer.safety')}
               </a>
             </div>
           </div>
 
           {/* Company */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Company</h3>
+            <h3 className="text-lg font-semibold">{t('footer.company')}</h3>
             <div className="space-y-2">
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                About Us
+                {t('footer.aboutUs')}
               </a>
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Careers
+                {t('footer.careers')}
               </a>
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Press
+                {t('footer.press')}
               </a>
               <a href="#" className="block text-muted-foreground hover:text-foreground transition-smooth">
-                Blog
+                {t('footer.blog')}
               </a>
             </div>
           </div>
 
           {/* Contact */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact</h3>
+            <h3 className="text-lg font-semibold">{t('footer.contact')}</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">+1 (555) 123-4567</span>
+                <span className="text-muted-foreground">{t('footer.phone')}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">hello@ridenext.com</span>
+                <span className="text-muted-foreground">{t('footer.email')}</span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">San Francisco, CA</span>
+                <span className="text-muted-foreground">{t('footer.location')}</span>
               </div>
             </div>
           </div>
@@ -98,17 +98,17 @@ const Footer = () => {
         {/* Bottom */}
         <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-muted-foreground text-sm">
-            © 2024 RideNext. All rights reserved.
+            {t('footer.copyright')}
           </div>
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Privacy Policy
+              {t('footer.privacyPolicy')}
             </a>
             <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Terms of Service
+              {t('footer.termsOfService')}
             </a>
             <a href="#" className="text-muted-foreground hover:text-foreground transition-smooth">
-              Cookie Policy
+              {t('footer.cookiePolicy')}
             </a>
           </div>
         </div>

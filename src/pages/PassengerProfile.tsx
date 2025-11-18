@@ -103,12 +103,12 @@ const PassengerProfile = () => {
       
       setIsEditing(false);
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated successfully",
+        title: t('toast.profileUpdated'),
+        description: t('toast.profileUpdatedDesc'),
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('toast.error'),
         description: error.message,
         variant: "destructive"
       });

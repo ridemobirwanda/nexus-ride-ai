@@ -91,8 +91,8 @@ const DriverDashboard = () => {
         if (error) {
           console.error('Error verifying driver status:', error);
           toast({
-            title: "Authentication Error", 
-            description: "Unable to verify driver access. Please sign in again.",
+            title: t('toast.authError'), 
+            description: t('toast.verifyAccessError'),
             variant: "destructive"
           });
           setIsLoading(false);
@@ -102,8 +102,8 @@ const DriverDashboard = () => {
         
         if (!isDriverUser) {
           toast({
-            title: "Access Denied",
-            description: "You need a driver account to access this dashboard.",
+            title: t('toast.accessDenied'),
+            description: t('toast.needDriverAccount'),
             variant: "destructive"
           });
           setIsLoading(false);
