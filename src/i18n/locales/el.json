@@ -315,5 +315,52 @@
     "enterName": "Εισαγάγετε το όνομά σας",
     "enterPhone": "Εισαγάγετε τον αριθμό τηλεφώνου σας",
     "bookAsGuest": "Κράτηση ως Επισκέπτης"
+  },
+  "profile": {
+    "title": "Το Προφίλ Μου",
+    "editProfile": "Επεξεργασία Προφίλ",
+    "saveChanges": "Αποθήκευση Αλλαγών",
+    "cancelEdit": "Ακύρωση",
+    "personalInfo": "Προσωπικές Πληροφορίες",
+    "accountInfo": "Πληροφορίες Λογαριασμού",
+    "name": "Όνομα",
+    "phone": "Αριθμός Τηλεφώνου",
+    "email": "Διεύθυνση Email",
+    "profilePicture": "Φωτογραφία Προφίλ",
+    "uploadPhoto": "Μεταφόρτωση Φωτογραφίας",
+    "changePassword": "Αλλαγή Κωδικού",
+    "profileUpdated": "Ενημέρωση Προφίλ",
+    "profileUpdatedDesc": "Το προφίλ σας ενημερώθηκε επιτυχώς"
+  },
+  "history": {
+    "title": "Ιστορικό Διαδρομών",
+    "searchRides": "Αναζήτηση διαδρομών...",
+    "filterAll": "Όλες οι Διαδρομές",
+    "filterCompleted": "Ολοκληρωμένες",
+    "filterCancelled": "Ακυρωμένες",
+    "filterInProgress": "Σε Εξέλιξη",
+    "noRides": "Δεν βρέθηκαν διαδρομές",
+    "viewDetails": "Προβολή Λεπτομερειών",
+    "rateRide": "Αξιολόγηση Διαδρομής",
+    "driverInfo": "Πληροφορίες Οδηγού",
+    "tripDetails": "Λεπτομέρειες Ταξιδιού",
+    "paymentInfo": "Πληροφορίες Πληρωμής"
+  },
+  "appPreview": {
+    "title": "Ζήστε την Εμπειρία της Εφαρμογής",
+    "subtitle": "Κατεβάστε την εφαρμογή μας για την καλύτερη εμπειρία",
+    "passengerTab": "Επιβάτης",
+    "driverTab": "Οδηγός",
+    "getStarted": "Ξεκινήστε",
+    "downloadApp": "Λήψη Εφαρμογής",
+    "installPWA": "Εγκατάσταση Εφαρμογής",
+    "appInstalled": "Η Εφαρμογή Εγκαταστάθηκε",
+    "downloadIOS": "Λήψη από το App Store",
+    "downloadAndroid": "Λήψη από το Google Play",
+    "features": "Χαρακτηριστικά",
+    "realTimeTracking": "Παρακολούθηση σε πραγματικό χρόνο",
+    "instantBooking": "Άμεση κράτηση",
+    "securePayments": "Ασφαλείς πληρωμές",
+    "ratingsReviews": "Αξιολογήσεις & κριτικές"
   }
 }

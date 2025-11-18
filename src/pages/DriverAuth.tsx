@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 const DriverAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);

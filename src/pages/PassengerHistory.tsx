@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,7 @@ interface Ride {
 
 const PassengerHistory = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [rides, setRides] = useState<Ride[]>([]);
   const [filteredRides, setFilteredRides] = useState<Ride[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
