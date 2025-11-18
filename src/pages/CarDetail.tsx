@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +51,7 @@ interface RentalCar {
 const CarDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [car, setCar] = useState<RentalCar | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,8 +90,8 @@ const CarDetail = () => {
       setCar(carWithImages);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to load car details",
+        title: t('errors.loadFailed'),
+        description: t('carDetail.errors.loadFailed'),
         variant: "destructive"
       });
       navigate('/cars');

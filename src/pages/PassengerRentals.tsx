@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ interface CarRental {
 }
 
 const PassengerRentals = () => {
+  const { t } = useTranslation();
   const [rentals, setRentals] = useState<CarRental[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -75,8 +77,8 @@ const PassengerRentals = () => {
       setRentals(rentalsWithCars);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to load your rentals",
+        title: t('errors.loadFailed'),
+        description: t('passengerRentals.errors.loadFailed'),
         variant: "destructive"
       });
     } finally {
