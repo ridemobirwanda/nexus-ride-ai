@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useLanguageSync } from "./hooks/useLanguageSync";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PassengerAuth from "./pages/PassengerAuth";
@@ -35,6 +36,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  useLanguageSync();
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
