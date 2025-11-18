@@ -577,5 +577,11 @@
       "loadFailed": "Échec du chargement du tableau de bord",
       "statusUpdateFailed": "Échec de la mise à jour du statut"
     }
+  },
+  "languageDetection": {
+    "title": "Préférence de langue",
+    "message": "Nous avons détecté que votre navigateur est configuré en {{language}}. Souhaitez-vous changer?",
+    "accept": "Oui, changer",
+    "dismiss": "Non, merci"
   }
 }

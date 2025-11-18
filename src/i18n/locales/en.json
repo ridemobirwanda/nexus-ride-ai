@@ -577,5 +577,11 @@
       "loadFailed": "Failed to load dashboard data",
       "statusUpdateFailed": "Failed to update status"
     }
+  },
+  "languageDetection": {
+    "title": "Language Preference",
+    "message": "We've detected your browser is set to {{language}}. Would you like to switch?",
+    "accept": "Yes, switch",
+    "dismiss": "No, thanks"
   }
 }
