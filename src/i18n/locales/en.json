@@ -28,7 +28,9 @@
     "safety": "Safety",
     "pricing": "Pricing",
     "passengerLogin": "Passenger Login",
-    "driveWithUs": "Drive with us"
+    "driveWithUs": "Drive with us",
+    "mainNavigation": "Main navigation",
+    "mobileMenu": "Mobile menu"
   },
   "hero": {
     "title": "Future",
@@ -640,5 +642,29 @@
     "bookAgain": "Book Again",
     "rateDriver": "Rate Driver",
     "contactSupport": "Contact Support"
+  },
+  "accessibility": {
+    "skipToMainContent": "Skip to main content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "loading": "Loading",
+    "languageSelector": "Select language",
+    "userMenu": "User menu",
+    "notifications": "Notifications",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "sortBy": "Sort by",
+    "filter": "Filter",
+    "search": "Search",
+    "clearSearch": "Clear search",
+    "selectDate": "Select date",
+    "increaseValue": "Increase value",
+    "decreaseValue": "Decrease value",
+    "closeDialog": "Close dialog",
+    "expandSection": "Expand section",
+    "collapseSection": "Collapse section",
+    "mapView": "Map view",
+    "listView": "List view",
+    "currentLocation": "Current location"
   }
 }
