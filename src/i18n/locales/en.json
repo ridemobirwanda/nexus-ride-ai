@@ -315,5 +315,52 @@
     "enterName": "Enter your name",
     "enterPhone": "Enter your phone number",
     "bookAsGuest": "Book as Guest"
+  },
+  "profile": {
+    "title": "My Profile",
+    "editProfile": "Edit Profile",
+    "saveChanges": "Save Changes",
+    "cancelEdit": "Cancel",
+    "personalInfo": "Personal Information",
+    "accountInfo": "Account Information",
+    "name": "Name",
+    "phone": "Phone Number",
+    "email": "Email Address",
+    "profilePicture": "Profile Picture",
+    "uploadPhoto": "Upload Photo",
+    "changePassword": "Change Password",
+    "profileUpdated": "Profile Updated",
+    "profileUpdatedDesc": "Your profile has been updated successfully"
+  },
+  "history": {
+    "title": "Ride History",
+    "searchRides": "Search rides...",
+    "filterAll": "All Rides",
+    "filterCompleted": "Completed",
+    "filterCancelled": "Cancelled",
+    "filterInProgress": "In Progress",
+    "noRides": "No rides found",
+    "viewDetails": "View Details",
+    "rateRide": "Rate Ride",
+    "driverInfo": "Driver Information",
+    "tripDetails": "Trip Details",
+    "paymentInfo": "Payment Information"
+  },
+  "appPreview": {
+    "title": "Experience the App",
+    "subtitle": "Download our mobile app for the best experience",
+    "passengerTab": "Passenger",
+    "driverTab": "Driver",
+    "getStarted": "Get Started",
+    "downloadApp": "Download App",
+    "installPWA": "Install App",
+    "appInstalled": "App Installed",
+    "downloadIOS": "Download on the App Store",
+    "downloadAndroid": "Get it on Google Play",
+    "features": "Features",
+    "realTimeTracking": "Real-time tracking",
+    "instantBooking": "Instant booking",
+    "securePayments": "Secure payments",
+    "ratingsReviews": "Ratings & reviews"
   }
 }

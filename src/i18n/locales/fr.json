@@ -315,5 +315,52 @@
     "enterName": "Entrez votre nom",
     "enterPhone": "Entrez votre numéro de téléphone",
     "bookAsGuest": "Réserver en tant qu'Invité"
+  },
+  "profile": {
+    "title": "Mon Profil",
+    "editProfile": "Modifier le Profil",
+    "saveChanges": "Enregistrer les Modifications",
+    "cancelEdit": "Annuler",
+    "personalInfo": "Informations Personnelles",
+    "accountInfo": "Informations du Compte",
+    "name": "Nom",
+    "phone": "Numéro de Téléphone",
+    "email": "Adresse Email",
+    "profilePicture": "Photo de Profil",
+    "uploadPhoto": "Télécharger une Photo",
+    "changePassword": "Changer le Mot de Passe",
+    "profileUpdated": "Profil Mis à Jour",
+    "profileUpdatedDesc": "Votre profil a été mis à jour avec succès"
+  },
+  "history": {
+    "title": "Historique des Courses",
+    "searchRides": "Rechercher des courses...",
+    "filterAll": "Toutes les Courses",
+    "filterCompleted": "Terminées",
+    "filterCancelled": "Annulées",
+    "filterInProgress": "En Cours",
+    "noRides": "Aucune course trouvée",
+    "viewDetails": "Voir les Détails",
+    "rateRide": "Évaluer la Course",
+    "driverInfo": "Informations du Chauffeur",
+    "tripDetails": "Détails du Trajet",
+    "paymentInfo": "Informations de Paiement"
+  },
+  "appPreview": {
+    "title": "Découvrez l'Application",
+    "subtitle": "Téléchargez notre application mobile pour la meilleure expérience",
+    "passengerTab": "Passager",
+    "driverTab": "Chauffeur",
+    "getStarted": "Commencer",
+    "downloadApp": "Télécharger l'Application",
+    "installPWA": "Installer l'Application",
+    "appInstalled": "Application Installée",
+    "downloadIOS": "Télécharger sur l'App Store",
+    "downloadAndroid": "Disponible sur Google Play",
+    "features": "Fonctionnalités",
+    "realTimeTracking": "Suivi en temps réel",
+    "instantBooking": "Réservation instantanée",
+    "securePayments": "Paiements sécurisés",
+    "ratingsReviews": "Notes et avis"
   }
 }

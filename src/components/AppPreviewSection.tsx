@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Smartphone, 
   Car, 
@@ -25,6 +26,7 @@ import { usePWA } from '@/hooks/usePWA';
 const AppPreviewSection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { isInstallable, isInstalled, installApp } = usePWA();
   const [activeTab, setActiveTab] = useState('passenger');
   const [destination, setDestination] = useState('');

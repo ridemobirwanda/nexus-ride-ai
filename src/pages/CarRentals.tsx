@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,7 @@ interface RentalCar {
 }
 
 const CarRentals = () => {
+  const { t } = useTranslation();
   const [cars, setCars] = useState<RentalCar[]>([]);
   const [filteredCars, setFilteredCars] = useState<RentalCar[]>([]);
   const [isLoading, setIsLoading] = useState(true);
