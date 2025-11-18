@@ -200,9 +200,9 @@ const CarRentals = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">🚗 Car Rentals</h1>
+          <h1 className="text-4xl font-bold mb-4">🚗 {t('rentals.title')}</h1>
           <p className="text-xl text-muted-foreground">
-            Choose from our premium fleet of vehicles for your perfect journey
+            {t('nav.carRentals')}
           </p>
         </div>
 
@@ -211,7 +211,7 @@ const CarRentals = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Find Your Perfect Car
+              {t('rentals.searchPlaceholder')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -220,7 +220,7 @@ const CarRentals = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search cars..."
+                  placeholder={t('rentals.searchPlaceholder')}
                   className="pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -230,10 +230,10 @@ const CarRentals = () => {
               {/* Car Type Filter */}
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Car Type" />
+                  <SelectValue placeholder={t('rentals.filterByType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="all">{t('rentals.allTypes')}</SelectItem>
                   {getCarTypes().map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
@@ -243,10 +243,10 @@ const CarRentals = () => {
               {/* Fuel Type Filter */}
               <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Fuel Type" />
+                  <SelectValue placeholder={t('rentals.filterByFuel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Fuel Types</SelectItem>
+                  <SelectItem value="all">{t('rentals.allFuels')}</SelectItem>
                   {getFuelTypes().map(fuel => (
                     <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
                   ))}
@@ -256,10 +256,10 @@ const CarRentals = () => {
               {/* Price Range Filter */}
               <Select value={priceRange} onValueChange={setPriceRange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Price Range" />
+                  <SelectValue placeholder={t('rentals.priceRange')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Prices</SelectItem>
+                  <SelectItem value="all">{t('rentals.allPrices')}</SelectItem>
                   <SelectItem value="budget">Budget (≤10,000 RWF)</SelectItem>
                   <SelectItem value="mid">Mid-range (10,001-20,000 RWF)</SelectItem>
                   <SelectItem value="luxury">Luxury (&gt;20,000 RWF)</SelectItem>

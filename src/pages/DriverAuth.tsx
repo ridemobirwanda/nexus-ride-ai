@@ -253,16 +253,16 @@ const DriverAuth = () => {
                 <Car className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-center">Driver Portal</CardTitle>
+            <CardTitle className="text-2xl text-center">{t('driver.dashboard')}</CardTitle>
             <p className="text-muted-foreground text-center">
-              Start earning with RideNow
+              {t('nav.driveWithUs')}
             </p>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin" className="space-y-4 mt-4">
