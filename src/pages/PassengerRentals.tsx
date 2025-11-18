@@ -122,7 +122,7 @@ const PassengerRentals = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Car className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
-            <h2 className="text-2xl font-semibold mb-2">Loading Your Rentals...</h2>
+            <h2 className="text-2xl font-semibold mb-2">{t('passengerRentals.loading')}</h2>
           </div>
         </div>
       </div>
@@ -135,15 +135,15 @@ const PassengerRentals = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">My Car Rentals</h1>
-            <p className="text-muted-foreground">Manage your vehicle bookings and track active rentals</p>
+            <h1 className="text-4xl font-bold mb-2">{t('passengerRentals.title')}</h1>
+            <p className="text-muted-foreground">{t('passengerRentals.subtitle')}</p>
           </div>
           <Button 
             onClick={() => navigate('/cars')}
             className="gradient-primary"
           >
             <Car className="h-4 w-4 mr-2" />
-            Browse Cars
+            {t('passengerRentals.browseCars')}
           </Button>
         </div>
 
@@ -156,7 +156,7 @@ const PassengerRentals = () => {
               onClick={() => setFilter(status)}
               className="text-sm"
             >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              {t(`passengerRentals.filter${status.charAt(0).toUpperCase() + status.slice(1)}`)}
             </Button>
           ))}
         </div>
@@ -184,12 +184,12 @@ const PassengerRentals = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Pickup:</span>
+                    <span className="font-medium">{t('carBooking.pickupLocation')}:</span>
                     <span>{formatDateTime(rental.rental_start)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">Return:</span>
+                    <span className="font-medium">{t('carBooking.returnLocation')}:</span>
                     <span>{formatDateTime(rental.rental_end)}</span>
                   </div>
                 </div>
@@ -199,14 +199,14 @@ const PassengerRentals = () => {
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <div>
-                      <span className="font-medium">Pickup:</span>
+                      <span className="font-medium">{t('passengerRentals.pickupLocation')}:</span>
                       <p className="text-muted-foreground">{rental.pickup_location}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <div>
-                      <span className="font-medium">Return:</span>
+                      <span className="font-medium">{t('passengerRentals.returnLocation')}:</span>
                       <p className="text-muted-foreground">{rental.return_location}</p>
                     </div>
                   </div>
@@ -216,7 +216,7 @@ const PassengerRentals = () => {
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-primary" />
-                    <span className="font-medium">Total Cost</span>
+                    <span className="font-medium">{t('passengerRentals.totalCost')}</span>
                   </div>
                   <span className="text-lg font-bold text-primary">
                     {formatPrice(rental.total_price)}
@@ -231,7 +231,7 @@ const PassengerRentals = () => {
                     onClick={() => navigate(`/cars/${rental.car.id}`)}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    View Car
+                    {t('passengerRentals.viewDetails')}
                   </Button>
                   
                   {rental.status === 'active' && (
@@ -240,7 +240,7 @@ const PassengerRentals = () => {
                       onClick={() => navigate(`/rentals/${rental.id}/track`)}
                     >
                       <Navigation className="h-4 w-4 mr-2" />
-                      Track Vehicle
+                      {t('passengerRentals.trackCar')}
                     </Button>
                   )}
                 </div>
@@ -254,20 +254,17 @@ const PassengerRentals = () => {
           <div className="text-center py-12">
             <Car className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-xl font-semibold mb-2">
-              {filter === 'all' ? 'No rentals yet' : `No ${filter} rentals`}
+              {t('passengerRentals.noRentals')}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {filter === 'all' 
-                ? "Start by browsing our available cars"
-                : `You don't have any ${filter} rentals at the moment`
-              }
+              {t('passengerRentals.noRentalsDesc')}
             </p>
             {filter === 'all' && (
               <Button 
                 onClick={() => navigate('/cars')}
                 className="gradient-primary"
               >
-                Browse Available Cars
+                {t('passengerRentals.browseCars')}
               </Button>
             )}
           </div>

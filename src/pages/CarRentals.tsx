@@ -187,8 +187,8 @@ const CarRentals = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Car className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
-            <h2 className="text-2xl font-semibold mb-2">Loading Cars...</h2>
-            <p className="text-muted-foreground">Finding the perfect rental for you</p>
+            <h2 className="text-2xl font-semibold mb-2">{t('common.loading')}</h2>
+            <p className="text-muted-foreground">{t('rentals.title')}</p>
           </div>
         </div>
       </div>
@@ -260,9 +260,9 @@ const CarRentals = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('rentals.allPrices')}</SelectItem>
-                  <SelectItem value="budget">Budget (≤10,000 RWF)</SelectItem>
-                  <SelectItem value="mid">Mid-range (10,001-20,000 RWF)</SelectItem>
-                  <SelectItem value="luxury">Luxury (&gt;20,000 RWF)</SelectItem>
+                  <SelectItem value="budget">{t('rentals.priceRange')} (≤10,000 RWF)</SelectItem>
+                  <SelectItem value="mid">{t('rentals.priceRange')} (10,001-20,000 RWF)</SelectItem>
+                  <SelectItem value="luxury">{t('rentals.priceRange')} (&gt;20,000 RWF)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -272,7 +272,7 @@ const CarRentals = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            {filteredCars.length} car{filteredCars.length !== 1 ? 's' : ''} available
+            {filteredCars.length} {t('rentals.available')}
           </p>
         </div>
 
@@ -376,7 +376,7 @@ const CarRentals = () => {
                       </span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {formatPrice(car.price_per_hour)}/hr
+                      {formatPrice(car.price_per_hour)}/{t('rentals.perHour')}
                     </div>
                   </div>
                   
@@ -387,7 +387,7 @@ const CarRentals = () => {
                       navigate(`/cars/${car.id}/book`);
                     }}
                   >
-                    Rent Now
+                    {t('rentals.bookNow')}
                   </Button>
                 </div>
               </CardContent>
@@ -399,9 +399,9 @@ const CarRentals = () => {
         {filteredCars.length === 0 && (
           <div className="text-center py-12">
             <Car className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">No cars found</h3>
+            <h3 className="text-xl font-semibold mb-2">{t('rentals.noResults')}</h3>
             <p className="text-muted-foreground">
-              Try adjusting your filters to see more options
+              {t('rentals.searchPlaceholder')}
             </p>
             <Button 
               onClick={() => {
@@ -413,7 +413,7 @@ const CarRentals = () => {
               className="mt-4"
               variant="outline"
             >
-              Clear Filters
+              {t('common.filter')}
             </Button>
           </div>
         )}
