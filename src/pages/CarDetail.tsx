@@ -140,7 +140,7 @@ const CarDetail = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Car className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
-          <h2 className="text-2xl font-semibold mb-2">Loading Car Details...</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t('carDetail.loading')}</h2>
         </div>
       </div>
     );
@@ -151,9 +151,9 @@ const CarDetail = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-2">Car Not Found</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t('carBooking.carNotFound')}</h2>
           <Button onClick={() => navigate('/cars')} variant="outline">
-            ← Back to Cars
+            ← {t('carDetail.backToCars')}
           </Button>
         </div>
       </div>
@@ -171,7 +171,7 @@ const CarDetail = () => {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Cars
+            {t('carDetail.backToCars')}
           </Button>
           
           <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ const CarDetail = () => {
               }
             >
               <CheckCircle className="h-3 w-3 mr-1" />
-              {car.availability_status.charAt(0).toUpperCase() + car.availability_status.slice(1)}
+              {car.availability_status === 'available' ? t('rentals.available') : t('rentals.unavailable')}
             </Badge>
           </div>
         </div>
@@ -313,15 +313,15 @@ const CarDetail = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Seating</span>
+                        <span className="text-sm">{t('carDetail.seats')}</span>
                       </div>
-                      <span className="font-medium">{car.seating_capacity} passengers</span>
+                      <span className="font-medium">{car.seating_capacity} {t('booking.category')}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Fuel className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Fuel Type</span>
+                        <span className="text-sm">{t('carDetail.fuel')}</span>
                       </div>
                       <span className="font-medium">{car.fuel_type}</span>
                     </div>
@@ -329,7 +329,7 @@ const CarDetail = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Location</span>
+                        <span className="text-sm">{t('carDetail.location')}</span>
                       </div>
                       <span className="font-medium text-right text-sm">{car.location_address}</span>
                     </div>
@@ -346,7 +346,7 @@ const CarDetail = () => {
                           {formatPrice(car.price_per_day)}
                         </span>
                       </div>
-                      <p className="text-muted-foreground">per day</p>
+                      <p className="text-muted-foreground">{t('carDetail.pricePerDay')}</p>
                     </div>
 
                     <div className="text-center">
@@ -356,7 +356,7 @@ const CarDetail = () => {
                           {formatPrice(car.price_per_hour)}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">per hour</p>
+                      <p className="text-sm text-muted-foreground">{t('carDetail.pricePerHour')}</p>
                     </div>
                   </div>
 
@@ -371,10 +371,10 @@ const CarDetail = () => {
                     {car.availability_status === 'available' ? (
                       <>
                         <Calendar className="h-5 w-5 mr-2" />
-                        Book This Car
+                        {t('carDetail.bookNow')}
                       </>
                     ) : (
-                      'Currently Unavailable'
+                      t('rentals.unavailable')
                     )}
                   </Button>
 

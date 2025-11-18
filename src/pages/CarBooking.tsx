@@ -251,14 +251,14 @@ const CarBooking = () => {
       if (error) throw error;
 
       toast({
-        title: "Booking Confirmed!",
-        description: "Your car rental has been booked successfully. Check your rentals for details.",
+        title: t('success.booked'),
+        description: t('carBooking.success.bookingReceived'),
       });
 
       navigate('/passenger/rentals');
     } catch (error: any) {
       toast({
-        title: "Booking Failed",
+        title: t('carBooking.errors.bookingFailed'),
         description: error.message,
         variant: "destructive"
       });
@@ -297,7 +297,7 @@ const CarBooking = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Car className="h-12 w-12 mx-auto mb-4 text-primary animate-pulse" />
-          <h2 className="text-2xl font-semibold mb-2">Loading Booking Details...</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t('common.loading')}</h2>
         </div>
       </div>
     );
@@ -308,9 +308,9 @@ const CarBooking = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-2">Car Not Found</h2>
+          <h2 className="text-2xl font-semibold mb-2">{t('carBooking.carNotFound')}</h2>
           <Button onClick={() => navigate('/cars')} variant="outline">
-            ← Back to Cars
+            ← {t('carBooking.backToCars')}
           </Button>
         </div>
       </div>
@@ -328,8 +328,8 @@ const CarBooking = () => {
                 setShowRegistration(false);
                 setUser(registeredUser);
               }}
-              title="Complete Registration"
-              description="Just a few details to confirm your car rental"
+              title={t('carBooking.completeRegistration')}
+              description={t('carBooking.registrationDesc')}
             />
           </div>
         </div>
