@@ -158,22 +158,22 @@ const PassengerProfile = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate('/passenger/dashboard')}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-xl font-bold">Profile</h1>
+            <h1 className="text-xl font-bold">{t('profile.title')}</h1>
           </div>
           
           {!isEditing ? (
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
               <Edit className="h-4 w-4 mr-2" />
-              Edit
+              {t('profile.editProfile')}
             </Button>
           ) : (
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleCancel}>
-                Cancel
+                {t('profile.cancelEdit')}
               </Button>
               <Button size="sm" onClick={handleSave} disabled={isSaving}>
                 <Save className="h-4 w-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? `${t('common.saving')}...` : t('profile.saveChanges')}
               </Button>
             </div>
           )}

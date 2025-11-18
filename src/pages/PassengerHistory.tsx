@@ -178,7 +178,7 @@ const PassengerHistory = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate('/passenger/dashboard')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-bold">Ride History</h1>
+          <h1 className="text-xl font-bold">{t('history.title')}</h1>
         </div>
       </header>
 
@@ -189,7 +189,7 @@ const PassengerHistory = () => {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by location or driver..."
+                placeholder={t('history.searchRides')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -204,7 +204,10 @@ const PassengerHistory = () => {
                   size="sm"
                   onClick={() => setStatusFilter(status)}
                 >
-                  {status === 'all' ? 'All' : status.replace('_', ' ')}
+                  {status === 'all' ? t('history.filterAll') : 
+                   status === 'completed' ? t('history.filterCompleted') :
+                   status === 'cancelled' ? t('history.filterCancelled') :
+                   t('history.filterInProgress')}
                 </Button>
               ))}
             </div>
@@ -216,7 +219,7 @@ const PassengerHistory = () => {
           <Card>
             <CardContent className="text-center py-12">
               <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-lg font-medium mb-2">No rides found</h3>
+              <h3 className="text-lg font-medium mb-2">{t('history.noRides')}</h3>
               <p className="text-muted-foreground mb-4">
                 {rides.length === 0 
                   ? "You haven't taken any rides yet"

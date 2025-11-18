@@ -136,29 +136,29 @@ const PassengerAuth = () => {
                 <User className="h-8 w-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome Passenger</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('auth.welcomeBack')}</CardTitle>
             <CardDescription>
-              Sign in to your account or create a new one to start booking rides
+              {t('passenger.dashboard')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin" className="space-y-4 mt-6">
                 {!showForgotPassword ? (
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{t('auth.email')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('auth.email')}
                         className="pl-10"
                         value={signInData.email}
                         onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
@@ -167,13 +167,13 @@ const PassengerAuth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password">{t('auth.password')}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signin-password"
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('auth.password')}
                         className="pl-10"
                         value={signInData.password}
                         onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
@@ -187,7 +187,7 @@ const PassengerAuth = () => {
                     variant="hero"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Signing In..." : "Sign In"}
+                    {isLoading ? `${t('common.loading')}...` : t('auth.signIn')}
                   </Button>
                   
                   <div className="text-center mt-4">
@@ -197,7 +197,7 @@ const PassengerAuth = () => {
                       onClick={() => setShowForgotPassword(true)}
                       className="text-sm text-muted-foreground hover:text-primary"
                     >
-                      Forgot your password?
+                      {t('auth.forgotPassword')}
                     </Button>
                   </div>
                 </form>
@@ -205,20 +205,20 @@ const PassengerAuth = () => {
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="text-center mb-4">
                     <RotateCcw className="h-8 w-8 mx-auto mb-2 text-primary" />
-                    <h3 className="text-lg font-semibold">Reset Password</h3>
+                    <h3 className="text-lg font-semibold">{t('auth.resetPassword')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Enter your email address and we'll send you a link to reset your password
+                      {t('auth.forgotPassword')}
                     </p>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="reset-email">Email</Label>
+                    <Label htmlFor="reset-email">{t('auth.email')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="reset-email"
                         type="email"
-                        placeholder="Enter your email address"
+                        placeholder={t('auth.email')}
                         className="pl-10"
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
@@ -234,7 +234,7 @@ const PassengerAuth = () => {
                     disabled={isLoading || !resetEmail}
                   >
                     <RotateCcw className="h-4 w-4 mr-2" />
-                    {isLoading ? "Sending Reset Email..." : "Send Reset Email"}
+                    {isLoading ? `${t('common.loading')}...` : t('auth.resetPassword')}
                   </Button>
                   
                   <Button
@@ -246,7 +246,7 @@ const PassengerAuth = () => {
                     }}
                     className="w-full text-sm text-muted-foreground"
                   >
-                    Back to Sign In
+                    {t('common.back')}
                   </Button>
                 </form>
                 )}
@@ -255,13 +255,13 @@ const PassengerAuth = () => {
               <TabsContent value="signup" className="space-y-4 mt-6">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-name">{t('auth.fullName')}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-name"
                         type="text"
-                        placeholder="Enter your full name"
+                        placeholder={t('auth.fullName')}
                         className="pl-10"
                         value={signUpData.name}
                         onChange={(e) => setSignUpData({ ...signUpData, name: e.target.value })}
@@ -270,13 +270,13 @@ const PassengerAuth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('auth.email')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('auth.email')}
                         className="pl-10"
                         value={signUpData.email}
                         onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
@@ -285,13 +285,13 @@ const PassengerAuth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <Label htmlFor="signup-phone">{t('auth.phoneNumber')}</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-phone"
                         type="tel"
-                        placeholder="Enter your phone number"
+                        placeholder={t('auth.phoneNumber')}
                         className="pl-10"
                         value={signUpData.phone}
                         onChange={(e) => setSignUpData({ ...signUpData, phone: e.target.value })}
@@ -300,7 +300,7 @@ const PassengerAuth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t('auth.password')}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
