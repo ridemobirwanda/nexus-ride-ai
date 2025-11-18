@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useLanguageSync } from "./hooks/useLanguageSync";
+import { LanguageDetectionBanner } from "./components/LanguageDetectionBanner";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PassengerAuth from "./pages/PassengerAuth";
@@ -43,6 +44,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <LanguageDetectionBanner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
