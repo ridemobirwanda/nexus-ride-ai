@@ -43,6 +43,72 @@ const LocationTracker: React.FC<LocationTrackerProps> = ({ className }) => {
   const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [trackingDuration, setTrackingDuration] = useState(0);
 
+  // Fetch initial driver status from database
+  useEffect(() => {
+    const fetchInitialStatus = async () => {
+      try {
+        const { data: userAuth } = await supabase.auth.getUser();
+        if (!userAuth.user) return;
+
+        const { data, error } = await supabase
+          .from('drivers')
+          .select('status')
+          .eq('user_id', userAuth.user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data?.status) {
+          console.log('Initial driver status:', data.status);
+          setDriverStatus(data.status);
+          
+          // Auto-start tracking if status is available
+          if (data.status === 'available' && !isTracking) {
+            console.log('Auto-starting location tracking for available driver');
+            startTracking();
+          }
+        }
+      } catch (error: any) {
+        console.error('Error fetching initial driver status:', error);
+      }
+    };
+
+    fetchInitialStatus();
+
+    // Listen for real-time status changes from admin approval
+    const statusChannel = supabase
+      .channel('driver-status-changes-tracker')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'drivers'
+        },
+        async (payload: any) => {
+          const { data: userAuth } = await supabase.auth.getUser();
+          if (userAuth.user && payload.new?.user_id === userAuth.user.id && payload.new?.status) {
+            console.log('Driver status updated from admin:', payload.new.status);
+            setDriverStatus(payload.new.status);
+            
+            // Auto-start tracking if status changed to available
+            if (payload.new.status === 'available' && !isTracking) {
+              console.log('Auto-starting location tracking after admin approval');
+              startTracking();
+              toast({
+                title: "You're Now Online!",
+                description: "Your account has been approved. Location tracking started automatically.",
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(statusChannel);
+    };
+  }, []);
+
   // Track duration timer
   useEffect(() => {
     let interval: NodeJS.Timeout;

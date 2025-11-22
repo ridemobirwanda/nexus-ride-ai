@@ -64,13 +64,22 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
 
         const { data, error } = await supabase
           .from('drivers')
-          .select('status')
+          .select('status, is_available')
           .eq('user_id', userAuth.user.id)
           .maybeSingle();
 
         if (error) throw error;
         if (data?.status) {
+          console.log('Initial driver status in panel:', data.status, 'is_available:', data.is_available);
           setDriverStatus(data.status);
+          
+          // Show toast if driver is now available (approved)
+          if (data.status === 'available' && data.is_available) {
+            toast({
+              title: "You're Online!",
+              description: "Your account is approved. You can now receive ride requests.",
+            });
+          }
         }
       } catch (error: any) {
         console.error('Error fetching driver status:', error);
@@ -81,19 +90,27 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
 
     // Listen for real-time status changes
     const statusChannel = supabase
-      .channel('driver-status-changes')
+      .channel('driver-status-changes-panel')
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'drivers',
-          filter: `user_id=eq.${driverId}`
+          table: 'drivers'
         },
-        (payload: any) => {
-          if (payload.new?.status) {
-            console.log('Driver status updated:', payload.new.status);
+        async (payload: any) => {
+          const { data: userAuth } = await supabase.auth.getUser();
+          if (userAuth.user && payload.new?.user_id === userAuth.user.id && payload.new?.status) {
+            console.log('Driver status updated in panel:', payload.new.status);
             setDriverStatus(payload.new.status);
+            
+            // Show toast when approved
+            if (payload.new.status === 'available' && payload.new.is_available) {
+              toast({
+                title: "Account Approved!",
+                description: "You're now online and can receive ride requests.",
+              });
+            }
           }
         }
       )
