@@ -24,6 +24,7 @@ import {
 import DriverCarSetup from '@/components/DriverCarSetup';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface Driver {
@@ -63,6 +64,7 @@ const DriverDashboard = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const { vibrateNewRide } = useHapticFeedback();
 
   // Auth state listener with driver verification
   useEffect(() => {
@@ -216,6 +218,16 @@ const DriverDashboard = () => {
           .limit(10);
 
         if (pendingError) throw pendingError;
+        
+        // Trigger haptic feedback for new ride requests
+        if (pending && pending.length > pendingRides.length && pendingRides.length > 0) {
+          vibrateNewRide();
+          toast({
+            title: "New Ride Request!",
+            description: "You have a new ride request",
+          });
+        }
+        
         setPendingRides(pending || []);
 
         // Fetch active ride for this driver
