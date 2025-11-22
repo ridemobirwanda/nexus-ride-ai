@@ -666,5 +666,14 @@
     "mapView": "Vue carte",
     "listView": "Vue liste",
     "currentLocation": "Position actuelle"
+  },
+  "pwa": {
+    "installTitle": "Installer l'application Nexus Ride",
+    "installDescription": "Accédez instantanément à la réservation de trajets en un clic. Fonctionne hors ligne !",
+    "installButton": "Télécharger l'application",
+    "installSuccess": "Application installée avec succès ! Vous pouvez maintenant l'utiliser depuis votre écran d'accueil.",
+    "installError": "Impossible d'installer l'application. Veuillez réessayer.",
+    "updateAvailable": "Une nouvelle version est disponible !",
+    "updateButton": "Mettre à jour maintenant"
   }
 }
