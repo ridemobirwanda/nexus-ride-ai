@@ -675,5 +675,16 @@
     "installError": "Unable to install app. Please try again.",
     "updateAvailable": "A new version is available!",
     "updateButton": "Update Now"
+  },
+  "qr": {
+    "title": "Scan & Go",
+    "description": "Scan this QR code with your phone to instantly open Nexus Ride and start booking rides",
+    "howTo": "How to scan",
+    "step1": "Open your phone camera or QR scanner app",
+    "step2": "Point your camera at the QR code",
+    "step3": "Tap the notification to open Nexus Ride",
+    "step4": "Add to home screen for quick access anytime",
+    "compatible": "Works on all modern smartphones with camera",
+    "ariaLabel": "QR code to open Nexus Ride app"
   }
 }

@@ -675,5 +675,16 @@
     "installError": "Impossible d'installer l'application. Veuillez réessayer.",
     "updateAvailable": "Une nouvelle version est disponible !",
     "updateButton": "Mettre à jour maintenant"
+  },
+  "qr": {
+    "title": "Scanner & Partir",
+    "description": "Scannez ce code QR avec votre téléphone pour ouvrir instantanément Nexus Ride et commencer à réserver des trajets",
+    "howTo": "Comment scanner",
+    "step1": "Ouvrez l'appareil photo de votre téléphone ou une application de scanner QR",
+    "step2": "Pointez votre appareil photo vers le code QR",
+    "step3": "Appuyez sur la notification pour ouvrir Nexus Ride",
+    "step4": "Ajoutez à l'écran d'accueil pour un accès rapide à tout moment",
+    "compatible": "Fonctionne sur tous les smartphones modernes avec appareil photo",
+    "ariaLabel": "Code QR pour ouvrir l'application Nexus Ride"
   }
 }
