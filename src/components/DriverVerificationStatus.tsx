@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Upload, FileText } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DocumentUpload } from '@/components/DocumentUpload';
 
 interface VerificationRequest {
   id: string;
@@ -27,6 +28,7 @@ export const DriverVerificationStatus = ({ driverId }: DriverVerificationStatusP
   const [verificationRequest, setVerificationRequest] = useState<VerificationRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [showResubmit, setShowResubmit] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
 
   useEffect(() => {
     fetchVerificationStatus();
@@ -247,41 +249,43 @@ export const DriverVerificationStatus = ({ driverId }: DriverVerificationStatusP
           </div>
         )}
 
-        {/* Resubmit Button */}
-        {status === 'rejected' && (
-          <div className="pt-2">
-            {!showResubmit ? (
+        {/* Document Upload Section */}
+        {(status === 'not_submitted' || status === 'rejected') && (
+          <div className="pt-2 border-t">
+            {!showDocumentUpload ? (
               <Button 
-                onClick={() => setShowResubmit(true)} 
+                onClick={() => setShowDocumentUpload(true)} 
                 className="w-full"
-                variant="outline"
+                variant="default"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Resubmit Documents
+                {status === 'rejected' ? 'Update Documents' : 'Upload Documents'}
               </Button>
             ) : (
-              <div className="space-y-3">
-                <Alert>
-                  <AlertDescription>
-                    Make sure you've updated your documents before resubmitting. This will reset your verification status to "Pending".
-                  </AlertDescription>
-                </Alert>
-                <div className="flex gap-2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">Upload Verification Documents</h4>
                   <Button 
-                    onClick={handleResubmit} 
-                    className="flex-1"
-                    variant="default"
-                  >
-                    Confirm Resubmit
-                  </Button>
-                  <Button 
-                    onClick={() => setShowResubmit(false)} 
-                    variant="outline"
-                    className="flex-1"
+                    onClick={() => setShowDocumentUpload(false)} 
+                    variant="ghost"
+                    size="sm"
                   >
                     Cancel
                   </Button>
                 </div>
+                <DocumentUpload
+                  driverId={driverId}
+                  verificationRequestId={verificationRequest?.id || ''}
+                  existingDocuments={verificationRequest?.documents as any}
+                  onDocumentsUpdated={() => {
+                    setShowDocumentUpload(false);
+                    fetchVerificationStatus();
+                    toast({
+                      title: "Success",
+                      description: "Documents uploaded and verification submitted",
+                    });
+                  }}
+                />
               </div>
             )}
           </div>
