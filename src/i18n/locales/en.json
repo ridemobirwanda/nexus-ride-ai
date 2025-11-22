@@ -666,5 +666,14 @@
     "mapView": "Map view",
     "listView": "List view",
     "currentLocation": "Current location"
+  },
+  "pwa": {
+    "installTitle": "Install Nexus Ride App",
+    "installDescription": "Get instant access to book rides with one tap. Works offline!",
+    "installButton": "Download App",
+    "installSuccess": "App installed successfully! You can now use it from your home screen.",
+    "installError": "Unable to install app. Please try again.",
+    "updateAvailable": "A new version is available!",
+    "updateButton": "Update Now"
   }
 }

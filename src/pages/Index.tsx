@@ -4,6 +4,7 @@ import FeaturesSection from '@/components/FeaturesSection';
 import AppPreviewSection from '@/components/AppPreviewSection';
 import Footer from '@/components/Footer';
 import { SkipToContent } from '@/components/SkipToContent';
+import { InstallAppBanner } from '@/components/InstallAppBanner';
 
 const Index = () => {
   return (
@@ -18,6 +19,7 @@ const Index = () => {
         <AppPreviewSection />
       </main>
       <Footer />
+      <InstallAppBanner />
     </div>
   );
 };
