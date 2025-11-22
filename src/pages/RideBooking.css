@@ -132,3 +132,30 @@
 .mapboxgl-canvas-container:hover {
   cursor: copy !important;
 }
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .dropoff-marker {
+    animation: none !important;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .dropoff-marker:hover {
+    animation: none !important;
+    transform: translateY(0);
+  }
+
+  .pickup-marker {
+    animation: none !important;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+
+  .map-loading::before {
+    animation: none !important;
+  }
+
+  .mapboxgl-ctrl-group button:hover {
+    transform: none !important;
+  }
+}
