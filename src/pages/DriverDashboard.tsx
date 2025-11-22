@@ -25,6 +25,7 @@ import DriverCarSetup from '@/components/DriverCarSetup';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { useDriverVerificationNotifications } from '@/hooks/useDriverVerificationNotifications';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface Driver {
@@ -65,6 +66,9 @@ const DriverDashboard = () => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { vibrateNewRide } = useHapticFeedback();
+  
+  // Enable verification notifications
+  useDriverVerificationNotifications(driver?.id || null);
 
   // Auth state listener with driver verification
   useEffect(() => {
