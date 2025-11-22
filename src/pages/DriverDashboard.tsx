@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import DriverCarSetup from '@/components/DriverCarSetup';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface Driver {
@@ -61,6 +62,7 @@ const DriverDashboard = () => {
   const [showCarSetup, setShowCarSetup] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   // Auth state listener with driver verification
   useEffect(() => {
@@ -354,23 +356,32 @@ const DriverDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen rider-bg">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-lg border-b px-4 py-3 sticky top-0 z-50">
+    <div className="min-h-screen rider-bg pb-safe">
+      {/* Header - Mobile Optimized */}
+      <header className="bg-card/80 backdrop-blur-lg border-b px-4 py-4 sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold gradient-hero bg-clip-text text-transparent">Driver Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {driver?.name || user?.email}
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
+          <h1 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold gradient-hero bg-clip-text text-transparent`}>
+            Driver Dashboard
+          </h1>
+          <div className="flex items-center gap-2 md:gap-4">
+            {!isMobile && (
+              <span className="text-sm text-muted-foreground">
+                {driver?.name || user?.email}
+              </span>
+            )}
+            <Button 
+              variant="ghost" 
+              size={isMobile ? "lg" : "sm"}
+              onClick={handleSignOut}
+              className={isMobile ? "min-h-[44px] min-w-[44px]" : ""}
+            >
+              <LogOut className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className={`container mx-auto ${isMobile ? 'px-3 py-4' : 'px-4 py-6'} space-y-4 md:space-y-6`}>
         {/* Car Setup or Driver Status */}
         {showCarSetup ? (
           <div className="space-y-6">
@@ -384,8 +395,8 @@ const DriverDashboard = () => {
           </div>
         ) : (
           <>
-            {/* Driver Status and Location Tracking */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            {/* Driver Status and Location Tracking - Mobile Optimized */}
+            <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'lg:grid-cols-2 gap-6'}`}>
               {/* Enhanced Driver Status */}
               {driver && (
                 <DriverStatusPanel 
@@ -395,6 +406,7 @@ const DriverDashboard = () => {
                     car_model: driver.car_model,
                     car_plate: driver.car_plate
                   }}
+                  isMobile={isMobile}
                 />
               )}
 
@@ -402,62 +414,75 @@ const DriverDashboard = () => {
               <LocationTracker />
             </div>
 
-        {/* Active Ride */}
+        {/* Active Ride - Mobile Optimized */}
         {activeRide && (
           <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Navigation className="h-5 w-5" />
+            <CardHeader className={isMobile ? "pb-3" : ""}>
+              <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+                <Navigation className={isMobile ? "h-6 w-6" : "h-5 w-5"} />
                 Active Ride
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
+            <CardContent className={isMobile ? "space-y-3" : "space-y-4"}>
+              <div className={isMobile ? "space-y-3" : "space-y-3"}>
                 <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-green-500 mt-1" />
-                  <div>
-                    <p className="font-medium">Pickup</p>
-                    <p className="text-sm text-muted-foreground">{activeRide.pickup_address}</p>
+                  <MapPin className={`${isMobile ? 'h-6 w-6' : 'h-5 w-5'} text-green-500 mt-1 flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium ${isMobile ? 'text-base' : ''}`}>Pickup</p>
+                    <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground break-words`}>
+                      {activeRide.pickup_address}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Navigation className="h-5 w-5 text-red-500 mt-1" />
-                  <div>
-                    <p className="font-medium">Dropoff</p>
-                    <p className="text-sm text-muted-foreground">{activeRide.dropoff_address}</p>
+                  <Navigation className={`${isMobile ? 'h-6 w-6' : 'h-5 w-5'} text-red-500 mt-1 flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium ${isMobile ? 'text-base' : ''}`}>Dropoff</p>
+                    <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground break-words`}>
+                      {activeRide.dropoff_address}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t">
+              <div className={`${isMobile ? 'flex-col space-y-3' : 'flex items-center justify-between'} pt-4 border-t`}>
                 <div>
-                  <p className="font-medium">Passenger: {activeRide.passenger.name}</p>
-                  <p className="text-sm text-muted-foreground">Fare: ${activeRide.estimated_fare}</p>
+                  <p className={`font-medium ${isMobile ? 'text-base mb-1' : ''}`}>
+                    Passenger: {activeRide.passenger.name}
+                  </p>
+                  <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>
+                    Fare: ${activeRide.estimated_fare}
+                  </p>
                 </div>
-                <div className="flex gap-2">
+                <div className={`flex ${isMobile ? 'gap-3' : 'gap-2'} ${isMobile ? 'w-full' : ''}`}>
                   <Button 
                     variant="outline" 
-                    size="sm"
+                    size={isMobile ? "lg" : "sm"}
                     onClick={() => window.open(`tel:${activeRide.passenger.phone}`, '_self')}
                     title={`Call ${activeRide.passenger.name}`}
+                    className={isMobile ? "flex-1 min-h-[48px]" : ""}
                   >
-                    <Phone className="h-4 w-4" />
+                    <Phone className={isMobile ? "h-5 w-5 mr-2" : "h-4 w-4"} />
+                    {isMobile && "Call"}
                   </Button>
                   <Button 
                     variant="outline" 
-                    size="sm"
+                    size={isMobile ? "lg" : "sm"}
                     onClick={() => navigate(`/driver/chat/${activeRide.id}`)}
+                    className={isMobile ? "flex-1 min-h-[48px]" : ""}
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <MessageCircle className={isMobile ? "h-5 w-5 mr-2" : "h-4 w-4"} />
+                    {isMobile && "Chat"}
                   </Button>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className={`flex ${isMobile ? 'flex-col gap-3' : 'gap-2'}`}>
                 {activeRide.status === 'accepted' && (
                   <Button 
                     onClick={() => updateRideStatus(activeRide.id, 'in_progress')}
-                    className="flex-1"
+                    className={`flex-1 ${isMobile ? 'min-h-[52px] text-base' : ''}`}
+                    size={isMobile ? "lg" : "default"}
                   >
                     Start Ride
                   </Button>
@@ -465,7 +490,8 @@ const DriverDashboard = () => {
                 {activeRide.status === 'in_progress' && (
                   <Button 
                     onClick={() => updateRideStatus(activeRide.id, 'completed')}
-                    className="flex-1"
+                    className={`flex-1 ${isMobile ? 'min-h-[52px] text-base' : ''}`}
+                    size={isMobile ? "lg" : "default"}
                   >
                     Complete Ride
                   </Button>
@@ -475,17 +501,17 @@ const DriverDashboard = () => {
           </Card>
         )}
 
-        {/* Pending Rides */}
+        {/* Pending Rides - Mobile Optimized */}
         {!activeRide && pendingRides.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+            <CardHeader className={isMobile ? "pb-3" : ""}>
+              <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+                <Clock className={isMobile ? "h-6 w-6" : "h-5 w-5"} />
                 Available Rides ({pendingRides.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className={isMobile ? "space-y-3" : "space-y-4"}>
                 {pendingRides.map((ride) => {
                   // Parse pickup location
                   let pickupLat = 0, pickupLng = 0;
@@ -511,78 +537,82 @@ const DriverDashboard = () => {
                   }
 
                   return (
-                    <div key={ride.id} className="p-4 bg-muted/30 rounded-lg space-y-4 border border-border/50 hover:border-primary/50 transition-colors">
-                      {/* Distance and ETA Badge */}
+                    <div 
+                      key={ride.id} 
+                      className={`${isMobile ? 'p-4' : 'p-4'} bg-muted/30 rounded-lg ${isMobile ? 'space-y-3' : 'space-y-4'} border border-border/50 hover:border-primary/50 transition-colors`}
+                    >
+                      {/* Distance and ETA Badge - Mobile Optimized */}
                       {distanceToPickup > 0 && (
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs gap-1.5">
-                            <Navigation className="h-3 w-3" />
+                        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
+                          <Badge variant="outline" className={`${isMobile ? 'text-sm w-fit' : 'text-xs'} gap-1.5`}>
+                            <Navigation className={isMobile ? "h-4 w-4" : "h-3 w-3"} />
                             {distanceToPickup.toFixed(1)} km away
                           </Badge>
-                          <Badge variant="secondary" className="text-xs gap-1.5">
-                            <Clock className="h-3 w-3" />
+                          <Badge variant="secondary" className={`${isMobile ? 'text-sm w-fit' : 'text-xs'} gap-1.5`}>
+                            <Clock className={isMobile ? "h-4 w-4" : "h-3 w-3"} />
                             ~{etaMinutes} min to pickup
                           </Badge>
                         </div>
                       )}
 
-                      {/* Passenger Info */}
-                      <div className="flex items-center gap-3 pb-3 border-b">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
+                      {/* Passenger Info - Mobile Optimized */}
+                      <div className={`flex items-center gap-3 ${isMobile ? 'pb-3' : 'pb-3'} border-b`}>
+                        <div className={`${isMobile ? 'h-12 w-12' : 'h-10 w-10'} rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0`}>
+                          <User className={isMobile ? "h-6 w-6 text-primary" : "h-5 w-5 text-primary"} />
                         </div>
-                        <div>
-                          <p className="font-semibold">{ride.passenger.name}</p>
-                          <p className="text-xs text-muted-foreground">{ride.passenger.phone}</p>
-                        </div>
-                      </div>
-
-                      {/* Locations */}
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                          <MapPin className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground mb-0.5">PICKUP LOCATION</p>
-                            <p className="text-sm font-medium leading-tight">{ride.pickup_address}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <Navigation className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground mb-0.5">DROPOFF LOCATION</p>
-                            <p className="text-sm leading-tight">{ride.dropoff_address}</p>
-                          </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`${isMobile ? 'text-base' : 'text-sm'} font-semibold`}>{ride.passenger.name}</p>
+                          <p className={`${isMobile ? 'text-sm' : 'text-xs'} text-muted-foreground`}>{ride.passenger.phone}</p>
                         </div>
                       </div>
 
-                      {/* Trip Details */}
-                      <div className="flex items-center gap-4 text-sm">
+                      {/* Locations - Mobile Optimized */}
+                      <div className={isMobile ? "space-y-3" : "space-y-3"}>
+                        <div className="flex items-start gap-3">
+                          <MapPin className={`${isMobile ? 'h-6 w-6' : 'h-5 w-5'} text-green-500 mt-0.5 flex-shrink-0`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`${isMobile ? 'text-sm' : 'text-xs'} font-medium text-muted-foreground mb-0.5`}>PICKUP LOCATION</p>
+                            <p className={`${isMobile ? 'text-base' : 'text-sm'} font-medium leading-tight break-words`}>{ride.pickup_address}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Navigation className={`${isMobile ? 'h-6 w-6' : 'h-5 w-5'} text-destructive mt-0.5 flex-shrink-0`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`${isMobile ? 'text-sm' : 'text-xs'} font-medium text-muted-foreground mb-0.5`}>DROPOFF LOCATION</p>
+                            <p className={`${isMobile ? 'text-base' : 'text-sm'} leading-tight break-words`}>{ride.dropoff_address}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Trip Details - Mobile Optimized */}
+                      <div className={`flex items-center gap-4 ${isMobile ? 'text-base' : 'text-sm'}`}>
                         <div className="flex items-center gap-1.5">
-                          <Car className="h-4 w-4 text-muted-foreground" />
+                          <Car className={isMobile ? "h-5 w-5 text-muted-foreground" : "h-4 w-4 text-muted-foreground"} />
                           <span>{ride.distance_km?.toFixed(1) || 'N/A'} km</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
+                          <DollarSign className={isMobile ? "h-5 w-5 text-muted-foreground" : "h-4 w-4 text-muted-foreground"} />
                           <span className="font-semibold">${ride.estimated_fare?.toFixed(2)}</span>
                         </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex gap-2 pt-2">
+                      {/* Actions - Mobile Optimized */}
+                      <div className={`flex ${isMobile ? 'gap-3' : 'gap-2'} pt-2`}>
                         <Button 
                           onClick={() => acceptRide(ride.id)}
-                          className="flex-1"
-                          size="lg"
+                          className={`flex-1 ${isMobile ? 'min-h-[52px] text-base' : ''}`}
+                          size={isMobile ? "lg" : "lg"}
                         >
-                          <Navigation className="h-4 w-4 mr-2" />
-                          Accept & Start Navigation
+                          <Navigation className={isMobile ? "h-5 w-5 mr-2" : "h-4 w-4 mr-2"} />
+                          {isMobile ? "Accept Ride" : "Accept & Start Navigation"}
                         </Button>
                         <Button 
                           variant="outline" 
-                          size="lg"
+                          size={isMobile ? "lg" : "lg"}
                           onClick={() => window.open(`tel:${ride.passenger.phone}`, '_self')}
+                          className={isMobile ? "min-h-[52px] min-w-[52px]" : ""}
                         >
-                          <Phone className="h-4 w-4" />
+                          <Phone className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
                         </Button>
                       </div>
                     </div>
@@ -593,26 +623,26 @@ const DriverDashboard = () => {
           </Card>
         )}
 
-        {/* No Rides Available */}
+        {/* No Rides Available - Mobile Optimized */}
         {!activeRide && pendingRides.length === 0 && driver?.is_available && (
           <Card>
-            <CardContent className="text-center py-12">
-              <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">No rides available</h3>
-              <p className="text-muted-foreground">
+            <CardContent className={`text-center ${isMobile ? 'py-10' : 'py-12'}`}>
+              <Car className={`${isMobile ? 'h-16 w-16' : 'h-12 w-12'} mx-auto mb-4 text-muted-foreground`} />
+              <h3 className={`${isMobile ? 'text-xl' : 'text-lg'} font-medium mb-2`}>No rides available</h3>
+              <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>
                 You're online and ready to receive ride requests
               </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Driver Offline */}
+        {/* Driver Offline - Mobile Optimized */}
         {!driver?.is_available && (
           <Card>
-            <CardContent className="text-center py-12">
-              <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">You're offline</h3>
-              <p className="text-muted-foreground">
+            <CardContent className={`text-center ${isMobile ? 'py-10' : 'py-12'}`}>
+              <Car className={`${isMobile ? 'h-16 w-16' : 'h-12 w-12'} mx-auto mb-4 text-muted-foreground`} />
+              <h3 className={`${isMobile ? 'text-xl' : 'text-lg'} font-medium mb-2`}>You're offline</h3>
+              <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>
                 Turn on availability to start receiving ride requests
               </p>
             </CardContent>
