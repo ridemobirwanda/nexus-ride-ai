@@ -31,6 +31,7 @@ interface DriverStatusPanelProps {
     car_model: string;
     car_plate: string;
   };
+  isMobile?: boolean;
 }
 
 interface DriverEarnings {
@@ -45,7 +46,8 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
   driverId, 
   className, 
   onManageVehicle,
-  driverData 
+  driverData,
+  isMobile = false
 }) => {
   const [driverStatus, setDriverStatus] = useState<'offline' | 'available' | 'on_trip' | 'inactive'>('offline');
   const [isStatusLoading, setIsStatusLoading] = useState(false);
@@ -225,51 +227,51 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
   const statusDisplay = getStatusDisplay(driverStatus);
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Status Control Card */}
+    <div className={`space-y-4 md:space-y-6 ${className}`}>
+      {/* Status Control Card - Mobile Optimized */}
       <Card className="gradient-card card-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+        <CardHeader className={isMobile ? "pb-3" : ""}>
+          <CardTitle className={`flex items-center justify-between ${isMobile ? 'text-base' : ''}`}>
             <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Driver Status
+              <Activity className={isMobile ? "h-5 w-5" : "h-5 w-5"} />
+              <span className={isMobile ? "text-base" : ""}>Driver Status</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={statusDisplay.variant} className="gap-1">
-                <statusDisplay.icon className="h-3 w-3" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={statusDisplay.variant} className={`gap-1 ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
+                <statusDisplay.icon className={isMobile ? "h-3.5 w-3.5" : "h-3 w-3"} />
                 {statusDisplay.text}
               </Badge>
               {driverStatus === 'available' && (
-                <Badge variant="outline" className="gap-1">
-                  <Wifi className="h-3 w-3 text-green-500" />
+                <Badge variant="outline" className={`gap-1 ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
+                  <Wifi className={isMobile ? "h-3.5 w-3.5 text-green-500" : "h-3 w-3 text-green-500"} />
                   Live
                 </Badge>
               )}
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Status Selector */}
+        <CardContent className={isMobile ? "space-y-3" : "space-y-4"}>
+          {/* Status Selector - Mobile Optimized */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Current Status</label>
+            <label className={`${isMobile ? 'text-base' : 'text-sm'} font-medium`}>Current Status</label>
             <Select 
               value={driverStatus} 
               onValueChange={updateDriverStatus}
               disabled={isStatusLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger className={isMobile ? "h-12 text-base" : ""}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="offline">
-                  <div className="flex items-center gap-2">
-                    <WifiOff className="h-4 w-4" />
+                <SelectItem value="offline" className={isMobile ? "py-3" : ""}>
+                  <div className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
+                    <WifiOff className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
                     Offline
                   </div>
                 </SelectItem>
-                <SelectItem value="available">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" />
+                <SelectItem value="available" className={isMobile ? "py-3" : ""}>
+                  <div className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
+                    <UserCheck className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
                     Available
                   </div>
                 </SelectItem>
@@ -277,22 +279,22 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
             </Select>
           </div>
 
-          {/* Online Duration */}
+          {/* Online Duration - Mobile Optimized */}
           {driverStatus === 'available' && (
-            <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+            <div className={`flex items-center justify-between ${isMobile ? 'p-4' : 'p-3'} bg-primary/10 rounded-lg`}>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Online Duration</span>
+                <Clock className={isMobile ? "h-5 w-5 text-primary" : "h-4 w-4 text-primary"} />
+                <span className={`${isMobile ? 'text-base' : 'text-sm'} font-medium`}>Online Duration</span>
               </div>
-              <span className="text-sm font-mono">{formatTime(isOnlineTime)}</span>
+              <span className={`${isMobile ? 'text-base' : 'text-sm'} font-mono font-bold`}>{formatTime(isOnlineTime)}</span>
             </div>
           )}
 
-          {/* Location Status */}
+          {/* Location Status - Mobile Optimized */}
           {lastLocationUpdate && (
-            <div className="flex items-center justify-between text-sm">
+            <div className={`flex items-center justify-between ${isMobile ? 'text-base' : 'text-sm'}`}>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <MapPin className={isMobile ? "h-5 w-5 text-muted-foreground" : "h-4 w-4 text-muted-foreground"} />
                 <span>Last Location Update</span>
               </div>
               <span className="text-muted-foreground">
@@ -301,10 +303,10 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
             </div>
           )}
 
-          {/* Status Guide */}
-          <div className="text-xs text-muted-foreground p-3 bg-muted/20 rounded-lg">
+          {/* Status Guide - Mobile Optimized */}
+          <div className={`${isMobile ? 'text-sm' : 'text-xs'} text-muted-foreground ${isMobile ? 'p-4' : 'p-3'} bg-muted/20 rounded-lg`}>
             <div className="font-medium mb-2">Status Guide:</div>
-            <div className="space-y-1">
+            <div className={isMobile ? 'space-y-1.5' : 'space-y-1'}>
               <div>• <strong>Available:</strong> Online and accepting ride requests</div>
               <div>• <strong>On Trip:</strong> Currently serving a passenger</div>
               <div>• <strong>Inactive:</strong> No location updates for 30+ seconds</div>
@@ -312,27 +314,28 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
             </div>
           </div>
 
-          {/* Vehicle Info & Management */}
+          {/* Vehicle Info & Management - Mobile Optimized */}
           {driverData && (
-            <div className="space-y-3 pt-4 border-t">
+            <div className={`${isMobile ? 'space-y-4' : 'space-y-3'} pt-4 border-t`}>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Vehicle</p>
-                  <p className="font-medium">{driverData.car_model}</p>
+                  <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>Vehicle</p>
+                  <p className={`font-medium ${isMobile ? 'text-base' : ''}`}>{driverData.car_model}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Plate</p>
-                  <p className="font-medium">{driverData.car_plate}</p>
+                  <p className={`${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>Plate</p>
+                  <p className={`font-medium ${isMobile ? 'text-base' : ''}`}>{driverData.car_plate}</p>
                 </div>
               </div>
               
               {onManageVehicle && (
                 <Button 
                   variant="outline" 
-                  className="w-full" 
+                  className={`w-full ${isMobile ? 'min-h-[48px] text-base' : ''}`}
                   onClick={onManageVehicle}
+                  size={isMobile ? "lg" : "default"}
                 >
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className={isMobile ? "h-5 w-5 mr-2" : "h-4 w-4 mr-2"} />
                   Manage Vehicle
                 </Button>
               )}
@@ -341,60 +344,60 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
         </CardContent>
       </Card>
 
-      {/* Earnings Summary Card */}
+      {/* Earnings Summary Card - Mobile Optimized */}
       {earnings && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Earnings Summary
+          <CardHeader className={isMobile ? "pb-3" : ""}>
+            <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-base' : ''}`}>
+              <TrendingUp className={isMobile ? "h-5 w-5" : "h-5 w-5"} />
+              <span>Earnings Summary</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className={`text-center ${isMobile ? 'p-4' : 'p-3'} bg-green-50 dark:bg-green-950/20 rounded-lg`}>
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <span className="text-lg font-bold text-green-600">
+                  <DollarSign className={isMobile ? "h-5 w-5 text-green-600" : "h-4 w-4 text-green-600"} />
+                  <span className={`${isMobile ? 'text-xl' : 'text-lg'} font-bold text-green-600`}>
                     ${earnings.today_earnings.toFixed(2)}
                   </span>
                 </div>
-                <div className="text-xs text-muted-foreground">Today</div>
+                <div className={`${isMobile ? 'text-sm' : 'text-xs'} text-muted-foreground`}>Today</div>
               </div>
               
-              <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+              <div className={`text-center ${isMobile ? 'p-4' : 'p-3'} bg-blue-50 dark:bg-blue-950/20 rounded-lg`}>
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <span className="text-lg font-bold text-blue-600">
+                  <Calendar className={isMobile ? "h-5 w-5 text-blue-600" : "h-4 w-4 text-blue-600"} />
+                  <span className={`${isMobile ? 'text-xl' : 'text-lg'} font-bold text-blue-600`}>
                     ${earnings.this_week_earnings.toFixed(2)}
                   </span>
                 </div>
-                <div className="text-xs text-muted-foreground">This Week</div>
+                <div className={`${isMobile ? 'text-sm' : 'text-xs'} text-muted-foreground`}>This Week</div>
               </div>
               
-              <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+              <div className={`text-center ${isMobile ? 'p-4' : 'p-3'} bg-purple-50 dark:bg-purple-950/20 rounded-lg`}>
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <Car className="h-4 w-4 text-purple-600" />
-                  <span className="text-lg font-bold text-purple-600">
+                  <Car className={isMobile ? "h-5 w-5 text-purple-600" : "h-4 w-4 text-purple-600"} />
+                  <span className={`${isMobile ? 'text-xl' : 'text-lg'} font-bold text-purple-600`}>
                     {earnings.total_rides}
                   </span>
                 </div>
-                <div className="text-xs text-muted-foreground">Total Rides</div>
+                <div className={`${isMobile ? 'text-sm' : 'text-xs'} text-muted-foreground`}>Total Rides</div>
               </div>
               
-              <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+              <div className={`text-center ${isMobile ? 'p-4' : 'p-3'} bg-orange-50 dark:bg-orange-950/20 rounded-lg`}>
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <Gauge className="h-4 w-4 text-orange-600" />
-                  <span className="text-lg font-bold text-orange-600">
+                  <Gauge className={isMobile ? "h-5 w-5 text-orange-600" : "h-4 w-4 text-orange-600"} />
+                  <span className={`${isMobile ? 'text-xl' : 'text-lg'} font-bold text-orange-600`}>
                     ${(earnings.total_earnings / Math.max(earnings.total_rides, 1)).toFixed(2)}
                   </span>
                 </div>
-                <div className="text-xs text-muted-foreground">Avg per Ride</div>
+                <div className={`${isMobile ? 'text-sm' : 'text-xs'} text-muted-foreground`}>Avg per Ride</div>
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t">
-              <div className="flex items-center justify-between text-sm">
+              <div className={`flex items-center justify-between ${isMobile ? 'text-base' : 'text-sm'}`}>
                 <span className="text-muted-foreground">Total Lifetime Earnings:</span>
                 <span className="font-bold text-primary">
                   ${earnings.total_earnings.toFixed(2)}
