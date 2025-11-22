@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Car, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, RotateCcw } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import QRCodeSection from '@/components/QRCodeSection';
 
 const DriverAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -517,6 +518,8 @@ const DriverAuth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        
+        <QRCodeSection />
       </div>
     </div>
   );
