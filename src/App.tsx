@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useLanguageSync } from "./hooks/useLanguageSync";
 import { LanguageDetectionBanner } from "./components/LanguageDetectionBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ReducedMotionProvider } from "./components/ReducedMotionProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PassengerAuth from "./pages/PassengerAuth";
@@ -43,11 +44,12 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <LanguageDetectionBanner />
-          <BrowserRouter>
+        <ReducedMotionProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <LanguageDetectionBanner />
+            <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/passenger/auth" element={<PassengerAuth />} />
@@ -73,7 +75,8 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </ReducedMotionProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
