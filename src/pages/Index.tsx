@@ -2,6 +2,7 @@ import Navigation from '@/components/Navigation';
 import HeroSection from '@/components/HeroSection';
 import FeaturesSection from '@/components/FeaturesSection';
 import AppPreviewSection from '@/components/AppPreviewSection';
+import QRCodeSection from '@/components/QRCodeSection';
 import Footer from '@/components/Footer';
 import { SkipToContent } from '@/components/SkipToContent';
 import { InstallAppBanner } from '@/components/InstallAppBanner';
@@ -16,6 +17,7 @@ const Index = () => {
         <section id="features" aria-labelledby="features-heading">
           <FeaturesSection />
         </section>
+        <QRCodeSection />
         <AppPreviewSection />
       </main>
       <Footer />
