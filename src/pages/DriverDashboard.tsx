@@ -26,6 +26,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useDriverVerificationNotifications } from '@/hooks/useDriverVerificationNotifications';
+import { DriverVerificationStatus } from '@/components/DriverVerificationStatus';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface Driver {
@@ -429,6 +430,11 @@ const DriverDashboard = () => {
               {/* Location Tracking */}
               <LocationTracker />
             </div>
+
+            {/* Verification Status Widget */}
+            {driver && (
+              <DriverVerificationStatus driverId={driver.id} />
+            )}
 
         {/* Active Ride - Mobile Optimized */}
         {activeRide && (
