@@ -39,6 +39,14 @@ const Navigation = () => {
               {t('nav.features')}
             </button>
             <button 
+              onClick={() => navigate('/vehicles')} 
+              className="text-muted-foreground hover:text-foreground transition-smooth focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1"
+              aria-label="View Vehicles"
+              role="menuitem"
+            >
+              Vehicles
+            </button>
+            <button 
               onClick={() => navigate('/cars')} 
               className="text-muted-foreground hover:text-foreground transition-smooth focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1"
               aria-label={t('nav.carRentals')}
@@ -111,6 +119,13 @@ const Navigation = () => {
               role="menuitem"
             >
               {t('nav.features')}
+            </button>
+            <button 
+              onClick={() => { navigate('/vehicles'); setIsMenuOpen(false); }}
+              className="block w-full text-left px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-smooth focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              role="menuitem"
+            >
+              Vehicles
             </button>
             <button 
               onClick={() => { navigate('/cars'); setIsMenuOpen(false); }}

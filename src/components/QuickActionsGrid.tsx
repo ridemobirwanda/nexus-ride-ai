@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Clock, User } from 'lucide-react';
+import { Clock, User, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const QuickActionsGrid = () => {
@@ -14,6 +14,14 @@ const QuickActionsGrid = () => {
       >
         <Clock className="h-6 w-6" />
         <span>Ride History</span>
+      </Button>
+      <Button 
+        variant="outline" 
+        className="h-auto p-4 flex-col gap-2"
+        onClick={() => navigate('/vehicles')}
+      >
+        <Car className="h-6 w-6" />
+        <span>View Vehicles</span>
       </Button>
       <Button 
         variant="outline" 
