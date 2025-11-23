@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Car, Save, Settings } from 'lucide-react';
-import CarImageUpload from './CarImageUpload';
+import CarMediaUpload from './CarMediaUpload';
 import CarCategorySelector from './CarCategorySelector';
 
 interface DriverCarSetupProps {
@@ -17,6 +17,13 @@ interface DriverCarSetupProps {
 interface CarImage {
   id: string;
   image_url: string;
+  is_primary: boolean;
+}
+
+interface CarVideo {
+  id: string;
+  video_url: string;
+  thumbnail_url?: string;
   is_primary: boolean;
 }
 
@@ -43,6 +50,7 @@ const DriverCarSetup = ({ driverId }: DriverCarSetupProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [carImages, setCarImages] = useState<CarImage[]>([]);
+  const [carVideos, setCarVideos] = useState<CarVideo[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CarCategory | null>(null);
   const [driverData, setDriverData] = useState<DriverData>({
     car_model: '',
@@ -56,6 +64,7 @@ const DriverCarSetup = ({ driverId }: DriverCarSetupProps) => {
   useEffect(() => {
     fetchDriverData();
     fetchCarImages();
+    fetchCarVideos();
   }, [driverId]);
 
   const fetchDriverData = async () => {
@@ -118,6 +127,21 @@ const DriverCarSetup = ({ driverId }: DriverCarSetupProps) => {
       setCarImages(data || []);
     } catch (error: any) {
       console.error('Error fetching car images:', error);
+    }
+  };
+
+  const fetchCarVideos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('car_videos')
+        .select('*')
+        .eq('driver_id', driverId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCarVideos(data || []);
+    } catch (error: any) {
+      console.error('Error fetching car videos:', error);
     }
   };
 
@@ -259,11 +283,13 @@ const DriverCarSetup = ({ driverId }: DriverCarSetupProps) => {
         </CardContent>
       </Card>
 
-      {/* Car Images */}
-      <CarImageUpload
+      {/* Car Media (Images & Videos) */}
+      <CarMediaUpload
         driverId={driverId}
         images={carImages}
+        videos={carVideos}
         onImagesUpdate={setCarImages}
+        onVideosUpdate={setCarVideos}
       />
 
       {selectedCategory && (

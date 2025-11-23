@@ -193,6 +193,48 @@ export type Database = {
           },
         ]
       }
+      car_videos: {
+        Row: {
+          created_at: string | null
+          driver_id: string
+          id: string
+          is_primary: boolean | null
+          thumbnail_url: string | null
+          video_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          is_primary?: boolean | null
+          thumbnail_url?: string | null
+          video_url: string
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          is_primary?: boolean | null
+          thumbnail_url?: string | null
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_videos_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "car_videos_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
