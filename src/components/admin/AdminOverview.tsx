@@ -6,6 +6,7 @@ import { Users, Car, DollarSign, AlertTriangle, TrendingUp, Clock, CheckCircle2 
 
 interface AdminOverviewProps {
   userRole: string | null;
+  onNavigate?: (tab: string) => void;
 }
 
 interface Stats {
@@ -19,7 +20,7 @@ interface Stats {
   avgRating: number;
 }
 
-export function AdminOverview({ userRole }: AdminOverviewProps) {
+export function AdminOverview({ userRole, onNavigate }: AdminOverviewProps) {
   const [stats, setStats] = useState<Stats>({
     totalPassengers: 0,
     totalDrivers: 0,
@@ -85,6 +86,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: Users,
       description: "Registered passengers",
       color: "text-blue-500",
+      navigateTo: "users",
     },
     {
       title: "Total Drivers",
@@ -92,6 +94,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: Car,
       description: "Registered drivers",
       color: "text-green-500",
+      navigateTo: "users",
     },
     {
       title: "Active Rides",
@@ -99,6 +102,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: Clock,
       description: "Currently in progress",
       color: "text-orange-500",
+      navigateTo: "rides",
     },
     {
       title: "Total Revenue",
@@ -106,6 +110,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: DollarSign,
       description: "All-time earnings",
       color: "text-emerald-500",
+      navigateTo: "financial",
     },
     {
       title: "Pending Verifications",
@@ -113,6 +118,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: AlertTriangle,
       description: "Awaiting review",
       color: "text-yellow-500",
+      navigateTo: "verification",
     },
     {
       title: "Open Support Tickets",
@@ -120,6 +126,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: AlertTriangle,
       description: "Need attention",
       color: "text-red-500",
+      navigateTo: "support",
     },
     {
       title: "Rides Today",
@@ -127,6 +134,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: CheckCircle2,
       description: "Completed today",
       color: "text-cyan-500",
+      navigateTo: "rides",
     },
     {
       title: "Average Rating",
@@ -134,6 +142,7 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
       icon: TrendingUp,
       description: "System-wide rating",
       color: "text-purple-500",
+      navigateTo: "analytics",
     },
   ];
 
@@ -168,16 +177,20 @@ export function AdminOverview({ userRole }: AdminOverviewProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card, index) => (
-          <Card key={index} className="gradient-card border-primary/10 hover:border-primary/20 transition-all duration-300">
+          <Card 
+            key={index} 
+            className="gradient-card border-primary/10 hover:border-primary/30 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+            onClick={() => onNavigate?.(card.navigateTo)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                 {card.title}
               </CardTitle>
-              <card.icon className={`h-4 w-4 ${card.color}`} />
+              <card.icon className={`h-4 w-4 ${card.color} group-hover:scale-110 transition-transform`} />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold mb-1">{card.value}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground group-hover:text-foreground/70 transition-colors">
                 {card.description}
               </p>
             </CardContent>

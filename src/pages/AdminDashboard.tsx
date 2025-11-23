@@ -69,7 +69,7 @@ const AdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return <AdminOverview userRole={userRole} />;
+        return <AdminOverview userRole={userRole} onNavigate={setActiveTab} />;
       case "users":
         return <UserManagement userRole={userRole} />;
       case "rides":
