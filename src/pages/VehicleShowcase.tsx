@@ -15,7 +15,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Clock,
+  Navigation
 } from 'lucide-react';
 import {
   Carousel,
@@ -66,9 +68,18 @@ interface CarVideo {
   is_primary: boolean;
 }
 
+interface DriverLocation {
+  driver_id: string;
+  location: { x: number; y: number };
+  timestamp: string;
+}
+
 interface VehicleWithMedia extends Driver {
   images: CarImage[];
   videos: CarVideo[];
+  distance_km?: number;
+  estimated_arrival_minutes?: number;
+  is_online?: boolean;
 }
 
 const VehicleShowcase = () => {
@@ -78,15 +89,137 @@ const VehicleShowcase = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleWithMedia | null>(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    getUserLocation();
     fetchVehicles();
   }, []);
 
   useEffect(() => {
     filterVehicles();
-  }, [searchQuery, vehicles]);
+  }, [searchQuery, vehicles, showOnlineOnly]);
+
+  useEffect(() => {
+    if (userLocation) {
+      updateVehicleDistances();
+      
+      // Set up real-time subscription for driver location updates
+      const channel = supabase
+        .channel('driver-locations-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'driver_locations'
+          },
+          (payload) => {
+            console.log('Driver location update:', payload);
+            updateVehicleDistances();
+          }
+        )
+        .subscribe();
+
+      // Refresh distances every 30 seconds
+      const interval = setInterval(() => {
+        updateVehicleDistances();
+      }, 30000);
+
+      return () => {
+        supabase.removeChannel(channel);
+        clearInterval(interval);
+      };
+    }
+  }, [userLocation, vehicles]);
+
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+          toast({
+            title: "Location Access",
+            description: "Enable location for distance and ETA calculations",
+            variant: "default"
+          });
+        }
+      );
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  };
+
+  const updateVehicleDistances = async () => {
+    if (!userLocation) return;
+
+    // Fetch current driver locations
+    const driverIds = vehicles.map(v => v.id);
+    const { data: locations } = await supabase
+      .from('driver_locations')
+      .select('driver_id, location, timestamp')
+      .in('driver_id', driverIds)
+      .eq('is_active', true)
+      .order('timestamp', { ascending: false });
+
+    const updatedVehicles = vehicles.map(vehicle => {
+      const driverLocation = locations?.find(loc => loc.driver_id === vehicle.id);
+      
+      if (driverLocation && driverLocation.location) {
+        const locPoint = driverLocation.location as any;
+        const driverLat = locPoint.y || locPoint.lat || 0;
+        const driverLng = locPoint.x || locPoint.lng || 0;
+        
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          driverLat,
+          driverLng
+        );
+
+        // Calculate ETA (assuming average speed of 30 km/h in city traffic)
+        const eta = Math.round((distance / 30) * 60);
+
+        // Check if driver is online (last update within 30 seconds)
+        const lastUpdate = new Date(driverLocation.timestamp);
+        const now = new Date();
+        const isOnline = (now.getTime() - lastUpdate.getTime()) < 30000;
+
+        return {
+          ...vehicle,
+          distance_km: distance,
+          estimated_arrival_minutes: eta,
+          is_online: isOnline
+        };
+      }
+
+      return {
+        ...vehicle,
+        is_online: false
+      };
+    });
+
+    setVehicles(updatedVehicles);
+  };
 
   const fetchVehicles = async () => {
     try {
@@ -160,19 +293,40 @@ const VehicleShowcase = () => {
   };
 
   const filterVehicles = () => {
-    if (!searchQuery.trim()) {
-      setFilteredVehicles(vehicles);
-      return;
+    let filtered = vehicles;
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(vehicle => 
+        vehicle.car_model?.toLowerCase().includes(query) ||
+        vehicle.car_color?.toLowerCase().includes(query) ||
+        vehicle.name?.toLowerCase().includes(query) ||
+        vehicle.car_category?.name?.toLowerCase().includes(query)
+      );
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = vehicles.filter(vehicle => 
-      vehicle.car_model?.toLowerCase().includes(query) ||
-      vehicle.car_color?.toLowerCase().includes(query) ||
-      vehicle.name?.toLowerCase().includes(query) ||
-      vehicle.car_category?.name?.toLowerCase().includes(query)
-    );
-    setFilteredVehicles(filtered);
+    // Filter by online status
+    if (showOnlineOnly) {
+      filtered = filtered.filter(vehicle => vehicle.is_online);
+    }
+    
+    // Sort by online status first, then by distance
+    const sorted = [...filtered].sort((a, b) => {
+      // Online drivers first
+      if (a.is_online && !b.is_online) return -1;
+      if (!a.is_online && b.is_online) return 1;
+      
+      // Then by distance
+      if (a.distance_km !== undefined && b.distance_km !== undefined) {
+        return a.distance_km - b.distance_km;
+      }
+      
+      // Finally by rating
+      return b.rating - a.rating;
+    });
+    
+    setFilteredVehicles(sorted);
   };
 
   const openGallery = (vehicle: VehicleWithMedia) => {
@@ -221,6 +375,26 @@ const VehicleShowcase = () => {
               className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60"
             />
           </div>
+
+          {/* Filter and Stats */}
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant={showOnlineOnly ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setShowOnlineOnly(!showOnlineOnly)}
+              className="text-white"
+            >
+              {showOnlineOnly ? '✓ Online Only' : 'Show Online Only'}
+            </Button>
+            <div className="flex items-center gap-2 text-xs text-white/80">
+              <Badge variant="secondary" className="bg-green-500 text-white">
+                {vehicles.filter(v => v.is_online).length} Online
+              </Badge>
+              <Badge variant="secondary" className="bg-white/20 text-white">
+                {vehicles.length} Total
+              </Badge>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -263,7 +437,21 @@ const VehicleShowcase = () => {
                     </div>
                   )}
                   
-                  {/* Media Count Badge */}
+                  {/* Availability Status Badge */}
+                  <div className="absolute top-2 left-2">
+                    {vehicle.is_online ? (
+                      <Badge className="bg-green-500 text-white flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                        Online
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="bg-gray-500/80 text-white">
+                        Offline
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Media Count Badges */}
                   <div className="absolute top-2 right-2 flex gap-1">
                     {vehicle.images.length > 0 && (
                       <Badge className="bg-black/70 text-white">
@@ -277,8 +465,16 @@ const VehicleShowcase = () => {
                     )}
                   </div>
 
+                  {/* ETA Badge */}
+                  {vehicle.is_online && vehicle.estimated_arrival_minutes !== undefined && (
+                    <Badge className="absolute bottom-2 left-2 bg-primary flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {vehicle.estimated_arrival_minutes} min
+                    </Badge>
+                  )}
+
                   {/* Rating Badge */}
-                  <Badge className="absolute bottom-2 left-2 bg-primary">
+                  <Badge className="absolute bottom-2 right-2 bg-black/70 text-white">
                     <Star className="h-3 w-3 mr-1 fill-current" />
                     {vehicle.rating.toFixed(1)}
                   </Badge>
@@ -297,6 +493,20 @@ const VehicleShowcase = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-3">
+                  {/* Distance and ETA Info */}
+                  {vehicle.is_online && vehicle.distance_km !== undefined && (
+                    <div className="flex items-center gap-3 p-2 bg-primary/5 rounded-lg border border-primary/20">
+                      <div className="flex items-center gap-1 text-sm">
+                        <Navigation className="h-4 w-4 text-primary" />
+                        <span className="font-medium">{vehicle.distance_km.toFixed(1)} km away</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span className="font-medium">{vehicle.estimated_arrival_minutes} min ETA</span>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 text-sm">
                     <Car className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium">{vehicle.car_plate}</span>
@@ -330,11 +540,17 @@ const VehicleShowcase = () => {
                     }}>
                       View Gallery
                     </Button>
-                    <Button className="flex-1" onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/ride-booking?driver_id=${vehicle.id}&driver_name=${encodeURIComponent(vehicle.name)}`);
-                    }}>
-                      Book Driver
+                    <Button 
+                      className="flex-1" 
+                      disabled={!vehicle.is_online}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (vehicle.is_online) {
+                          navigate(`/ride-booking?driver_id=${vehicle.id}&driver_name=${encodeURIComponent(vehicle.name)}`);
+                        }
+                      }}
+                    >
+                      {vehicle.is_online ? 'Book Driver' : 'Offline'}
                     </Button>
                   </div>
                 </CardContent>
@@ -351,8 +567,20 @@ const VehicleShowcase = () => {
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xl font-bold">{selectedVehicle.car_model}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="text-xl font-bold">{selectedVehicle.car_model}</div>
+                      {selectedVehicle.is_online ? (
+                        <Badge className="bg-green-500 text-white flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                          Online
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-gray-500/80 text-white">
+                          Offline
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-sm text-muted-foreground font-normal">
                       {selectedVehicle.car_year} • {selectedVehicle.car_color} • {selectedVehicle.car_plate}
                     </div>
@@ -365,6 +593,26 @@ const VehicleShowcase = () => {
               </DialogHeader>
 
               <div className="space-y-6 mt-4">
+                {/* Distance & ETA Info */}
+                {selectedVehicle.is_online && selectedVehicle.distance_km !== undefined && (
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardContent className="pt-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <Navigation className="h-6 w-6 text-primary mx-auto mb-2" />
+                          <div className="text-2xl font-bold">{selectedVehicle.distance_km.toFixed(1)} km</div>
+                          <div className="text-sm text-muted-foreground">Distance</div>
+                        </div>
+                        <div className="text-center">
+                          <Clock className="h-6 w-6 text-primary mx-auto mb-2" />
+                          <div className="text-2xl font-bold">{selectedVehicle.estimated_arrival_minutes} min</div>
+                          <div className="text-sm text-muted-foreground">Estimated Arrival</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Driver Info */}
                 <Card>
                   <CardHeader>
@@ -374,6 +622,16 @@ const VehicleShowcase = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Driver:</span>
                       <span className="font-medium">{selectedVehicle.name}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className="font-medium">
+                        {selectedVehicle.is_online ? (
+                          <Badge className="bg-green-500 text-white">Available</Badge>
+                        ) : (
+                          <Badge variant="secondary">Offline</Badge>
+                        )}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Total Trips:</span>
@@ -486,12 +744,15 @@ const VehicleShowcase = () => {
                 <Button 
                   className="w-full" 
                   size="lg"
+                  disabled={!selectedVehicle.is_online}
                   onClick={() => {
-                    navigate(`/ride-booking?driver_id=${selectedVehicle.id}&driver_name=${encodeURIComponent(selectedVehicle.name)}`);
-                    setIsGalleryOpen(false);
+                    if (selectedVehicle.is_online) {
+                      navigate(`/ride-booking?driver_id=${selectedVehicle.id}&driver_name=${encodeURIComponent(selectedVehicle.name)}`);
+                      setIsGalleryOpen(false);
+                    }
                   }}
                 >
-                  Book This Driver
+                  {selectedVehicle.is_online ? 'Book This Driver' : 'Driver is Offline'}
                 </Button>
               </div>
             </>
