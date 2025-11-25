@@ -78,29 +78,29 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <section id="features" className="py-20 bg-muted/50">
-      <div className="container mx-auto px-4">
+    <section id="features" className="py-12 sm:py-16 lg:py-20 bg-muted/50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+        <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
             {t('features.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
             {t('features.subtitle')}
           </p>
         </div>
 
         {/* Core Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {coreFeatures.map((feature, index) => (
-            <Card key={index} className="p-6 gradient-card card-shadow border-border/50 hover:border-primary/50 transition-smooth">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/20 glow-primary">
-                  <feature.icon className="h-6 w-6 text-primary" />
+            <Card key={index} className="p-4 sm:p-6 gradient-card card-shadow border-border/50 hover:border-primary/50 transition-smooth group">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-primary/20 glow-primary flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm">{feature.description}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">{feature.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm">{feature.description}</p>
                 </div>
               </div>
             </Card>
@@ -108,34 +108,34 @@ const FeaturesSection = () => {
         </div>
 
         {/* Futuristic Features */}
-        <div className="text-center mb-12">
-          <h3 className="text-3xl font-bold mb-4">
+        <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             <span className="gradient-accent bg-clip-text text-transparent">
               {t('features.aiPowered')}
             </span>
           </h3>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground px-4">
             {t('features.aiPoweredSubtitle')}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {futuristicFeatures.map((feature, index) => (
-            <Card key={index} className="p-8 gradient-card card-shadow border-border/50 hover:border-accent/50 transition-smooth group">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className={`p-4 rounded-xl ${feature.gradient} glow-accent`}>
-                  <feature.icon className="h-8 w-8 text-white" />
+            <Card key={index} className="p-6 sm:p-8 gradient-card card-shadow border-border/50 hover:border-accent/50 transition-smooth group">
+              <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
+                <div className={`p-3 sm:p-4 rounded-xl ${feature.gradient} glow-accent group-hover:scale-110 transition-transform`}>
+                  <feature.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-lg sm:text-xl font-bold">{feature.title}</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">{feature.description}</p>
               </div>
             </Card>
           ))}
         </div>
 
         {/* CTA */}
-        <div className="text-center mt-16">
-          <Button variant="hero" size="lg" className="text-lg px-8 py-6">
+        <div className="text-center mt-12 sm:mt-16">
+          <Button variant="hero" size="lg" className="text-base sm:text-lg px-6 py-5 sm:px-8 sm:py-6 w-full sm:w-auto touch-manipulation">
             Experience the Future
           </Button>
         </div>

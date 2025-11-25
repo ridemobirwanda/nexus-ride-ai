@@ -181,21 +181,22 @@ const PassengerDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* Header */}
       <header className="bg-card/95 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent truncate">
                 RideNow
               </h1>
-              <Badge variant="secondary" className="text-xs">Passenger</Badge>
+              <Badge variant="secondary" className="text-[10px] sm:text-xs flex-shrink-0">Passenger</Badge>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden sm:inline">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden md:inline truncate max-w-[150px] lg:max-w-none">
                 Welcome, {passenger?.name || user?.email || 'Guest'}
               </span>
               {user && (
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <Button variant="ghost" size="sm" onClick={handleSignOut} className="touch-manipulation">
                   <LogOut className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only sm:ml-2 hidden sm:inline">Sign Out</span>
                 </Button>
               )}
             </div>
@@ -203,20 +204,20 @@ const PassengerDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 max-w-4xl">
+        <div className="space-y-4 sm:space-y-6">
           {/* Current Location Display */}
           {currentLocation && (
             <Card className="border-primary/20 bg-primary/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Your Current Location
+              <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  <span>Your Current Location</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{currentLocation.address}</p>
-                <p className="text-xs text-muted-foreground mt-1">
+              <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                <p className="text-sm sm:text-base text-muted-foreground break-words">{currentLocation.address}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                   This will be used as your pickup location
                 </p>
               </CardContent>
@@ -225,13 +226,13 @@ const PassengerDashboard = () => {
 
           {/* Step 1: Passenger Capacity Selection */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Step 1: How many passengers?
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span>Step 1: How many passengers?</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <SeatFilterSelector
                 selectedSeats={selectedSeats}
                 onSeatChange={setSelectedSeats}
@@ -241,15 +242,15 @@ const PassengerDashboard = () => {
 
           {/* Step 2: Car Selection */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0">
                   2
                 </div>
-                Choose Your Ride
+                <span>Choose Your Ride</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <CarCategorySelector
                 selectedCategoryId={selectedCategory?.id}
                 onCategorySelect={handleCategorySelect}
@@ -261,21 +262,21 @@ const PassengerDashboard = () => {
 
           {/* Help Section */}
           <Card className="bg-muted/50">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <h3 className="font-semibold text-lg">How it works</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="text-center">
+            <CardContent className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-6">
+              <div className="text-center space-y-3 sm:space-y-4">
+                <h3 className="font-semibold text-base sm:text-lg">How it works</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="text-center p-3 sm:p-0">
                     <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold">1</div>
-                    <p className="text-sm text-muted-foreground">Select passenger count</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Select passenger count</p>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center p-3 sm:p-0">
                     <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold">2</div>
-                    <p className="text-sm text-muted-foreground">Choose your car type</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Choose your car type</p>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center p-3 sm:p-0">
                     <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-2 text-sm font-bold">3</div>
-                    <p className="text-sm text-muted-foreground">Set destination & book</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Set destination & book</p>
                   </div>
                 </div>
               </div>
