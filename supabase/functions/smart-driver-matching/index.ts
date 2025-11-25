@@ -23,6 +23,7 @@ interface RideRequest {
   pickup_lng: number;
   max_distance_km?: number;
   max_drivers?: number;
+  preferred_driver_id?: string;
 }
 
 serve(async (req) => {
@@ -55,7 +56,7 @@ serve(async (req) => {
       );
     }
 
-    const { pickup_lat, pickup_lng, max_distance_km = 10, max_drivers = 5 }: RideRequest = await req.json();
+    const { pickup_lat, pickup_lng, max_distance_km = 10, max_drivers = 5, preferred_driver_id }: RideRequest = await req.json();
 
     if (!pickup_lat || !pickup_lng) {
       return new Response(
@@ -68,6 +69,9 @@ serve(async (req) => {
     }
 
     console.log(`Finding drivers near (${pickup_lat}, ${pickup_lng}) within ${max_distance_km}km`);
+    if (preferred_driver_id) {
+      console.log(`Preferred driver ID: ${preferred_driver_id} - will be prioritized if available`);
+    }
 
     // Create point string for PostGIS
     const pickupPoint = `POINT(${pickup_lng} ${pickup_lat})`;
@@ -106,6 +110,9 @@ serve(async (req) => {
     const scoredDrivers = drivers.map(driver => {
       let score = 0;
       
+      // Check if this is the preferred driver
+      const isPreferred = preferred_driver_id && driver.driver_id === preferred_driver_id;
+      
       // Rating score (40% weight) - higher is better
       score += (driver.rating / 5.0) * 40;
       
@@ -121,14 +128,30 @@ serve(async (req) => {
       const maxETA = Math.max(...drivers.map(d => d.estimated_arrival_minutes), 1);
       score += ((maxETA - driver.estimated_arrival_minutes) / maxETA) * 10;
 
+      // Preferred driver bonus (add 100 points to ensure they're ranked first)
+      if (isPreferred) {
+        score += 100;
+      }
+
       return {
         ...driver,
-        match_score: Math.round(score * 100) / 100
+        match_score: Math.round(score * 100) / 100,
+        is_preferred: isPreferred
       };
     });
 
     // Sort by match score (highest first)
     scoredDrivers.sort((a, b) => b.match_score - a.match_score);
+
+    // Log if preferred driver was found and ranked
+    if (preferred_driver_id) {
+      const preferredDriver = scoredDrivers.find(d => d.driver_id === preferred_driver_id);
+      if (preferredDriver) {
+        console.log(`✅ Preferred driver found: ${preferredDriver.name} (ranked #${scoredDrivers.indexOf(preferredDriver) + 1})`);
+      } else {
+        console.log(`⚠️ Preferred driver ${preferred_driver_id} not available in search area`);
+      }
+    }
 
     const response = {
       success: true,

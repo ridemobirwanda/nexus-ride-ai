@@ -63,6 +63,8 @@ const RideBooking = () => {
   const [passenger, setPassenger] = useState<Passenger | null>(null);
   const [showRegistration, setShowRegistration] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [preferredDriverId, setPreferredDriverId] = useState<string | null>(null);
+  const [preferredDriverName, setPreferredDriverName] = useState<string | null>(null);
   
   const [locationData, setLocationData] = useState({
     pickupLocation: null as Location | null,
@@ -86,6 +88,7 @@ const RideBooking = () => {
     checkAuth();
     fetchCategoryFromUrl();
     getLocationFromUrl();
+    getPreferredDriverFromUrl();
   }, []);
 
   // Separate effect for map initialization that waits for the ref
@@ -124,6 +127,23 @@ const RideBooking = () => {
       
       if (data) {
         setSelectedCategory(data);
+      }
+    }
+  };
+
+  const getPreferredDriverFromUrl = () => {
+    const driverId = searchParams.get('driver_id');
+    const driverName = searchParams.get('driver_name');
+    
+    if (driverId) {
+      setPreferredDriverId(driverId);
+      setPreferredDriverName(driverName ? decodeURIComponent(driverName) : null);
+      
+      if (driverName) {
+        toast({
+          title: "🚗 Driver Pre-selected",
+          description: `Booking with ${decodeURIComponent(driverName)}`
+        });
       }
     }
   };
@@ -800,7 +820,8 @@ const RideBooking = () => {
               pickup_lng: locationData.pickupLocation.lng,
               car_category_id: selectedCategory.id,
               max_distance_km: 15,
-              limit: 10
+              limit: 10,
+              preferred_driver_id: preferredDriverId // Pass preferred driver to matching function
             }
           }
         );
@@ -1043,6 +1064,18 @@ const RideBooking = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 px-3 pb-3">
+                {/* Preferred Driver Indicator */}
+                {preferredDriverName && (
+                  <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+                    <div className="flex items-center gap-2">
+                      <User className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-muted-foreground">Preferred Driver</p>
+                        <p className="text-xs font-medium truncate">{preferredDriverName}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* Real-time Fare Display */}
                 <div className="text-center p-3 bg-card rounded-lg border border-primary/20">
                   <div className="text-xs text-muted-foreground mb-1">Estimated Fare</div>

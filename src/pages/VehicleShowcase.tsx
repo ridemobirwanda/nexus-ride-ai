@@ -323,9 +323,20 @@ const VehicleShowcase = () => {
                     </p>
                   )}
 
-                  <Button className="w-full mt-2" variant="outline">
-                    View Gallery
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button className="flex-1" variant="outline" onClick={(e) => {
+                      e.stopPropagation();
+                      openGallery(vehicle);
+                    }}>
+                      View Gallery
+                    </Button>
+                    <Button className="flex-1" onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/ride-booking?driver_id=${vehicle.id}&driver_name=${encodeURIComponent(vehicle.name)}`);
+                    }}>
+                      Book Driver
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -470,6 +481,18 @@ const VehicleShowcase = () => {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Book This Driver Button */}
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => {
+                    navigate(`/ride-booking?driver_id=${selectedVehicle.id}&driver_name=${encodeURIComponent(selectedVehicle.name)}`);
+                    setIsGalleryOpen(false);
+                  }}
+                >
+                  Book This Driver
+                </Button>
               </div>
             </>
           )}
