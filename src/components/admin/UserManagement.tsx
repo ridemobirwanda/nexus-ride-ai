@@ -105,10 +105,10 @@ export function UserManagement({ userRole }: UserManagementProps) {
   const UserTable = ({ users, type }: { users: User[], type: 'passenger' | 'driver' }) => {
     if (users.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <UserCheck className="w-12 h-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No {type}s found</h3>
-          <p className="text-sm text-muted-foreground max-w-md">
+        <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+          <UserCheck className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold mb-2">No {type}s found</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-md px-4">
             {searchTerm 
               ? `No ${type}s match your search criteria. Try adjusting your search.`
               : `There are no ${type}s registered in the system yet.`
@@ -118,102 +118,202 @@ export function UserManagement({ userRole }: UserManagementProps) {
       );
     }
 
-    return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Phone</TableHead>
-            {type === 'driver' && (
-              <>
-                <TableHead>Status</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Trips</TableHead>
-              </>
-            )}
-            <TableHead>Joined</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell>{user.phone || "Not provided"}</TableCell>
+    // Mobile card view
+    const MobileUserCard = ({ user }: { user: User }) => (
+      <Card className="mb-3">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="min-w-0 flex-1">
+              <h4 className="font-medium text-sm truncate">{user.name}</h4>
+              <p className="text-xs text-muted-foreground">{user.phone || "No phone"}</p>
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setSelectedUser(user)}>
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[95vw] sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-lg">User Details</DialogTitle>
+                  <DialogDescription>
+                    Manage {user.name}'s account
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <h4 className="font-medium text-sm">Name</h4>
+                      <p className="text-sm text-muted-foreground">{user.name}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">Phone</h4>
+                      <p className="text-sm text-muted-foreground">{user.phone || "Not provided"}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">User Type</h4>
+                      <Badge variant="outline" className="capitalize text-xs">{user.user_type}</Badge>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">Member Since</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleSuspendUser(user)}
+                      disabled={userRole !== 'super_admin'}
+                      className="flex-1"
+                    >
+                      <UserX className="w-4 h-4 mr-2" />
+                      Suspend User
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Shield className="w-4 h-4 mr-2" />
+                      View Activity
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
               {type === 'driver' && (
                 <>
-                  <TableCell>
-                    <Badge 
-                      variant={user.status === 'available' ? 'default' : 'secondary'}
-                      className="capitalize"
-                    >
-                      {user.status || 'offline'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.rating?.toFixed(1) || 'N/A'}</TableCell>
-                  <TableCell>{user.total_trips || 0}</TableCell>
+                  <Badge 
+                    variant={user.status === 'available' ? 'default' : 'secondary'}
+                    className="capitalize text-xs"
+                  >
+                    {user.status || 'offline'}
+                  </Badge>
+                  <span className="text-muted-foreground">★ {user.rating?.toFixed(1) || 'N/A'}</span>
+                  <span className="text-muted-foreground">{user.total_trips || 0} trips</span>
                 </>
               )}
-              <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>User Details</DialogTitle>
-                      <DialogDescription>
-                        Manage {user.name}'s account
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-medium">Name</h4>
-                          <p className="text-sm text-muted-foreground">{user.name}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Phone</h4>
-                          <p className="text-sm text-muted-foreground">{user.phone || "Not provided"}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium">User Type</h4>
-                          <Badge variant="outline" className="capitalize">{user.user_type}</Badge>
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Member Since</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleSuspendUser(user)}
-                          disabled={userRole !== 'super_admin'}
-                        >
-                          <UserX className="w-4 h-4 mr-2" />
-                          Suspend User
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Shield className="w-4 h-4 mr-2" />
-                          View Activity
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </TableCell>
-            </TableRow>
+            </div>
+            <span className="text-muted-foreground">
+              {new Date(user.created_at).toLocaleDateString()}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+
+    return (
+      <>
+        {/* Mobile view - cards */}
+        <div className="block md:hidden">
+          {users.map((user) => (
+            <MobileUserCard key={user.id} user={user} />
           ))}
-        </TableBody>
-      </Table>
+        </div>
+
+        {/* Desktop view - table */}
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[120px]">Name</TableHead>
+                <TableHead className="min-w-[100px]">Phone</TableHead>
+                {type === 'driver' && (
+                  <>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead>Trips</TableHead>
+                  </>
+                )}
+                <TableHead>Joined</TableHead>
+                <TableHead className="w-[60px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.phone || "Not provided"}</TableCell>
+                  {type === 'driver' && (
+                    <>
+                      <TableCell>
+                        <Badge 
+                          variant={user.status === 'available' ? 'default' : 'secondary'}
+                          className="capitalize"
+                        >
+                          {user.status || 'offline'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{user.rating?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell>{user.total_trips || 0}</TableCell>
+                    </>
+                  )}
+                  <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedUser(user)}>
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>User Details</DialogTitle>
+                          <DialogDescription>
+                            Manage {user.name}'s account
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-medium">Name</h4>
+                              <p className="text-sm text-muted-foreground">{user.name}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium">Phone</h4>
+                              <p className="text-sm text-muted-foreground">{user.phone || "Not provided"}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium">User Type</h4>
+                              <Badge variant="outline" className="capitalize">{user.user_type}</Badge>
+                            </div>
+                            <div>
+                              <h4 className="font-medium">Member Since</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleSuspendUser(user)}
+                              disabled={userRole !== 'super_admin'}
+                            >
+                              <UserX className="w-4 h-4 mr-2" />
+                              Suspend User
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Shield className="w-4 h-4 mr-2" />
+                              View Activity
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </>
     );
   };
 
@@ -240,70 +340,68 @@ export function UserManagement({ userRole }: UserManagementProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">User Management</h2>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold">User Management</h2>
+        <div className="relative w-full sm:w-auto">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full sm:w-64 h-11 sm:h-10"
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Passengers</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Passengers</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{passengers.length}</div>
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{passengers.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Drivers</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Drivers</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{drivers.length}</div>
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="text-lg sm:text-2xl font-bold">{drivers.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Drivers</CardTitle>
+          <CardHeader className="pb-1 sm:pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Active</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="text-lg sm:text-2xl font-bold">
               {drivers.filter(d => d.status === 'available').length}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="passengers" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="passengers">
+      <Tabs defaultValue="passengers" className="space-y-3 sm:space-y-4">
+        <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+          <TabsTrigger value="passengers" className="text-xs sm:text-sm">
             Passengers ({filteredPassengers.length})
           </TabsTrigger>
-          <TabsTrigger value="drivers">
+          <TabsTrigger value="drivers" className="text-xs sm:text-sm">
             Drivers ({filteredDrivers.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="passengers">
           <Card>
-            <CardHeader>
-              <CardTitle>Passenger Accounts</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Passenger Accounts</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Manage passenger accounts and view their activity
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6 pt-0">
               <UserTable users={filteredPassengers} type="passenger" />
             </CardContent>
           </Card>
@@ -311,13 +409,13 @@ export function UserManagement({ userRole }: UserManagementProps) {
 
         <TabsContent value="drivers">
           <Card>
-            <CardHeader>
-              <CardTitle>Driver Accounts</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Driver Accounts</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Manage driver accounts, status, and performance
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6 pt-0">
               <UserTable users={filteredDrivers} type="driver" />
             </CardContent>
           </Card>

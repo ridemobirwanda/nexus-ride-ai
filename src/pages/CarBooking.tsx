@@ -339,36 +339,37 @@ const CarBooking = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-8">
           <Button 
             variant="ghost" 
             onClick={() => navigate(`/cars/${car.id}`)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 self-start min-h-[44px] touch-manipulation"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Car Details
+            <span className="hidden sm:inline">Back to Car Details</span>
+            <span className="sm:hidden">Back</span>
           </Button>
-          <h1 className="text-3xl font-bold">Book Your Rental</h1>
+          <h1 className="text-xl sm:text-3xl font-bold">Book Your Rental</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Booking Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Rental Period */}
               <Card className="gradient-card card-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                     Rental Period
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="start-date">Start Date & Time</Label>
+                      <Label htmlFor="start-date" className="text-sm">Start Date & Time</Label>
                       <Input
                         id="start-date"
                         type="datetime-local"
@@ -376,11 +377,12 @@ const CarBooking = () => {
                         value={bookingData.rentalStart}
                         onChange={(e) => handleDateChange('rentalStart', e.target.value)}
                         required
+                        className="h-11 sm:h-10"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="end-date">End Date & Time</Label>
+                      <Label htmlFor="end-date" className="text-sm">End Date & Time</Label>
                       <Input
                         id="end-date"
                         type="datetime-local"
@@ -388,29 +390,30 @@ const CarBooking = () => {
                         value={bookingData.rentalEnd}
                         onChange={(e) => handleDateChange('rentalEnd', e.target.value)}
                         required
+                        className="h-11 sm:h-10"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Billing Type</Label>
+                    <Label className="text-sm">Billing Type</Label>
                     <RadioGroup
                       value={bookingData.durationType}
                       onValueChange={(value: 'hourly' | 'daily') => 
                         setBookingData({ ...bookingData, durationType: value })
                       }
-                      className="flex gap-6"
+                      className="flex flex-col sm:flex-row gap-3 sm:gap-6"
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-3 sm:p-0 border sm:border-0 rounded-lg sm:rounded-none touch-manipulation">
                         <RadioGroupItem value="hourly" id="hourly" />
-                        <Label htmlFor="hourly" className="flex items-center gap-2">
+                        <Label htmlFor="hourly" className="flex items-center gap-2 text-sm cursor-pointer">
                           <Clock className="h-4 w-4" />
                           Hourly ({formatPrice(car.price_per_hour)}/hr)
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-3 sm:p-0 border sm:border-0 rounded-lg sm:rounded-none touch-manipulation">
                         <RadioGroupItem value="daily" id="daily" />
-                        <Label htmlFor="daily" className="flex items-center gap-2">
+                        <Label htmlFor="daily" className="flex items-center gap-2 text-sm cursor-pointer">
                           <Calendar className="h-4 w-4" />
                           Daily ({formatPrice(car.price_per_day)}/day)
                         </Label>
@@ -473,31 +476,31 @@ const CarBooking = () => {
 
               {/* Pickup & Return */}
               <Card className="gradient-card card-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                     Pickup & Return Location
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                      <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <Label className="text-sm font-semibold mb-1 block">Pickup Location</Label>
-                        <p className="text-sm">{bookingData.pickupLocation}</p>
-                        <Badge variant="secondary" className="mt-2">
+                    <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-xs sm:text-sm font-semibold mb-1 block">Pickup Location</Label>
+                        <p className="text-xs sm:text-sm break-words">{bookingData.pickupLocation}</p>
+                        <Badge variant="secondary" className="mt-2 text-xs">
                           Set by car owner
                         </Badge>
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-3 p-4 bg-secondary/5 border border-secondary/20 rounded-lg">
-                      <MapPin className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <Label className="text-sm font-semibold mb-1 block">Return Location</Label>
-                        <p className="text-sm">{bookingData.returnLocation}</p>
-                        <Badge variant="secondary" className="mt-2">
+                    <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-secondary/5 border border-secondary/20 rounded-lg">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-secondary mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-xs sm:text-sm font-semibold mb-1 block">Return Location</Label>
+                        <p className="text-xs sm:text-sm break-words">{bookingData.returnLocation}</p>
+                        <Badge variant="secondary" className="mt-2 text-xs">
                           Same as pickup
                         </Badge>
                       </div>
@@ -506,41 +509,42 @@ const CarBooking = () => {
                   
                   <p className="text-xs text-muted-foreground flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>The pickup and return locations are set by the car owner based on where the vehicle is located. Please ensure you can access this location during your rental period.</span>
+                    <span>The pickup and return locations are set by the car owner based on where the vehicle is located.</span>
                   </p>
                 </CardContent>
               </Card>
 
               {/* Driver Information */}
               <Card className="gradient-card card-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5" />
                     Driver Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="license">Driver's License Number *</Label>
+                      <Label htmlFor="license" className="text-sm">Driver's License Number *</Label>
                       <Input
                         id="license"
                         placeholder="Enter license number"
                         value={bookingData.driverLicenseNumber}
                         onChange={(e) => setBookingData({ ...bookingData, driverLicenseNumber: e.target.value })}
                         required
+                        className="h-11 sm:h-10"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Contact Phone *</Label>
+                      <Label htmlFor="phone" className="text-sm">Contact Phone *</Label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="phone"
                           type="tel"
                           placeholder="Enter phone number"
-                          className="pl-10"
+                          className="pl-10 h-11 sm:h-10"
                           value={bookingData.contactPhone}
                           onChange={(e) => setBookingData({ ...bookingData, contactPhone: e.target.value })}
                           required
@@ -550,13 +554,14 @@ const CarBooking = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="requests">Special Requests (Optional)</Label>
+                    <Label htmlFor="requests" className="text-sm">Special Requests (Optional)</Label>
                     <Textarea
                       id="requests"
                       placeholder="Any special requirements or requests..."
                       value={bookingData.specialRequests}
                       onChange={(e) => setBookingData({ ...bookingData, specialRequests: e.target.value })}
                       rows={3}
+                      className="min-h-[80px]"
                     />
                   </div>
                 </CardContent>
@@ -566,46 +571,46 @@ const CarBooking = () => {
 
           {/* Booking Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-4">
+            <div className="lg:sticky lg:top-4">
               <Card className="gradient-card card-shadow">
-                <CardHeader>
-                  <CardTitle>Booking Summary</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Booking Summary</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
                   {/* Car Info */}
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg">
+                  <div className="space-y-1 sm:space-y-2">
+                    <h3 className="font-semibold text-base sm:text-lg">
                       {car.brand} {car.model}
                     </h3>
-                    <p className="text-muted-foreground">{car.year} • {car.car_type}</p>
-                    <Badge variant="outline">{car.location_address}</Badge>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{car.year} • {car.car_type}</p>
+                    <Badge variant="outline" className="text-xs break-all">{car.location_address}</Badge>
                   </div>
 
                   <Separator />
 
                   {/* Price Breakdown */}
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span>
+                      <span className="text-muted-foreground">
                         {bookingData.durationType === 'hourly' ? 'Hourly Rate' : 'Daily Rate'}
                       </span>
-                      <span>
+                      <span className="font-medium">
                         {formatPrice(bookingData.durationType === 'hourly' ? car.price_per_hour : car.price_per_day)}
                       </span>
                     </div>
 
                     {bookingData.durationValue > 0 && (
                       <div className="flex justify-between">
-                        <span>
+                        <span className="text-muted-foreground">
                           Duration ({bookingData.durationValue} {bookingData.durationType === 'hourly' ? 'hrs' : 'days'})
                         </span>
-                        <span>×{bookingData.durationValue}</span>
+                        <span className="font-medium">×{bookingData.durationValue}</span>
                       </div>
                     )}
 
                     <Separator />
 
-                    <div className="flex justify-between font-bold text-lg">
+                    <div className="flex justify-between font-bold text-base sm:text-lg">
                       <span>Total</span>
                       <span className="text-primary">
                         {formatPrice(calculateTotalPrice())}
@@ -617,16 +622,16 @@ const CarBooking = () => {
 
                   {/* Important Notes */}
                   <div className="space-y-2">
-                    <div className="flex items-start gap-2 text-sm">
-                      <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5" />
+                    <div className="flex items-start gap-2 text-xs sm:text-sm">
+                      <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                       <span>Valid driver's license required</span>
                     </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <div className="flex items-start gap-2 text-xs sm:text-sm">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                       <span>Insurance included</span>
                     </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                    <div className="flex items-start gap-2 text-xs sm:text-sm">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                       <span>24/7 roadside assistance</span>
                     </div>
                   </div>
@@ -641,18 +646,19 @@ const CarBooking = () => {
                       !bookingData.driverLicenseNumber?.trim() ||
                       !bookingData.contactPhone?.trim()
                     }
-                    className="w-full gradient-primary text-lg py-6"
+                    className="w-full gradient-primary text-sm sm:text-lg py-4 sm:py-6 min-h-[48px] touch-manipulation"
                   >
                     {isSubmitting ? (
-                      'Processing Booking...'
+                      'Processing...'
                     ) : !user ? (
-                      'Register & Confirm Booking'
+                      'Register & Book'
                     ) : calculateTotalPrice() === 0 ? (
-                      'Select Dates to Continue'
+                      'Select Dates'
                     ) : (
                       <>
-                        <CreditCard className="h-5 w-5 mr-2" />
-                        Confirm Booking • {formatPrice(calculateTotalPrice())}
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                        <span className="hidden sm:inline">Confirm Booking • </span>
+                        {formatPrice(calculateTotalPrice())}
                       </>
                     )}
                   </Button>
