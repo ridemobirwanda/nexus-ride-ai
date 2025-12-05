@@ -192,22 +192,22 @@ export const DriverVerificationStatus = ({ driverId }: DriverVerificationStatusP
 
   return (
     <Card className="shadow-lg">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <StatusIcon className={`h-5 w-5 ${config.color}`} />
-              Verification Status
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="space-y-1 min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <StatusIcon className={`h-5 w-5 flex-shrink-0 ${config.color}`} />
+              <span className="truncate">Verification Status</span>
             </CardTitle>
-            <CardDescription>{config.description}</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">{config.description}</CardDescription>
           </div>
-          <Badge variant={config.variant}>{config.label}</Badge>
+          <Badge variant={config.variant} className="self-start">{config.label}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
         {/* Progress Bar */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted-foreground">Progress</span>
             <span className="font-medium">{config.progress}%</span>
           </div>
@@ -217,19 +217,19 @@ export const DriverVerificationStatus = ({ driverId }: DriverVerificationStatusP
         {/* Rejection Reason */}
         {status === 'rejected' && verificationRequest?.rejection_reason && (
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="ml-2">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <AlertDescription className="ml-2 text-xs sm:text-sm">
               <strong>Rejection Reason:</strong> {verificationRequest.rejection_reason}
             </AlertDescription>
           </Alert>
         )}
 
         {/* Next Steps */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm">Next Steps:</h4>
+        <div className="space-y-2 sm:space-y-3">
+          <h4 className="font-medium text-xs sm:text-sm">Next Steps:</h4>
           <ul className="space-y-2">
             {config.nextSteps.map((step, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground">
                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-medium flex-shrink-0 mt-0.5">
                   {index + 1}
                 </span>
@@ -241,7 +241,7 @@ export const DriverVerificationStatus = ({ driverId }: DriverVerificationStatusP
 
         {/* Timestamps */}
         {verificationRequest && (
-          <div className="space-y-1 text-xs text-muted-foreground border-t pt-4">
+          <div className="space-y-1 text-xs text-muted-foreground border-t pt-3 sm:pt-4">
             <p>Submitted: {new Date(verificationRequest.submitted_at).toLocaleString()}</p>
             {verificationRequest.reviewed_at && (
               <p>Reviewed: {new Date(verificationRequest.reviewed_at).toLocaleString()}</p>
@@ -255,20 +255,21 @@ export const DriverVerificationStatus = ({ driverId }: DriverVerificationStatusP
             {!showDocumentUpload ? (
               <Button 
                 onClick={() => setShowDocumentUpload(true)} 
-                className="w-full"
+                className="w-full min-h-[48px] touch-manipulation"
                 variant="default"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 {status === 'rejected' ? 'Update Documents' : 'Upload Documents'}
               </Button>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm">Upload Verification Documents</h4>
+                  <h4 className="font-medium text-xs sm:text-sm">Upload Verification Documents</h4>
                   <Button 
                     onClick={() => setShowDocumentUpload(false)} 
                     variant="ghost"
                     size="sm"
+                    className="min-h-[44px] min-w-[44px] touch-manipulation"
                   >
                     Cancel
                   </Button>

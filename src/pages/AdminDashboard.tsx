@@ -114,9 +114,9 @@ const AdminDashboard = () => {
     <SidebarProvider>
       <div className="min-h-screen w-full rider-bg flex">
         <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <AdminHeader userRole={userRole} />
-          <main className="flex-1 p-4 overflow-auto">
+          <main className="flex-1 p-2 sm:p-4 lg:p-6 overflow-auto">
             {renderContent()}
           </main>
         </div>

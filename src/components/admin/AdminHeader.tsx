@@ -12,9 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, LogOut, Settings, User } from "lucide-react";
+import { Bell, LogOut, Settings, User, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 
 interface AdminHeaderProps {
   userRole: string | null;
@@ -25,6 +26,7 @@ export function AdminHeader({ userRole }: AdminHeaderProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { toggleSidebar } = useSidebar();
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -62,39 +64,45 @@ export function AdminHeader({ userRole }: AdminHeaderProps) {
   };
 
   return (
-    <header className="h-14 border-b border-border/20 bg-card/50 backdrop-blur-sm">
-      <div className="flex items-center justify-between h-full px-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-foreground">{t('admin.title')}</h1>
-          <Badge variant={getRoleBadgeVariant(userRole)} className="capitalize">
+    <header className="h-12 sm:h-14 border-b border-border/20 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+      <div className="flex items-center justify-between h-full px-2 sm:px-6">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <SidebarTrigger className="min-h-[44px] min-w-[44px] touch-manipulation" />
+          <h1 className="text-sm sm:text-xl font-semibold text-foreground truncate hidden sm:block">{t('admin.title')}</h1>
+          <Badge variant={getRoleBadgeVariant(userRole)} className="capitalize hidden md:inline-flex text-xs">
             {userRole?.replace('_', ' ')}
           </Badge>
         </div>
 
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher />
+        <div className="flex items-center gap-1 sm:gap-3">
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
+          <Button variant="ghost" size="sm" className="relative min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 touch-manipulation">
+            <Bell className="w-4 h-4 sm:w-4 sm:h-4" />
+            <span className="absolute top-2 right-2 sm:-top-1 sm:-right-1 w-2 h-2 bg-destructive rounded-full"></span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 touch-manipulation">
                 <User className="w-4 h-4" />
-                <span className="hidden md:inline">{t('common.view')}</span>
+                <span className="hidden lg:inline">{t('common.view')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{t('admin.title')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem className="min-h-[44px] sm:min-h-0">
                 <Settings className="w-4 h-4 mr-2" />
                 {t('settings.title')}
               </DropdownMenuItem>
+              <div className="sm:hidden px-2 py-2">
+                <LanguageSwitcher />
+              </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} disabled={loading} className="text-destructive">
+              <DropdownMenuItem onClick={handleSignOut} disabled={loading} className="text-destructive min-h-[44px] sm:min-h-0">
                 <LogOut className="w-4 h-4 mr-2" />
                 {loading ? t('common.loading') : t('auth.signOut')}
               </DropdownMenuItem>

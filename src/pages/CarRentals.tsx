@@ -197,31 +197,31 @@ const CarRentals = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">🚗 {t('rentals.title')}</h1>
-          <p className="text-xl text-muted-foreground">
+        <div className="text-center mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">🚗 {t('rentals.title')}</h1>
+          <p className="text-base sm:text-xl text-muted-foreground">
             {t('nav.carRentals')}
           </p>
         </div>
 
         {/* Filters */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+        <Card className="mb-4 sm:mb-8">
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
               {t('rentals.searchPlaceholder')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <div className="relative sm:col-span-2 lg:col-span-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t('rentals.searchPlaceholder')}
-                  className="pl-10"
+                  className="pl-10 h-11 sm:h-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -229,7 +229,7 @@ const CarRentals = () => {
 
               {/* Car Type Filter */}
               <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue placeholder={t('rentals.filterByType')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,7 +242,7 @@ const CarRentals = () => {
 
               {/* Fuel Type Filter */}
               <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue placeholder={t('rentals.filterByFuel')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,7 +255,7 @@ const CarRentals = () => {
 
               {/* Price Range Filter */}
               <Select value={priceRange} onValueChange={setPriceRange}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue placeholder={t('rentals.priceRange')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,14 +270,14 @@ const CarRentals = () => {
         </Card>
 
         {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-muted-foreground">
+        <div className="mb-4 sm:mb-6">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {filteredCars.length} {t('rentals.available')}
           </p>
         </div>
 
-        {/* Car Grid - Compact layout for 3 cards per column */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        {/* Car Grid - Responsive layout */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {filteredCars.map((car) => (
             <Card 
               key={car.id} 

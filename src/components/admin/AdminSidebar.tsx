@@ -43,24 +43,27 @@ export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebar
   );
 
   return (
-    <Sidebar className={open ? "w-64" : "w-14"}>
-      <div className="p-4 border-b border-border/20">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+    <Sidebar 
+      className={`${open ? "w-64" : "w-14"} transition-all duration-300`}
+      collapsible="icon"
+    >
+      <div className="p-3 sm:p-4 border-b border-border/20">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
             <Shield className="w-4 h-4 text-primary" />
           </div>
           {open && (
-            <div>
-              <h2 className="font-bold text-foreground">{t('admin.title')}</h2>
-              <p className="text-xs text-muted-foreground capitalize">{userRole?.replace('_', ' ')}</p>
+            <div className="min-w-0">
+              <h2 className="font-bold text-foreground truncate">{t('admin.title')}</h2>
+              <p className="text-xs text-muted-foreground capitalize truncate">{userRole?.replace('_', ' ')}</p>
             </div>
           )}
         </div>
       </div>
       
-      <SidebarContent>
+      <SidebarContent className="overflow-y-auto">
         <SidebarGroup>
-          <SidebarGroupLabel>{t('admin.title')}</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-2">{t('admin.title')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredMenuItems.map((item) => (
@@ -68,10 +71,11 @@ export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebar
                   <SidebarMenuButton
                     onClick={() => setActiveTab(item.id)}
                     isActive={activeTab === item.id}
-                    className="w-full justify-start"
+                    className="w-full justify-start min-h-[44px] touch-manipulation"
+                    tooltip={!open ? item.label : undefined}
                   >
-                    <item.icon className="w-4 h-4" />
-                    {open && <span>{item.label}</span>}
+                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                    {open && <span className="truncate">{item.label}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
