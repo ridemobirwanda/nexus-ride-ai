@@ -73,8 +73,8 @@ serve(async (req) => {
       console.log(`Preferred driver ID: ${preferred_driver_id} - will be prioritized if available`);
     }
 
-    // Create point string for PostGIS
-    const pickupPoint = `POINT(${pickup_lng} ${pickup_lat})`;
+    // Create point string in PostgreSQL point format (lng, lat) - NOT WKT POINT format
+    const pickupPoint = `(${pickup_lng}, ${pickup_lat})`;
 
     // Use the smart matching function
     const { data: matchedDrivers, error } = await supabase.rpc(
