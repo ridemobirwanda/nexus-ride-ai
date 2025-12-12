@@ -19,13 +19,16 @@ import {
   Clock,
   Car,
   Loader2,
-  User
+  User,
+  Sparkles
 } from 'lucide-react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './RideBooking.css';
 import PaymentMethodSelector from '@/components/PaymentMethodSelector';
 import InlineRegistration from '@/components/InlineRegistration';
+import SmartLocationIndicator from '@/components/SmartLocationIndicator';
+import { useSmartLocationCorrection } from '@/hooks/useSmartLocationCorrection';
 
 interface Location {
   lat: number;
@@ -65,6 +68,11 @@ const RideBooking = () => {
   const [isBooking, setIsBooking] = useState(false);
   const [preferredDriverId, setPreferredDriverId] = useState<string | null>(null);
   const [preferredDriverName, setPreferredDriverName] = useState<string | null>(null);
+  
+  // Smart location correction
+  const { correctLocation, isCorrecing, lastCorrection } = useSmartLocationCorrection();
+  const [pickupCorrectionData, setPickupCorrectionData] = useState<{ confidence?: number; corrections?: string[] } | null>(null);
+  const [dropoffCorrectionData, setDropoffCorrectionData] = useState<{ confidence?: number; corrections?: string[] } | null>(null);
   
   const [locationData, setLocationData] = useState({
     pickupLocation: null as Location | null,

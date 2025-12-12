@@ -18,3 +18,9 @@ verify_jwt = false
 
 [functions.auto-dispatch-ride]
 verify_jwt = false
+
+[functions.smart-location-correction]
+verify_jwt = false
+
+[functions.get-mapbox-token]
+verify_jwt = false
