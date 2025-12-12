@@ -16,9 +16,13 @@ import {
   Navigation,
   Clock,
   DollarSign,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import Map from '@/components/Map';
+import EmergencySOS from '@/components/safety/EmergencySOS';
+import TripSharing from '@/components/safety/TripSharing';
+import DriverVerificationBadge from '@/components/safety/DriverVerificationBadge';
 
 interface Ride {
   id: string;
@@ -408,40 +412,45 @@ const PassengerRideStatus = () => {
         {/* Driver Info */}
         {ride.driver && (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Driver Details</CardTitle>
+              <div className="flex items-center gap-2">
+                <TripSharing
+                  rideId={ride.id}
+                  driverName={ride.driver.name}
+                  pickupAddress={ride.pickup_address}
+                  dropoffAddress={ride.dropoff_address}
+                  estimatedArrival={driverETA ? `${driverETA} min` : undefined}
+                />
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src="" />
-                    <AvatarFallback>{ride.driver.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{ride.driver.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {ride.driver.car_model} • {ride.driver.car_plate}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(`tel:${ride.driver.phone}`, '_self')}
-                    title={`Call ${ride.driver.name}`}
-                  >
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/passenger/chat/${rideId}`)}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
-                </div>
+              {/* Driver Verification Badge */}
+              <DriverVerificationBadge
+                driverId={ride.driver.id}
+                driverName={ride.driver.name}
+                carModel={ride.driver.car_model}
+                carPlate={ride.driver.car_plate}
+              />
+
+              <div className="flex items-center justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open(`tel:${ride.driver.phone}`, '_self')}
+                  title={`Call ${ride.driver.name}`}
+                >
+                  <Phone className="h-4 w-4 mr-1" />
+                  Call
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate(`/passenger/chat/${rideId}`)}
+                >
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  Chat
+                </Button>
               </div>
 
               {/* ETA Display */}
@@ -480,6 +489,31 @@ const PassengerRideStatus = () => {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Safety Tools */}
+        {['accepted', 'in_progress'].includes(ride.status) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Safety Tools
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <EmergencySOS
+                rideId={ride.id}
+                driverName={ride.driver?.name}
+                driverPhone={ride.driver?.phone}
+                pickupAddress={ride.pickup_address}
+                currentLocation={pickupCoords || undefined}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground text-center">
+                Hold for 5 seconds to activate emergency services
+              </p>
             </CardContent>
           </Card>
         )}
