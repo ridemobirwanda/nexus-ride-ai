@@ -20,7 +20,8 @@ import {
   Phone,
   MessageCircle,
   Settings,
-  RefreshCw
+  RefreshCw,
+  Wallet
 } from 'lucide-react';
 import DriverCarSetup from '@/components/DriverCarSetup';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -389,6 +390,15 @@ const DriverDashboard = () => {
                 {driver?.name || user?.email}
               </span>
             )}
+            <Button 
+              variant="outline" 
+              size={isMobile ? "lg" : "sm"}
+              onClick={() => navigate('/driver/earnings')}
+              className={isMobile ? "min-h-[44px] gap-2" : "gap-2"}
+            >
+              <Wallet className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
+              {!isMobile && "Earnings"}
+            </Button>
             <Button 
               variant="ghost" 
               size={isMobile ? "lg" : "sm"}
