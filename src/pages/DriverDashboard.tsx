@@ -22,7 +22,8 @@ import {
   MessageCircle,
   Settings,
   RefreshCw,
-  Wallet
+  Wallet,
+  BarChart3
 } from 'lucide-react';
 import DriverCarSetup from '@/components/DriverCarSetup';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -391,6 +392,15 @@ const DriverDashboard = () => {
                 {driver?.name || user?.email}
               </span>
             )}
+            <Button 
+              variant="outline" 
+              size={isMobile ? "lg" : "sm"}
+              onClick={() => navigate('/driver/analytics')}
+              className={isMobile ? "min-h-[44px] gap-2" : "gap-2"}
+            >
+              <BarChart3 className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
+              {!isMobile && "Analytics"}
+            </Button>
             <Button 
               variant="outline" 
               size={isMobile ? "lg" : "sm"}
