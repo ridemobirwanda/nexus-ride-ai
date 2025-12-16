@@ -19,6 +19,7 @@ import PassengerProfile from "./pages/PassengerProfile";
 import DriverAuth from "./pages/DriverAuth";
 import DriverDashboard from "./pages/DriverDashboard";
 import DriverEarnings from "./pages/DriverEarnings";
+import DriverAnalytics from "./pages/DriverAnalytics";
 import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/AdminDashboard";
 import ResetPassword from "./pages/ResetPassword";
@@ -72,6 +73,7 @@ const App = () => {
               <Route path="/driver/auth" element={<DriverAuth />} />
               <Route path="/driver/dashboard" element={<DriverDashboard />} />
               <Route path="/driver/earnings" element={<DriverEarnings />} />
+              <Route path="/driver/analytics" element={<DriverAnalytics />} />
               <Route path="/admin/auth" element={<AdminAuth />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />

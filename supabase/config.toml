@@ -27,3 +27,6 @@ verify_jwt = false
 
 [functions.demand-prediction]
 verify_jwt = false
+
+[functions.driver-analytics]
+verify_jwt = false
