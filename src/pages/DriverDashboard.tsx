@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import LocationTracker from '@/components/LocationTracker';
 import DriverStatusPanel from '@/components/DriverStatusPanel';
+import DemandHeatmap from '@/components/DemandHeatmap';
 import { 
   Car, 
   DollarSign, 
@@ -447,6 +448,11 @@ const DriverDashboard = () => {
             {/* Verification Status Widget */}
             {driver && (
               <DriverVerificationStatus driverId={driver.id} />
+            )}
+
+            {/* Demand Heatmap */}
+            {driver?.is_available && (
+              <DemandHeatmap />
             )}
 
         {/* Active Ride - Mobile Optimized with Touch Controls */}
