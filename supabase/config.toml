@@ -24,3 +24,6 @@ verify_jwt = false
 
 [functions.get-mapbox-token]
 verify_jwt = false
+
+[functions.demand-prediction]
+verify_jwt = false
