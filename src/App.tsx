@@ -30,6 +30,7 @@ import RideBooking from "./pages/RideBooking";
 import PassengerRentals from "./pages/PassengerRentals";
 import RentalTracking from "./pages/RentalTracking";
 import VehicleShowcase from "./pages/VehicleShowcase";
+import PublicRideTracking from "./pages/PublicRideTracking";
 
 // Create QueryClient outside component to avoid hot reload issues
 const queryClient = new QueryClient({
@@ -70,6 +71,7 @@ const App = () => {
               <Route path="/passenger/history" element={<PassengerHistory />} />
               <Route path="/passenger/profile" element={<PassengerProfile />} />
               <Route path="/vehicles" element={<VehicleShowcase />} />
+              <Route path="/track-ride/:rideId" element={<PublicRideTracking />} />
               <Route path="/driver/auth" element={<DriverAuth />} />
               <Route path="/driver/dashboard" element={<DriverDashboard />} />
               <Route path="/driver/earnings" element={<DriverEarnings />} />

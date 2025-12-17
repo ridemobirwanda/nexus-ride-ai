@@ -13,8 +13,10 @@ import {
   Clock,
   DollarSign,
   Eye,
-  Navigation
+  Navigation,
+  ArrowLeft
 } from 'lucide-react';
+import PassengerBottomNav from '@/components/PassengerBottomNav';
 
 interface CarRental {
   id: string;
@@ -130,13 +132,18 @@ const PassengerRentals = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">{t('passengerRentals.title')}</h1>
-            <p className="text-muted-foreground">{t('passengerRentals.subtitle')}</p>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/passenger')}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{t('passengerRentals.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('passengerRentals.subtitle')}</p>
+            </div>
           </div>
           <Button 
             onClick={() => navigate('/cars')}
@@ -281,6 +288,9 @@ const PassengerRentals = () => {
           </Button>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <PassengerBottomNav />
     </div>
   );
 };

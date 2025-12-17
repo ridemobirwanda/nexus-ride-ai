@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { LogOut, MapPin, Users, Loader2 } from 'lucide-react';
+import { LogOut, MapPin, Users, Loader2, History, User, Car } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import CarCategorySelector from '@/components/CarCategorySelector';
 import SeatFilterSelector from '@/components/SeatFilterSelector';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import ActiveRideCard from '@/components/ActiveRideCard';
+import PassengerBottomNav from '@/components/PassengerBottomNav';
 
 interface Passenger {
   id: string;
@@ -37,6 +38,19 @@ interface CarCategory {
   image_url?: string;
 }
 
+interface ActiveRide {
+  id: string;
+  status: string;
+  pickup_address: string;
+  dropoff_address: string;
+  estimated_fare: number;
+  driver?: {
+    name: string;
+    car_model?: string;
+    car_plate?: string;
+  };
+}
+
 const PassengerDashboard = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -46,13 +60,20 @@ const PassengerDashboard = () => {
   const [isDetectingLocation, setIsDetectingLocation] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CarCategory | null>(null);
+  const [activeRide, setActiveRide] = useState<ActiveRide | null>(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   // Auth state and location detection
   useEffect(() => {
     const initializeApp = async () => {
-      // Check auth
+      // Set up auth listener first
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      });
+
+      // Check existing session
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
@@ -64,7 +85,6 @@ const PassengerDashboard = () => {
             const { latitude, longitude } = position.coords;
             
             try {
-              // Reverse geocoding using a simple approach
               const location: Location = {
                 lat: latitude,
                 lng: longitude,
@@ -104,29 +124,56 @@ const PassengerDashboard = () => {
           variant: "destructive"
         });
       }
+
+      return () => subscription.unsubscribe();
     };
 
     initializeApp();
-  }, []);
+  }, [t]);
 
-  // Fetch passenger profile
+  // Fetch passenger profile and active rides
   useEffect(() => {
-    const fetchPassengerProfile = async () => {
+    const fetchPassengerData = async () => {
       if (!user) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const { data, error } = await supabase
+        // Fetch passenger profile
+        const { data: passengerData, error: passengerError } = await supabase
           .from('passengers')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (error) throw error;
-        setPassenger(data);
+        if (passengerError) throw passengerError;
+        setPassenger(passengerData);
+
+        // Fetch active rides (pending, accepted, in_progress)
+        if (passengerData) {
+          const { data: rideData, error: rideError } = await supabase
+            .from('rides')
+            .select(`
+              id,
+              status,
+              pickup_address,
+              dropoff_address,
+              estimated_fare,
+              driver:drivers(name, car_model, car_plate)
+            `)
+            .eq('passenger_id', passengerData.id)
+            .in('status', ['pending', 'accepted', 'in_progress'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!rideError && rideData) {
+            setActiveRide(rideData);
+          }
+        }
       } catch (error: any) {
+        console.error('Error fetching passenger data:', error);
         toast({
           title: "Error",
           description: error.message,
@@ -137,12 +184,41 @@ const PassengerDashboard = () => {
       }
     };
 
-    fetchPassengerProfile();
-  }, [user]);
+    fetchPassengerData();
+
+    // Set up real-time subscription for ride updates
+    if (passenger?.id) {
+      const channel = supabase
+        .channel('passenger-rides')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'rides',
+            filter: `passenger_id=eq.${passenger.id}`
+          },
+          (payload) => {
+            if (payload.new) {
+              const ride = payload.new as any;
+              if (['pending', 'accepted', 'in_progress'].includes(ride.status)) {
+                setActiveRide(ride);
+              } else {
+                setActiveRide(null);
+              }
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, passenger?.id]);
 
   const handleCategorySelect = (category: CarCategory) => {
     setSelectedCategory(category);
-    // Navigate to booking page with selected category and location
     navigate(`/passenger/book-ride?category=${category.id}&lat=${currentLocation?.lat}&lng=${currentLocation?.lng}&address=${encodeURIComponent(currentLocation?.address || '')}`);
   };
 
@@ -178,7 +254,7 @@ const PassengerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-20 lg:pb-0">
       {/* Header */}
       <header className="bg-card/95 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
@@ -190,13 +266,39 @@ const PassengerDashboard = () => {
               <Badge variant="secondary" className="text-[10px] sm:text-xs flex-shrink-0">Passenger</Badge>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
-              <span className="text-xs sm:text-sm text-muted-foreground hidden md:inline truncate max-w-[150px] lg:max-w-none">
-                Welcome, {passenger?.name || user?.email || 'Guest'}
-              </span>
               {user && (
-                <Button variant="ghost" size="sm" onClick={handleSignOut} className="touch-manipulation">
-                  <LogOut className="h-4 w-4" />
-                  <span className="sr-only sm:not-sr-only sm:ml-2 hidden sm:inline">Sign Out</span>
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate('/passenger/history')}
+                    className="hidden sm:flex"
+                  >
+                    <History className="h-4 w-4 mr-1" />
+                    History
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate('/passenger/profile')}
+                    className="hidden sm:flex"
+                  >
+                    <User className="h-4 w-4 mr-1" />
+                    Profile
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut} className="touch-manipulation">
+                    <LogOut className="h-4 w-4" />
+                    <span className="sr-only sm:not-sr-only sm:ml-2 hidden sm:inline">Sign Out</span>
+                  </Button>
+                </>
+              )}
+              {!user && (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => navigate('/passenger/auth')}
+                >
+                  Sign In
                 </Button>
               )}
             </div>
@@ -206,6 +308,38 @@ const PassengerDashboard = () => {
 
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 max-w-4xl">
         <div className="space-y-4 sm:space-y-6">
+          {/* Active Ride Alert */}
+          {activeRide && (
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Active Ride
+              </h2>
+              <ActiveRideCard ride={activeRide} />
+            </div>
+          )}
+
+          {/* Quick Actions for Rentals */}
+          <Card className="border-dashed">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Car className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-sm">Need a car for longer?</p>
+                    <p className="text-xs text-muted-foreground">Rent a car by the hour or day</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/cars')}
+                >
+                  Browse Cars
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Current Location Display */}
           {currentLocation && (
             <Card className="border-primary/20 bg-primary/5">
@@ -284,6 +418,9 @@ const PassengerDashboard = () => {
           </Card>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <PassengerBottomNav />
     </div>
   );
 };
