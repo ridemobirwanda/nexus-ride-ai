@@ -17,12 +17,15 @@ import {
   Clock,
   DollarSign,
   X,
-  Shield
+  Shield,
+  Bell
 } from 'lucide-react';
 import Map from '@/components/Map';
 import EmergencySOS from '@/components/safety/EmergencySOS';
 import TripSharing from '@/components/safety/TripSharing';
 import DriverVerificationBadge from '@/components/safety/DriverVerificationBadge';
+import { useRideNotifications } from '@/hooks/usePushNotifications';
+import { NotificationPermissionBanner } from '@/components/NotificationPermissionBanner';
 
 interface Ride {
   id: string;
@@ -54,6 +57,9 @@ const PassengerRideStatus = () => {
   const [driverETA, setDriverETA] = useState<number | null>(null);
   const [hasNotifiedArrival, setHasNotifiedArrival] = useState(false);
   const [showArrivalConfirm, setShowArrivalConfirm] = useState(false);
+  
+  // Push notifications hook
+  const { checkETANotification, notifyArrival, permission, requestPermission } = useRideNotifications(rideId);
 
   useEffect(() => {
     fetchRideDetails();
@@ -273,6 +279,9 @@ const PassengerRideStatus = () => {
     // Calculate ETA: distance / average speed (30 km/h) * 60 min
     const eta = Math.ceil((distance / 30) * 60);
     setDriverETA(eta);
+    
+    // Check ETA for push notification
+    checkETANotification(eta);
 
     // Check if driver is close (within 100 meters)
     const distanceInMeters = distance * 1000;
@@ -286,15 +295,12 @@ const PassengerRideStatus = () => {
         duration: 10000,
       });
 
-      // Browser notification if permitted
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Driver Arrived!', {
-          body: 'Your driver is waiting at the pickup location',
-          icon: '/pin-icon.png'
-        });
+      // Push notification for arrival
+      if (ride.driver?.name) {
+        notifyArrival(ride.driver.name);
       }
     }
-  }, [driverCoords, pickupCoords, ride.status, hasNotifiedArrival]);
+  }, [driverCoords, pickupCoords, ride?.status, hasNotifiedArrival, checkETANotification, notifyArrival, ride?.driver?.name]);
 
   const handleConfirmPickup = async () => {
     try {
@@ -547,6 +553,9 @@ const PassengerRideStatus = () => {
           </Card>
         )}
       </div>
+      
+      {/* Notification Permission Banner */}
+      <NotificationPermissionBanner />
     </div>
   );
 };
