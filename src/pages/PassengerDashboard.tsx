@@ -12,6 +12,7 @@ import CarCategorySelector from '@/components/CarCategorySelector';
 import SeatFilterSelector from '@/components/SeatFilterSelector';
 import ActiveRideCard from '@/components/ActiveRideCard';
 import PassengerBottomNav from '@/components/PassengerBottomNav';
+import { NotificationPermissionBanner } from '@/components/NotificationPermissionBanner';
 
 interface Passenger {
   id: string;
@@ -421,6 +422,9 @@ const PassengerDashboard = () => {
 
       {/* Bottom Navigation */}
       <PassengerBottomNav />
+      
+      {/* Notification Permission Banner */}
+      <NotificationPermissionBanner />
     </div>
   );
 };
