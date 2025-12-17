@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import PassengerBottomNav from '@/components/PassengerBottomNav';
 
 interface Ride {
   id: string;
@@ -172,11 +173,11 @@ const PassengerHistory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 lg:pb-0">
       {/* Header */}
       <header className="bg-card border-b px-4 py-3">
         <div className="container mx-auto flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/passenger/dashboard')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/passenger')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-bold">{t('history.title')}</h1>
@@ -326,6 +327,9 @@ const PassengerHistory = () => {
           </div>
         )}
       </div>
+
+      {/* Bottom Navigation */}
+      <PassengerBottomNav />
     </div>
   );
 };
