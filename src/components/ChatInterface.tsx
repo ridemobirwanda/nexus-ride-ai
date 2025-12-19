@@ -63,6 +63,27 @@ const ChatInterface = ({
     }
   };
 
+  const quickReplies = userType === 'driver' 
+    ? [
+        "I'm on my way",
+        "I'm here",
+        "Arriving in 5 min",
+        "Stuck in traffic"
+      ]
+    : [
+        "I'm waiting outside",
+        "I'll be right there",
+        "Can you wait?",
+        "At pickup location"
+      ];
+
+  const handleQuickReply = async (message: string) => {
+    const success = await sendMessage(message);
+    if (success) {
+      inputRef.current?.focus();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -122,8 +143,26 @@ const ChatInterface = ({
         </div>
       </div>
 
+      {/* Quick Replies */}
+      <div className="border-t bg-card/50 px-4 py-2">
+        <div className="max-w-2xl mx-auto flex gap-2 overflow-x-auto pb-1">
+          {quickReplies.map((reply) => (
+            <Button
+              key={reply}
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickReply(reply)}
+              disabled={isSending}
+              className="whitespace-nowrap text-xs flex-shrink-0"
+            >
+              {reply}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {/* Input */}
-      <div className="border-t bg-card p-4 sticky bottom-0">
+      <div className="border-t bg-card p-4">
         <div className="max-w-2xl mx-auto flex gap-2">
           <Input
             ref={inputRef}
