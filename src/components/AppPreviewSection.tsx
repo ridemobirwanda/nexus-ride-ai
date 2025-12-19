@@ -135,25 +135,50 @@ const AppPreviewSection = () => {
       // iOS - Guide to install PWA
       if (platform === 'ios') {
         toast({
-          title: "Install Nexus Ride",
-          description: "Tap the Share button, then 'Add to Home Screen' to install the app",
-          duration: 8000,
+          title: "Install Nexus Ride on iOS",
+          description: "Tap the Share button in Safari, then 'Add to Home Screen' to install",
+          duration: 10000,
         });
       } else {
-        window.open('https://apps.apple.com/app/nexus-ride-passenger', '_blank');
+        // On non-iOS, show how to install as PWA or try install prompt
+        if (isInstallable) {
+          const installed = await installApp();
+          if (installed) {
+            toast({
+              title: "App Installed!",
+              description: "Nexus Ride has been added to your home screen",
+            });
+          }
+        } else {
+          toast({
+            title: "Install Nexus Ride",
+            description: "Use your browser menu to 'Add to Home Screen' or 'Install App'",
+            duration: 8000,
+          });
+        }
       }
     } else if (store === 'android') {
-      // Android - Show install prompt or link to Play Store
+      // Android - Show install prompt
       if (isInstallable) {
         const installed = await installApp();
         if (installed) {
           toast({
-            title: "App Installed! 🎉",
+            title: "App Installed!",
             description: "Nexus Ride has been added to your home screen",
           });
         }
+      } else if (platform === 'android') {
+        toast({
+          title: "Install Nexus Ride",
+          description: "Tap the browser menu (⋮) and select 'Add to Home Screen' or 'Install App'",
+          duration: 8000,
+        });
       } else {
-        window.open('https://play.google.com/store/apps/details?id=app.lovable.nexusride.passenger', '_blank');
+        toast({
+          title: "Install Nexus Ride",
+          description: "Use your browser menu to install this app to your device",
+          duration: 8000,
+        });
       }
     } else {
       // Direct install for PWA or redirect to booking
@@ -161,16 +186,23 @@ const AppPreviewSection = () => {
         const installed = await installApp();
         if (installed) {
           toast({
-            title: "App Installed! 🎉",
+            title: "App Installed!",
             description: "Nexus Ride has been added to your home screen",
           });
           setTimeout(() => navigate('/passenger/auth'), 1000);
         }
       } else if (isInstalled) {
         navigate('/passenger/auth');
-      } else {
+      } else if (platform === 'ios') {
         toast({
-          title: "Welcome! 🚗",
+          title: "Install Nexus Ride",
+          description: "Tap Share → Add to Home Screen in Safari to install",
+          duration: 8000,
+        });
+      } else {
+        // Fallback - just navigate to auth
+        toast({
+          title: "Welcome!",
           description: "Sign up to start booking rides instantly",
         });
         navigate('/passenger/auth');
@@ -178,20 +210,65 @@ const AppPreviewSection = () => {
     }
   };
 
-  const handleDriverDownload = (store?: 'ios' | 'android') => {
+  const handleDriverDownload = async (store?: 'ios' | 'android') => {
     if (store === 'ios') {
-      // Replace with your actual App Store URL when published
-      window.open('https://apps.apple.com/app/nexus-ride-driver', '_blank');
+      if (platform === 'ios') {
+        toast({
+          title: "Install Driver App on iOS",
+          description: "Tap the Share button in Safari, then 'Add to Home Screen' to install",
+          duration: 10000,
+        });
+      } else if (isInstallable) {
+        const installed = await installApp();
+        if (installed) {
+          toast({
+            title: "App Installed!",
+            description: "Nexus Ride Driver has been added to your home screen",
+          });
+          setTimeout(() => navigate('/driver/auth'), 1000);
+        }
+      } else {
+        toast({
+          title: "Install Driver App",
+          description: "Use your browser menu to 'Add to Home Screen'",
+          duration: 8000,
+        });
+      }
     } else if (store === 'android') {
-      // Replace with your actual Google Play URL when published
-      window.open('https://play.google.com/store/apps/details?id=app.lovable.nexusride.driver', '_blank');
+      if (isInstallable) {
+        const installed = await installApp();
+        if (installed) {
+          toast({
+            title: "App Installed!",
+            description: "Nexus Ride Driver has been added to your home screen",
+          });
+          setTimeout(() => navigate('/driver/auth'), 1000);
+        }
+      } else {
+        toast({
+          title: "Install Driver App",
+          description: "Tap browser menu (⋮) → 'Add to Home Screen' or 'Install App'",
+          duration: 8000,
+        });
+      }
     } else {
-      // Web version - redirect to driver registration
-      toast({
-        title: "Join Our Driver Network! 🚘",
-        description: "Complete registration to start earning",
-      });
-      navigate('/driver/auth');
+      // Direct action - try to install or redirect
+      if (isInstallable) {
+        const installed = await installApp();
+        if (installed) {
+          toast({
+            title: "App Installed!",
+            description: "Nexus Ride has been added to your home screen",
+          });
+          setTimeout(() => navigate('/driver/auth'), 1000);
+        }
+      } else {
+        toast({
+          title: "Join Our Driver Network!",
+          description: "Complete registration to start earning",
+        });
+        navigate('/driver/auth');
+      }
     }
   };
 
