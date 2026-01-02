@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useLanguageSync } from "./hooks/useLanguageSync";
 import { LanguageDetectionBanner } from "./components/LanguageDetectionBanner";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ReducedMotionProvider } from "./components/ReducedMotionProvider";
 import Index from "./pages/Index";
@@ -53,6 +54,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <OfflineIndicator />
             <LanguageDetectionBanner />
             <BrowserRouter>
             <Routes>
