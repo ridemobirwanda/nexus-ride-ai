@@ -11,8 +11,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Plus, Edit, Trash2, Image as ImageIcon, Calendar, DollarSign, Users, MapPin } from "lucide-react";
+import { Car, Plus, Edit, Trash2, Image as ImageIcon, Calendar, DollarSign, Users, MapPin, Eye, CheckCircle, XCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { RentalCarImageUpload } from "./RentalCarImageUpload";
 
 interface RentalCar {
   id: string;
@@ -53,6 +54,11 @@ interface CarRental {
   car_id: string;
   pickup_location: string | null;
   return_location: string | null;
+  contact_phone: string;
+  driver_license_number: string | null;
+  special_requests: string | null;
+  duration_type: string;
+  duration_value: number;
 }
 
 interface RentalCarsManagementProps {
@@ -61,13 +67,17 @@ interface RentalCarsManagementProps {
 
 export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
   const [cars, setCars] = useState<RentalCar[]>([]);
+  const [carImages, setCarImages] = useState<Record<string, RentalCarImage[]>>({});
   const [rentals, setRentals] = useState<CarRental[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const [selectedCarForImages, setSelectedCarForImages] = useState<RentalCar | null>(null);
   const [editingCar, setEditingCar] = useState<RentalCar | null>(null);
   const [deletingCarId, setDeletingCarId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [bookingFilter, setBookingFilter] = useState("all");
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -96,9 +106,10 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [carsResponse, rentalsResponse] = await Promise.all([
+      const [carsResponse, rentalsResponse, imagesResponse] = await Promise.all([
         supabase.from("rental_cars").select("*").order("created_at", { ascending: false }),
         supabase.from("car_rentals").select("*").order("created_at", { ascending: false }),
+        supabase.from("rental_car_images").select("*").order("display_order", { ascending: true }),
       ]);
 
       if (carsResponse.error) throw carsResponse.error;
@@ -106,6 +117,16 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
 
       setCars(carsResponse.data || []);
       setRentals(rentalsResponse.data || []);
+      
+      // Group images by car_id
+      const imagesByCarId: Record<string, RentalCarImage[]> = {};
+      (imagesResponse.data || []).forEach((img) => {
+        if (!imagesByCarId[img.car_id]) {
+          imagesByCarId[img.car_id] = [];
+        }
+        imagesByCarId[img.car_id].push(img);
+      });
+      setCarImages(imagesByCarId);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -274,7 +295,71 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
     available: cars.filter(c => c.availability_status === "available").length,
     rented: cars.filter(c => c.availability_status === "rented").length,
     totalBookings: rentals.length,
-    activeBookings: rentals.filter(r => r.status === "active").length,
+    activeBookings: rentals.filter(r => r.status === "active" || r.status === "confirmed").length,
+    pendingBookings: rentals.filter(r => r.status === "pending").length,
+  };
+
+  const filteredRentals = rentals.filter(rental => {
+    if (bookingFilter === "all") return true;
+    return rental.status === bookingFilter;
+  });
+
+  const handleUpdateBookingStatus = async (rentalId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from("car_rentals")
+        .update({ status: newStatus })
+        .eq("id", rentalId);
+
+      if (error) throw error;
+
+      // If booking is confirmed/active, update car availability
+      if (newStatus === "active" || newStatus === "confirmed") {
+        const rental = rentals.find(r => r.id === rentalId);
+        if (rental) {
+          await supabase
+            .from("rental_cars")
+            .update({ availability_status: "rented" })
+            .eq("id", rental.car_id);
+        }
+      } else if (newStatus === "completed" || newStatus === "cancelled") {
+        const rental = rentals.find(r => r.id === rentalId);
+        if (rental) {
+          await supabase
+            .from("rental_cars")
+            .update({ availability_status: "available" })
+            .eq("id", rental.car_id);
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: `Booking status updated to ${newStatus}`,
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update booking status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOpenImagesDialog = (car: RentalCar) => {
+    setSelectedCarForImages(car);
+    setIsImageDialogOpen(true);
+  };
+
+  const handleImagesUpdate = (images: RentalCarImage[]) => {
+    if (selectedCarForImages) {
+      setCarImages(prev => ({
+        ...prev,
+        [selectedCarForImages.id]: images,
+      }));
+    }
   };
 
   if (loading) {
@@ -581,6 +666,7 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Image</TableHead>
                   <TableHead>Car</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Year</TableHead>
@@ -593,99 +679,70 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCars.map((car) => (
-                  <TableRow key={car.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{car.brand} {car.model}</div>
-                        <div className="text-sm text-muted-foreground">{car.plate_number}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{car.car_type}</TableCell>
-                    <TableCell>{car.year}</TableCell>
-                    <TableCell>{car.seating_capacity}</TableCell>
-                    <TableCell>${car.price_per_hour}</TableCell>
-                    <TableCell>${car.price_per_day}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          car.availability_status === "available"
-                            ? "default"
-                            : car.availability_status === "rented"
-                            ? "secondary"
-                            : "outline"
-                        }
-                      >
-                        {car.availability_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={car.is_active ? "default" : "outline"}>
-                        {car.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(car)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeletingCarId(car.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bookings" className="space-y-4">
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Booking ID</TableHead>
-                  <TableHead>Car</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
-                  <TableHead>Total Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Pickup</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rentals.map((rental) => {
-                  const car = cars.find(c => c.id === rental.car_id);
+                {filteredCars.map((car) => {
+                  const images = carImages[car.id] || [];
+                  const primaryImage = images.find(img => img.is_primary) || images[0];
                   return (
-                    <TableRow key={rental.id}>
-                      <TableCell className="font-mono text-sm">{rental.id.slice(0, 8)}</TableCell>
+                    <TableRow key={car.id}>
                       <TableCell>
-                        {car ? `${car.brand} ${car.model}` : "Unknown"}
+                        {primaryImage ? (
+                          <img 
+                            src={primaryImage.image_url} 
+                            alt={`${car.brand} ${car.model}`}
+                            className="w-16 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-16 h-12 bg-muted rounded flex items-center justify-center">
+                            <Car className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
                       </TableCell>
-                      <TableCell>{new Date(rental.rental_start).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(rental.rental_end).toLocaleDateString()}</TableCell>
-                      <TableCell>${rental.total_price}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{car.brand} {car.model}</div>
+                          <div className="text-sm text-muted-foreground">{car.plate_number}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{car.car_type}</TableCell>
+                      <TableCell>{car.year}</TableCell>
+                      <TableCell>{car.seating_capacity}</TableCell>
+                      <TableCell>${car.price_per_hour}</TableCell>
+                      <TableCell>${car.price_per_day}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            rental.status === "active"
+                            car.availability_status === "available"
                               ? "default"
-                              : rental.status === "completed"
+                              : car.availability_status === "rented"
                               ? "secondary"
                               : "outline"
                           }
                         >
-                          {rental.status}
+                          {car.availability_status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {rental.pickup_location || "N/A"}
+                      <TableCell>
+                        <Badge variant={car.is_active ? "default" : "outline"}>
+                          {car.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => handleOpenImagesDialog(car)} title="Manage Images">
+                            <ImageIcon className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(car)} title="Edit">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeletingCarId(car.id)}
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -694,7 +751,161 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
             </Table>
           </Card>
         </TabsContent>
+
+        <TabsContent value="bookings" className="space-y-4">
+          <div className="flex gap-4">
+            <Select value={bookingFilter} onValueChange={setBookingFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Bookings</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge variant="outline" className="px-3 py-1">
+              {stats.pendingBookings} pending
+            </Badge>
+          </div>
+
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Booking ID</TableHead>
+                  <TableHead>Car</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Total Price</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRentals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      No bookings found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredRentals.map((rental) => {
+                    const car = cars.find(c => c.id === rental.car_id);
+                    return (
+                      <TableRow key={rental.id}>
+                        <TableCell className="font-mono text-sm">{rental.id.slice(0, 8)}</TableCell>
+                        <TableCell>
+                          {car ? `${car.brand} ${car.model}` : "Unknown"}
+                        </TableCell>
+                        <TableCell>
+                          {rental.duration_value} {rental.duration_type}
+                        </TableCell>
+                        <TableCell>{new Date(rental.rental_start).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(rental.rental_end).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium">${rental.total_price}</TableCell>
+                        <TableCell className="text-sm">{rental.contact_phone}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              rental.status === "active" || rental.status === "confirmed"
+                                ? "default"
+                                : rental.status === "completed"
+                                ? "secondary"
+                                : rental.status === "pending"
+                                ? "outline"
+                                : "destructive"
+                            }
+                          >
+                            {rental.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {rental.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleUpdateBookingStatus(rental.id, "confirmed")}
+                                  title="Confirm"
+                                  className="text-green-600 hover:text-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleUpdateBookingStatus(rental.id, "cancelled")}
+                                  title="Cancel"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                            {rental.status === "confirmed" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUpdateBookingStatus(rental.id, "active")}
+                                title="Mark Active"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {rental.status === "active" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUpdateBookingStatus(rental.id, "completed")}
+                                title="Mark Completed"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Image Management Dialog */}
+      <Dialog open={isImageDialogOpen} onOpenChange={(open) => {
+        setIsImageDialogOpen(open);
+        if (!open) {
+          setSelectedCarForImages(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Images - {selectedCarForImages?.brand} {selectedCarForImages?.model}
+            </DialogTitle>
+            <DialogDescription>
+              Upload and manage images for this rental car
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCarForImages && (
+            <RentalCarImageUpload
+              carId={selectedCarForImages.id}
+              images={carImages[selectedCarForImages.id] || []}
+              onImagesUpdate={handleImagesUpdate}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deletingCarId} onOpenChange={() => setDeletingCarId(null)}>
         <AlertDialogContent>
