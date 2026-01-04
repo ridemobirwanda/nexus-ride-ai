@@ -18,6 +18,7 @@ import { ActivityTracker } from "@/components/admin/ActivityTracker";
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { FinancialManagement } from "@/components/admin/FinancialManagement";
 import { ContentManagement } from "@/components/admin/ContentManagement";
+import { VehicleManagement } from "@/components/admin/VehicleManagement";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
@@ -76,6 +77,8 @@ const AdminDashboard = () => {
         return <RideManagement userRole={userRole} />;
       case "rental-cars":
         return <RentalCarsManagement userRole={userRole} />;
+      case "vehicles":
+        return <VehicleManagement userRole={userRole} />;
       case "pricing":
         return <PricingControl userRole={userRole} />;
       case "verification":
