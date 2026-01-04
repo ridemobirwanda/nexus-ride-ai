@@ -113,14 +113,16 @@ const RideBooking = () => {
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      // Get passenger details
-      const { data: passengerData } = await supabase
+      // Get passenger details - use maybeSingle to handle case where no passenger exists
+      const { data: passengerData, error } = await supabase
         .from('passengers')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      setPassenger(passengerData);
+      if (passengerData && !error) {
+        setPassenger(passengerData);
+      }
     }
   };
 
@@ -735,19 +737,37 @@ const RideBooking = () => {
       if (error) throw error;
 
       if (data.user) {
-        const { error: profileError } = await supabase
+        // Insert passenger record and get the actual passenger ID
+        const { data: passengerRecord, error: profileError } = await supabase
           .from('passengers')
           .insert({
             user_id: data.user.id,
             name: name,
             phone: phone
-          });
+          })
+          .select('id')
+          .single();
 
         if (profileError && !profileError.message.includes('duplicate')) {
           throw profileError;
         }
 
-        setPassenger({ id: data.user.id, name, phone, user_id: data.user.id });
+        // If duplicate, fetch the existing passenger record
+        let passengerId = passengerRecord?.id;
+        if (!passengerId) {
+          const { data: existingPassenger } = await supabase
+            .from('passengers')
+            .select('id')
+            .eq('user_id', data.user.id)
+            .single();
+          passengerId = existingPassenger?.id;
+        }
+
+        if (!passengerId) {
+          throw new Error('Failed to create or find passenger record');
+        }
+
+        setPassenger({ id: passengerId, name, phone, user_id: data.user.id });
         setShowRegistration(false);
         
         toast({
@@ -755,8 +775,8 @@ const RideBooking = () => {
           description: "Now booking your ride..."
         });
 
-        // Continue with booking after registration
-        await proceedWithBooking(data.user.id, name);
+        // Continue with booking after registration using the correct passenger ID
+        await proceedWithBooking(passengerId, name);
       }
     } catch (error: any) {
       toast({
