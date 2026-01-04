@@ -1,4 +1,4 @@
-import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity, Settings, Banknote, FileText, CarFront } from "lucide-react";
+import { Shield, Users, Car, DollarSign, CheckCircle, BarChart3, Tag, MessageSquare, Home, Activity, Settings, Banknote, FileText, CarFront, Truck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Sidebar,
@@ -27,6 +27,7 @@ export function AdminSidebar({ activeTab, setActiveTab, userRole }: AdminSidebar
     { id: "users", label: t('admin.userManagement'), icon: Users, requiredRole: ["super_admin", "admin"] },
     { id: "rides", label: t('admin.rideManagement'), icon: Car, requiredRole: ["super_admin", "admin", "support"] },
     { id: "rental-cars", label: t('admin.rentalCars'), icon: CarFront, requiredRole: ["super_admin", "admin"] },
+    { id: "vehicles", label: t('admin.vehicles') || "Vehicles", icon: Truck, requiredRole: ["super_admin", "admin"] },
     { id: "pricing", label: t('admin.pricing'), icon: DollarSign, requiredRole: ["super_admin", "admin"] },
     { id: "verification", label: t('admin.driverVerification'), icon: CheckCircle, requiredRole: ["super_admin", "admin"] },
     { id: "analytics", label: t('admin.analytics'), icon: BarChart3, requiredRole: ["super_admin", "admin"] },

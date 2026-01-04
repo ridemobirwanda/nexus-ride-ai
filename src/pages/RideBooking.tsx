@@ -129,14 +129,22 @@ const RideBooking = () => {
   const fetchCategoryFromUrl = async () => {
     const categoryId = searchParams.get('category');
     if (categoryId) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('car_categories')
         .select('*')
         .eq('id', categoryId)
-        .single();
+        .eq('is_active', true)
+        .maybeSingle();
       
-      if (data) {
+      if (data && !error) {
         setSelectedCategory(data);
+      } else {
+        // Category not found or inactive, show error
+        toast({
+          title: "Vehicle Category Not Found",
+          description: "The selected vehicle category is not available. Please choose another.",
+          variant: "destructive"
+        });
       }
     }
   };
