@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Car, Plus, Edit, Trash2, Image as ImageIcon, Calendar, DollarSign, Users, MapPin, Eye, CheckCircle, XCircle } from "lucide-react";
+import { Car, Plus, Edit, Trash2, Image as ImageIcon, Calendar, DollarSign, Users, MapPin, Eye, CheckCircle, XCircle, Phone, FileText, CreditCard, Clock, User } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { RentalCarImageUpload } from "./RentalCarImageUpload";
 
@@ -78,6 +79,8 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [bookingFilter, setBookingFilter] = useState("all");
+  const [selectedBooking, setSelectedBooking] = useState<CarRental | null>(null);
+  const [isBookingDetailsOpen, setIsBookingDetailsOpen] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -827,6 +830,17 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedBooking(rental);
+                                setIsBookingDetailsOpen(true);
+                              }}
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
                             {rental.status === "pending" && (
                               <>
                                 <Button
@@ -904,6 +918,148 @@ export function RentalCarsManagement({ userRole }: RentalCarsManagementProps) {
               onImagesUpdate={handleImagesUpdate}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Booking Details Dialog */}
+      <Dialog open={isBookingDetailsOpen} onOpenChange={(open) => {
+        setIsBookingDetailsOpen(open);
+        if (!open) setSelectedBooking(null);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Booking Details
+            </DialogTitle>
+            <DialogDescription>
+              Booking ID: {selectedBooking?.id.slice(0, 8)}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedBooking && (() => {
+            const car = cars.find(c => c.id === selectedBooking.car_id);
+            return (
+              <div className="space-y-4">
+                {/* Car Info */}
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Car className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">Vehicle</span>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {car ? `${car.brand} ${car.model} (${car.year})` : "Unknown Vehicle"}
+                  </p>
+                  {car?.plate_number && (
+                    <p className="text-sm text-muted-foreground">Plate: {car.plate_number}</p>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Customer Info */}
+                <div className="space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Customer Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span>{selectedBooking.contact_phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      <span>{selectedBooking.driver_license_number || "Not provided"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Rental Period */}
+                <div className="space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Rental Period
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Start</p>
+                      <p className="font-medium">{new Date(selectedBooking.rental_start).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">End</p>
+                      <p className="font-medium">{new Date(selectedBooking.rental_end).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded bg-muted/50">
+                    <span className="text-sm">Duration</span>
+                    <span className="font-medium">{selectedBooking.duration_value} {selectedBooking.duration_type}</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Locations */}
+                <div className="space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Locations
+                  </h4>
+                  <div className="grid gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Pickup</p>
+                      <p>{selectedBooking.pickup_location || "Not specified"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Return</p>
+                      <p>{selectedBooking.return_location || "Same as pickup"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Special Requests */}
+                {selectedBooking.special_requests && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Special Requests
+                      </h4>
+                      <p className="text-sm p-3 rounded-lg bg-muted/50">
+                        {selectedBooking.special_requests}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                <Separator />
+
+                {/* Pricing & Status */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Price</p>
+                    <p className="text-2xl font-bold">${selectedBooking.total_price}</p>
+                  </div>
+                  <Badge
+                    variant={
+                      selectedBooking.status === "active" || selectedBooking.status === "confirmed"
+                        ? "default"
+                        : selectedBooking.status === "completed"
+                        ? "secondary"
+                        : selectedBooking.status === "pending"
+                        ? "outline"
+                        : "destructive"
+                    }
+                    className="text-sm px-3 py-1"
+                  >
+                    {selectedBooking.status}
+                  </Badge>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
