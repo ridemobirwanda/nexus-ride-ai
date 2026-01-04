@@ -236,13 +236,25 @@ const PassengerRideStatus = () => {
     );
   }
 
-  // Parse location coordinates (simplified)
+  // Parse location coordinates - handles both POINT(lng lat) and (lng, lat) formats
   const parseLocation = (locationStr: unknown) => {
     if (!locationStr || typeof locationStr !== 'string') return null;
-    const coords = locationStr.match(/POINT\(([^)]+)\)/);
-    if (!coords) return null;
-    const [lng, lat] = coords[1].split(' ').map(Number);
-    return { lat, lng };
+    
+    // Try POINT format first: POINT(lng lat)
+    const pointMatch = locationStr.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+    if (pointMatch) {
+      const [lng, lat] = pointMatch.slice(1).map(Number);
+      return { lat, lng };
+    }
+    
+    // Try PostgreSQL point format: (lng, lat) or (lng,lat)
+    const tupleMatch = locationStr.match(/\(([-\d.]+),\s*([-\d.]+)\)/);
+    if (tupleMatch) {
+      const [lng, lat] = tupleMatch.slice(1).map(Number);
+      return { lat, lng };
+    }
+    
+    return null;
   };
 
   // Calculate distance between two points using Haversine formula
