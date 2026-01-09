@@ -11,6 +11,12 @@ import { toast } from '@/hooks/use-toast';
 import { Car, Mail, Lock, User, Phone, Eye, EyeOff, ArrowLeft, RotateCcw } from 'lucide-react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import QRCodeSection from '@/components/QRCodeSection';
+import { 
+  driverSignUpSchema, 
+  driverSignInSchema, 
+  resetPasswordSchema,
+  validateForm 
+} from '@/lib/validations';
 
 const DriverAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,6 +25,7 @@ const DriverAuth = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [signUpData, setSignUpData] = useState({
     email: '',
@@ -123,42 +130,36 @@ const DriverAuth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+
+    // Validate form data
+    const validation = validateForm(driverSignUpSchema, signUpData);
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
+      toast({
+        title: "Error",
+        description: Object.values(validation.errors || {})[0] || 'Validation failed',
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
-
-    if (signUpData.password !== signUpData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    if (!signUpData.name || !signUpData.phone || !signUpData.carModel || !signUpData.carPlate) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const redirectUrl = `${window.location.origin}/driver/dashboard`;
       
       const { error } = await supabase.auth.signUp({
-        email: signUpData.email,
+        email: signUpData.email.trim(),
         password: signUpData.password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
             user_type: 'driver',
-            name: signUpData.name,
-            phone: signUpData.phone,
-            car_model: signUpData.carModel,
-            car_plate: signUpData.carPlate
+            name: signUpData.name.trim(),
+            phone: signUpData.phone.trim(),
+            car_model: signUpData.carModel.trim(),
+            car_plate: signUpData.carPlate.trim().toUpperCase()
           }
         }
       });
@@ -182,11 +183,25 @@ const DriverAuth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+
+    // Validate form data
+    const validation = validateForm(driverSignInSchema, signInData);
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
+      toast({
+        title: "Error",
+        description: Object.values(validation.errors || {})[0] || 'Validation failed',
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: signInData.email,
+        email: signInData.email.trim(),
         password: signInData.password,
       });
 
@@ -209,9 +224,23 @@ const DriverAuth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+    
+    // Validate email
+    const validation = validateForm(resetPasswordSchema, { email: resetEmail });
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
+      toast({
+        title: "Error",
+        description: Object.values(validation.errors || {})[0] || 'Validation failed',
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
         redirectTo: `${window.location.origin}/reset-password`
       });
 

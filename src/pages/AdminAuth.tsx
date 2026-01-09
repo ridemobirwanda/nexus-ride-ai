@@ -16,10 +16,7 @@ const AdminAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Development mode detection
-  const isDevelopment = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname.includes('lovable.app');
+  // Production mode - no dev bypass allowed
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,32 +99,6 @@ const AdminAuth = () => {
     }
   };
 
-  const handleDevBypass = async () => {
-    setLoading(true);
-    try {
-      // In development mode, create a mock admin session
-      // This bypasses authentication but creates proper session state
-      
-      toast({
-        title: "🚧 Development Access",
-        description: "Bypassing authentication for development/testing",
-        variant: "default"
-      });
-
-      // Navigate directly to admin dashboard
-      // Note: This is NOT secure and should NEVER be used in production
-      navigate("/admin/dashboard");
-      
-    } catch (error: any) {
-      toast({
-        title: "Bypass Failed", 
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen rider-bg flex items-center justify-center p-4">
@@ -204,29 +175,6 @@ const AdminAuth = () => {
               </button>
             </div>
 
-            {/* Development Mode Quick Access */}
-            {isDevelopment && !isResetMode && (
-              <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-2 border-yellow-200 dark:border-yellow-800">
-                <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300 mb-3">
-                  <AlertTriangle className="w-5 h-5" />
-                  <span className="font-semibold">⚠️ DEVELOPMENT MODE ONLY</span>
-                </div>
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-3">
-                  This bypass is <strong>ONLY</strong> available in development/testing environments.
-                  <br />
-                  <strong>NEVER use this in production!</strong>
-                </p>
-                <Button
-                  type="button"
-                  onClick={handleDevBypass}
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
-                  disabled={loading}
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  🚧 Quick Admin Access (DEV ONLY)
-                </Button>
-              </div>
-            )}
 
             {!isResetMode && (
               <div className="mt-4 p-4 bg-accent/10 rounded-lg border border-accent/20">

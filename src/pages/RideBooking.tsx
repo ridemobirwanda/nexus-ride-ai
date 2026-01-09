@@ -90,6 +90,33 @@ const RideBooking = () => {
     searchResults: [] as any[],
     activeSelection: 'pickup' as 'pickup' | 'dropoff' | null
   });
+  
+  // Use ref to track activeSelection for map click handler (avoids closure issues)
+  const activeSelectionRef = useRef<'pickup' | 'dropoff' | null>(mapState.activeSelection);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    activeSelectionRef.current = mapState.activeSelection;
+  }, [mapState.activeSelection]);
+
+  // Get Mapbox token from Supabase secrets
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+
+  // Fetch Mapbox token on mount
+  useEffect(() => {
+    const fetchMapboxToken = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+        if (error) throw error;
+        if (data?.token) {
+          setMapboxToken(data.token);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Mapbox token:', error);
+      }
+    };
+    fetchMapboxToken();
+  }, []);
 
   useEffect(() => {
     console.log('🚀 RideBooking component mounted');
@@ -99,16 +126,13 @@ const RideBooking = () => {
     getPreferredDriverFromUrl();
   }, []);
 
-  // Separate effect for map initialization that waits for the ref
+  // Separate effect for map initialization that waits for the ref and token
   useEffect(() => {
-    if (mapContainer.current && !map.current) {
+    if (mapContainer.current && !map.current && mapboxToken) {
       console.log('🗺️ Map container ready, initializing...');
       initializeMap();
     }
-  }, [mapContainer.current]);
-
-  // Get Mapbox token from Supabase secrets
-  const [mapboxToken, setMapboxToken] = useState<string>('');
+  }, [mapboxToken]);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -172,14 +196,15 @@ const RideBooking = () => {
       return;
     }
 
+    if (!mapboxToken) {
+      console.log('❌ Mapbox token not available yet');
+      return;
+    }
+
     console.log('🗺️ Initializing map...');
 
     try {
-      // Use the working Mapbox token
-      const token = 'pk.eyJ1Ijoia3J3aWJ1dHNvIiwiYSI6ImNtZXNhMWl5aTAwbG8yanM5NzBpdHdyZnQifQ.LekbGpZ0ndO2MQSPq0jYMA';
-      
-      mapboxgl.accessToken = token;
-      setMapboxToken(token);
+      mapboxgl.accessToken = mapboxToken;
       
       console.log('✅ Mapbox token set, creating map instance...');
       
@@ -412,7 +437,10 @@ const RideBooking = () => {
   };
 
   const handleMapClick = async (e: any) => {
-    if (!mapState.activeSelection) {
+    // Use ref to get current activeSelection (avoids stale closure)
+    const currentActiveSelection = activeSelectionRef.current;
+    
+    if (!currentActiveSelection) {
       toast({
         title: "Select Location Type",
         description: "Please choose pickup or dropoff first",
@@ -440,7 +468,7 @@ const RideBooking = () => {
       
       const newLocation: Location = { lat, lng, address };
       
-      if (mapState.activeSelection === 'pickup') {
+      if (currentActiveSelection === 'pickup') {
         setLocationData(prev => ({
           ...prev,
           pickupLocation: newLocation,
