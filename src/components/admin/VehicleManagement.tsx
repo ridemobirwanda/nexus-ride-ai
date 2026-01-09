@@ -33,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Car, Users, DollarSign, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Car, Users, DollarSign, Search, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface VehicleManagementProps {
@@ -317,6 +317,186 @@ export function VehicleManagement({ userRole }: VehicleManagementProps) {
 
   const formatCurrency = (amount: number) => `${amount.toLocaleString()} RWF`;
 
+  // Export categories to CSV
+  const exportToCSV = () => {
+    const headers = [
+      "name",
+      "description",
+      "base_fare",
+      "base_price_per_km",
+      "minimum_fare",
+      "passenger_capacity",
+      "features",
+      "image_url",
+      "is_active",
+      "surge_multiplier"
+    ];
+
+    const csvRows = [
+      headers.join(","),
+      ...categories.map(cat => [
+        `"${cat.name.replace(/"/g, '""')}"`,
+        `"${(cat.description || "").replace(/"/g, '""')}"`,
+        cat.base_fare,
+        cat.base_price_per_km,
+        cat.minimum_fare,
+        cat.passenger_capacity,
+        `"${cat.features.join("; ")}"`,
+        `"${(cat.image_url || "").replace(/"/g, '""')}"`,
+        cat.is_active,
+        cat.surge_multiplier
+      ].join(","))
+    ];
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `vehicle_categories_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: `Exported ${categories.length} vehicle categories to CSV.`,
+    });
+  };
+
+  // Import categories from CSV
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split("\n").filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          throw new Error("CSV file must have headers and at least one data row");
+        }
+
+        const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/"/g, ""));
+        const requiredHeaders = ["name", "base_fare", "base_price_per_km", "minimum_fare"];
+        
+        for (const required of requiredHeaders) {
+          if (!headers.includes(required)) {
+            throw new Error(`Missing required column: ${required}`);
+          }
+        }
+
+        const importedCategories: any[] = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCSVLine(lines[i]);
+          if (values.length === 0) continue;
+
+          const row: Record<string, string> = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || "";
+          });
+
+          const features = row.features
+            ? row.features.split(";").map(f => f.trim()).filter(f => f.length > 0)
+            : [];
+
+          importedCategories.push({
+            name: row.name || `Category ${i}`,
+            description: row.description || null,
+            base_fare: parseFloat(row.base_fare) || 2500,
+            base_price_per_km: parseFloat(row.base_price_per_km) || 800,
+            minimum_fare: parseFloat(row.minimum_fare) || 3000,
+            passenger_capacity: parseInt(row.passenger_capacity) || 4,
+            features,
+            image_url: row.image_url || null,
+            is_active: row.is_active?.toLowerCase() === "true" || row.is_active === "1",
+            surge_multiplier: parseFloat(row.surge_multiplier) || 1.0,
+          });
+        }
+
+        if (importedCategories.length === 0) {
+          throw new Error("No valid categories found in CSV");
+        }
+
+        const { error } = await supabase
+          .from("car_categories")
+          .insert(importedCategories);
+
+        if (error) throw error;
+
+        toast({
+          title: "Import Successful",
+          description: `Imported ${importedCategories.length} vehicle categories.`,
+        });
+
+        fetchCategories();
+      } catch (error: any) {
+        toast({
+          title: "Import Failed",
+          description: error.message || "Failed to import CSV file.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    reader.readAsText(file);
+    event.target.value = "";
+  };
+
+  // Parse CSV line handling quoted values
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current.trim());
+    return result;
+  };
+
+  // Download sample CSV template
+  const downloadTemplate = () => {
+    const template = `name,description,base_fare,base_price_per_km,minimum_fare,passenger_capacity,features,image_url,is_active,surge_multiplier
+"Economy - Sedan","Affordable daily rides",2000,500,2500,4,"Air Conditioning; 4 Seats; Fuel Efficient","",true,1.0
+"Premium - SUV","Spacious and comfortable",4000,1000,5000,6,"Premium AC; 6 Seats; Extra Legroom; WiFi","",true,1.0`;
+
+    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "vehicle_categories_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Template Downloaded",
+      description: "CSV template with sample data downloaded.",
+    });
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -341,7 +521,29 @@ export function VehicleManagement({ userRole }: VehicleManagementProps) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Vehicle Management</h2>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={addSampleCategories}>
+          <Button variant="outline" onClick={downloadTemplate} size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Template
+          </Button>
+          <Button variant="outline" onClick={exportToCSV} size="sm" disabled={categories.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <label>
+            <Button variant="outline" size="sm" asChild>
+              <span className="cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" />
+                Import CSV
+              </span>
+            </Button>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              className="hidden"
+            />
+          </label>
+          <Button variant="outline" onClick={addSampleCategories} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Add Sample Data
           </Button>
