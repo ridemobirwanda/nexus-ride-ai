@@ -10,11 +10,18 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { User, Phone, Mail, Lock, UserPlus, RotateCcw } from 'lucide-react';
+import { 
+  passengerSignUpSchema, 
+  passengerSignInSchema, 
+  resetPasswordSchema,
+  validateForm 
+} from '@/lib/validations';
 
 const PassengerAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [signUpData, setSignUpData] = useState({
     name: '',
@@ -34,10 +41,15 @@ const PassengerAuth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (signUpData.password !== signUpData.confirmPassword) {
+    setFormErrors({});
+    
+    // Validate form data
+    const validation = validateForm(passengerSignUpSchema, signUpData);
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
       toast({
         title: t('toast.error'),
-        description: t('toast.passwordsDontMatch'),
+        description: Object.values(validation.errors || {})[0] || 'Validation failed',
         variant: "destructive"
       });
       return;
@@ -46,14 +58,14 @@ const PassengerAuth = () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
-        email: signUpData.email,
+        email: signUpData.email.trim(),
         password: signUpData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/passenger`,
           data: {
             user_type: 'passenger',
-            name: signUpData.name,
-            phone: signUpData.phone
+            name: signUpData.name.trim(),
+            phone: signUpData.phone.trim()
           }
         }
       });
@@ -77,10 +89,24 @@ const PassengerAuth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+    
+    // Validate form data
+    const validation = validateForm(passengerSignInSchema, signInData);
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
+      toast({
+        title: t('toast.error'),
+        description: Object.values(validation.errors || {})[0] || 'Validation failed',
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: signInData.email,
+        email: signInData.email.trim(),
         password: signInData.password
       });
 
@@ -100,9 +126,23 @@ const PassengerAuth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+    
+    // Validate email
+    const validation = validateForm(resetPasswordSchema, { email: resetEmail });
+    if (!validation.success) {
+      setFormErrors(validation.errors || {});
+      toast({
+        title: t('toast.error'),
+        description: Object.values(validation.errors || {})[0] || 'Validation failed',
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
