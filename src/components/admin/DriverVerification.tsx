@@ -29,10 +29,16 @@ interface DriverVerificationProps {
 
 interface VerificationRequest {
   id: string;
+  driver_id: string;
   driver_name: string;
   driver_phone: string | null;
+  driver_photo: string | null;
   status: string;
-  documents: any[];
+  documents: {
+    license?: string;
+    insurance?: string;
+    registration?: string;
+  };
   rejection_reason: string | null;
   submitted_at: string;
   reviewed_at: string | null;
@@ -56,13 +62,14 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
         .from("driver_verification_requests")
         .select(`
           id,
+          driver_id,
           status,
           documents,
           rejection_reason,
           submitted_at,
           reviewed_at,
           reviewed_by,
-          drivers!inner(name, phone)
+          drivers!inner(name, phone, photo_url)
         `)
         .order("submitted_at", { ascending: false });
 
@@ -70,10 +77,14 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
 
       const formattedRequests = data?.map(request => ({
         id: request.id,
+        driver_id: request.driver_id,
         driver_name: request.drivers?.name || "Unknown",
         driver_phone: request.drivers?.phone || null,
+        driver_photo: request.drivers?.photo_url || null,
         status: request.status,
-        documents: Array.isArray(request.documents) ? request.documents : [],
+        documents: typeof request.documents === 'object' && request.documents !== null 
+          ? request.documents as { license?: string; insurance?: string; registration?: string }
+          : {},
         rejection_reason: request.rejection_reason,
         submitted_at: request.submitted_at,
         reviewed_at: request.reviewed_at,
@@ -317,9 +328,9 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <FileText className="w-4 h-4 mr-1" />
-                      {request.documents.length} files
+                    <div className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      {Object.keys(request.documents).filter(k => request.documents[k as keyof typeof request.documents]).length} / 3 docs
                     </div>
                   </TableCell>
                   <TableCell>{new Date(request.submitted_at).toLocaleDateString()}</TableCell>
@@ -374,27 +385,49 @@ export function DriverVerification({ userRole }: DriverVerificationProps) {
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-muted-foreground">Documents:</span>
-                                      <span>{selectedRequest.documents.length} files</span>
+                                      <span>{Object.keys(selectedRequest.documents).filter(k => selectedRequest.documents[k as keyof typeof selectedRequest.documents]).length} / 3</span>
                                     </div>
                                   </div>
                                 </div>
                               </div>
 
                               <div>
-                                <h4 className="font-medium mb-2">Documents</h4>
-                                <div className="space-y-2">
-                                  {selectedRequest.documents.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">No documents uploaded</p>
-                                  ) : (
-                                    selectedRequest.documents.map((doc: any, index: number) => (
-                                      <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                                <h4 className="font-medium mb-2">Verification Documents</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                  {(['license', 'insurance', 'registration'] as const).map((docType) => {
+                                    const docUrl = selectedRequest.documents[docType];
+                                    const labels = {
+                                      license: "Driver's License",
+                                      insurance: "Insurance Certificate", 
+                                      registration: "Vehicle Registration"
+                                    };
+                                    return (
+                                      <div key={docType} className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                          <span className="text-sm font-medium">{doc.name || `Document ${index + 1}`}</span>
-                                          <Badge variant="outline">{doc.type || "Unknown"}</Badge>
+                                          <span className="text-sm font-medium">{labels[docType]}</span>
+                                          {docUrl ? (
+                                            <Badge variant="default" className="text-xs">Uploaded</Badge>
+                                          ) : (
+                                            <Badge variant="outline" className="text-xs">Missing</Badge>
+                                          )}
                                         </div>
+                                        {docUrl ? (
+                                          <div className="relative aspect-video bg-muted rounded-lg overflow-hidden border">
+                                            <img 
+                                              src={docUrl} 
+                                              alt={labels[docType]}
+                                              className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                              onClick={() => window.open(docUrl, '_blank')}
+                                            />
+                                          </div>
+                                        ) : (
+                                          <div className="aspect-video bg-muted/50 rounded-lg flex items-center justify-center border border-dashed">
+                                            <FileText className="w-8 h-8 text-muted-foreground" />
+                                          </div>
+                                        )}
                                       </div>
-                                    ))
-                                  )}
+                                    );
+                                  })}
                                 </div>
                               </div>
 
