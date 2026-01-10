@@ -110,7 +110,7 @@ export const DocumentUpload = ({
           const fileName = `${driverId}/${type}-${Date.now()}.${fileExt}`;
 
           const { data, error } = await supabase.storage
-            .from('car-images')
+            .from('driver-documents')
             .upload(fileName, doc.file, {
               cacheControl: '3600',
               upsert: true,
@@ -119,7 +119,7 @@ export const DocumentUpload = ({
           if (error) throw error;
 
           const { data: { publicUrl } } = supabase.storage
-            .from('car-images')
+            .from('driver-documents')
             .getPublicUrl(data.path);
 
           uploadedDocs[type] = publicUrl;
