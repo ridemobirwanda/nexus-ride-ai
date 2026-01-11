@@ -270,6 +270,102 @@ export type Database = {
           },
         ]
       }
+      document_expiry_notifications: {
+        Row: {
+          created_at: string
+          document_type: string
+          driver_id: string
+          expiry_date: string
+          id: string
+          is_read: boolean | null
+          notification_type: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          driver_id: string
+          expiry_date: string
+          id?: string
+          is_read?: boolean | null
+          notification_type: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          driver_id?: string
+          expiry_date?: string
+          id?: string
+          is_read?: boolean | null
+          notification_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_expiry_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_expiry_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_expiry_tracking: {
+        Row: {
+          created_at: string
+          document_type: string
+          driver_id: string
+          expiry_date: string
+          id: string
+          reminder_sent_30_days: boolean | null
+          reminder_sent_7_days: boolean | null
+          reminder_sent_expired: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          driver_id: string
+          expiry_date: string
+          id?: string
+          reminder_sent_30_days?: boolean | null
+          reminder_sent_7_days?: boolean | null
+          reminder_sent_expired?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          driver_id?: string
+          expiry_date?: string
+          id?: string
+          reminder_sent_30_days?: boolean | null
+          reminder_sent_7_days?: boolean | null
+          reminder_sent_expired?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_expiry_tracking_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_expiry_tracking_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_earnings: {
         Row: {
           amount: number
@@ -1208,6 +1304,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_document_expiry_and_notify: { Args: never; Returns: number }
       create_admin_user: {
         Args: { p_email: string; p_name?: string; p_password: string }
         Returns: string
