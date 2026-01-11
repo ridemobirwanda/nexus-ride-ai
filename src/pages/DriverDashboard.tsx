@@ -31,6 +31,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useDriverVerificationNotifications } from '@/hooks/useDriverVerificationNotifications';
 import { DriverVerificationStatus } from '@/components/DriverVerificationStatus';
+import { DocumentExpiryTracker } from '@/components/DocumentExpiryTracker';
+import { DocumentExpiryNotificationBell } from '@/components/DocumentExpiryNotificationBell';
 import SwipeableRideCard from '@/components/driver/SwipeableRideCard';
 import MobileActiveRideCard from '@/components/driver/MobileActiveRideCard';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
@@ -392,6 +394,7 @@ const DriverDashboard = () => {
                 {driver?.name || user?.email}
               </span>
             )}
+            {driver && <DocumentExpiryNotificationBell driverId={driver.id} />}
             <Button 
               variant="outline" 
               size={isMobile ? "lg" : "sm"}
@@ -458,6 +461,11 @@ const DriverDashboard = () => {
             {/* Verification Status Widget */}
             {driver && (
               <DriverVerificationStatus driverId={driver.id} />
+            )}
+
+            {/* Document Expiry Tracking */}
+            {driver && (
+              <DocumentExpiryTracker driverId={driver.id} />
             )}
 
             {/* Demand Heatmap */}
