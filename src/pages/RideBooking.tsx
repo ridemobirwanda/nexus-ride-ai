@@ -29,6 +29,7 @@ import PaymentMethodSelector from '@/components/PaymentMethodSelector';
 import InlineRegistration from '@/components/InlineRegistration';
 import SmartLocationIndicator from '@/components/SmartLocationIndicator';
 import { useSmartLocationCorrection } from '@/hooks/useSmartLocationCorrection';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 interface Location {
   lat: number;
@@ -61,6 +62,9 @@ const RideBooking = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const pickupMarker = useRef<mapboxgl.Marker | null>(null);
   const dropoffMarker = useRef<mapboxgl.Marker | null>(null);
+  
+  // Dynamic system settings
+  const { settings, buildReverseGeocodingUrl, buildGeocodingUrl } = useSystemSettings();
   
   const [selectedCategory, setSelectedCategory] = useState<CarCategory | null>(null);
   const [passenger, setPassenger] = useState<Passenger | null>(null);
@@ -211,8 +215,8 @@ const RideBooking = () => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/satellite-streets-v12',
-        center: [30.0588, -1.9414], // Kigali, Rwanda
-        zoom: 15,
+        center: [settings.mapCenter.lng, settings.mapCenter.lat],
+        zoom: settings.mapZoom,
         pitch: 60,
         bearing: -15,
         antialias: true,
@@ -384,7 +388,7 @@ const RideBooking = () => {
           // Get address
           try {
             const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}&country=RW&types=address,poi`
+              buildReverseGeocodingUrl(longitude, latitude, mapboxToken)
             );
             const data = await response.json();
             const address = data.features?.[0]?.place_name || 'Current Location';
@@ -460,7 +464,7 @@ const RideBooking = () => {
       
       // Reverse geocoding to get address
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&country=RW&types=address,poi`
+        buildReverseGeocodingUrl(lng, lat, mapboxToken)
       );
       const data = await response.json();
       const feature = data.features?.[0];
@@ -627,7 +631,7 @@ const RideBooking = () => {
     
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&country=RW&proximity=30.0588,-1.9414&limit=5`
+        buildGeocodingUrl(query, mapboxToken)
       );
       const data = await response.json();
       
