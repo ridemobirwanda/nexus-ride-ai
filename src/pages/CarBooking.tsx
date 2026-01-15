@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { 
   ArrowLeft,
   Car, 
@@ -41,6 +42,7 @@ const CarBooking = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { formatCurrency } = useSystemSettings();
   const [car, setCar] = useState<RentalCar | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -186,13 +188,8 @@ const CarBooking = () => {
   };
 
   const formatPrice = (price: number) => {
-    if (!price || isNaN(price)) return 'RWF 0';
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(Math.round(price));
+    if (!price || isNaN(price)) return formatCurrency(0);
+    return formatCurrency(Math.round(price));
   };
 
   const processBooking = async () => {

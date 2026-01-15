@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { 
   ArrowLeft, 
   DollarSign, 
@@ -58,6 +59,7 @@ interface Driver {
 const DriverEarnings = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { formatCurrency } = useSystemSettings();
   const [driver, setDriver] = useState<Driver | null>(null);
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,13 +152,7 @@ const DriverEarnings = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+  // formatCurrency is now provided by useSystemSettings hook
 
   const getPercentageChange = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0;

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, TrendingUp, TrendingDown, Users, Car, Calendar, Download, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 interface FinancialManagementProps {
   userRole: string | null;
@@ -35,6 +36,7 @@ interface Transaction {
 }
 
 export function FinancialManagement({ userRole }: FinancialManagementProps) {
+  const { formatCurrency } = useSystemSettings();
   const [stats, setStats] = useState<FinancialStats>({
     totalRevenue: 0,
     dailyRevenue: 0,
@@ -127,12 +129,7 @@ export function FinancialManagement({ userRole }: FinancialManagementProps) {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  // formatCurrency is now provided by useSystemSettings hook
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
