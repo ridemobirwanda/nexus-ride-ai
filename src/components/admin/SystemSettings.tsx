@@ -8,7 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Globe, Bell, Shield, Database, RefreshCw } from "lucide-react";
+import { Settings, Globe, Bell, Shield, Database, RefreshCw, MapPin, Car } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,7 +34,41 @@ interface AppSettings {
   autoDispatchTimeout: number;
   driverMatchingRadius: number;
   minDriverRating: number;
+  // Localization settings
+  countryCode: string;
+  currency: string;
+  locale: string;
+  mapCenterLat: number;
+  mapCenterLng: number;
+  mapZoom: number;
+  serviceAreaCountries: string;
 }
+
+const COUNTRY_OPTIONS = [
+  { code: 'RW', name: 'Rwanda', currency: 'RWF', locale: 'rw-RW' },
+  { code: 'KE', name: 'Kenya', currency: 'KES', locale: 'en-KE' },
+  { code: 'UG', name: 'Uganda', currency: 'UGX', locale: 'en-UG' },
+  { code: 'TZ', name: 'Tanzania', currency: 'TZS', locale: 'sw-TZ' },
+  { code: 'NG', name: 'Nigeria', currency: 'NGN', locale: 'en-NG' },
+  { code: 'GH', name: 'Ghana', currency: 'GHS', locale: 'en-GH' },
+  { code: 'ZA', name: 'South Africa', currency: 'ZAR', locale: 'en-ZA' },
+  { code: 'US', name: 'United States', currency: 'USD', locale: 'en-US' },
+  { code: 'GB', name: 'United Kingdom', currency: 'GBP', locale: 'en-GB' },
+  { code: 'FR', name: 'France', currency: 'EUR', locale: 'fr-FR' },
+];
+
+const CURRENCY_OPTIONS = [
+  { code: 'RWF', name: 'Rwandan Franc', symbol: 'FRw' },
+  { code: 'KES', name: 'Kenyan Shilling', symbol: 'KSh' },
+  { code: 'UGX', name: 'Ugandan Shilling', symbol: 'USh' },
+  { code: 'TZS', name: 'Tanzanian Shilling', symbol: 'TSh' },
+  { code: 'NGN', name: 'Nigerian Naira', symbol: '₦' },
+  { code: 'GHS', name: 'Ghanaian Cedi', symbol: 'GH₵' },
+  { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
+  { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'GBP', name: 'British Pound', symbol: '£' },
+  { code: 'EUR', name: 'Euro', symbol: '€' },
+];
 
 export function SystemSettings({ userRole }: SystemSettingsProps) {
   const { t } = useTranslation();
@@ -54,6 +89,14 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
     autoDispatchTimeout: 30,
     driverMatchingRadius: 10,
     minDriverRating: 3.5,
+    // Localization defaults
+    countryCode: 'RW',
+    currency: 'RWF',
+    locale: 'rw-RW',
+    mapCenterLat: -1.9403,
+    mapCenterLng: 30.0619,
+    mapZoom: 13,
+    serviceAreaCountries: 'RW',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -73,14 +116,38 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
 
       const settingsMap = new Map(data?.map(s => [s.key, s.value]) || []);
       
+      // Parse map center
+      let mapCenterLat = -1.9403;
+      let mapCenterLng = 30.0619;
+      const mapCenterValue = settingsMap.get('default_map_center');
+      if (mapCenterValue && typeof mapCenterValue === 'object' && 'lat' in mapCenterValue && 'lng' in mapCenterValue) {
+        const mc = mapCenterValue as { lat: number; lng: number };
+        mapCenterLat = mc.lat;
+        mapCenterLng = mc.lng;
+      }
+
+      // Parse service area countries
+      let serviceAreaCountries = 'RW';
+      const countriesValue = settingsMap.get('service_area_countries');
+      if (Array.isArray(countriesValue)) {
+        serviceAreaCountries = countriesValue.join(',');
+      } else if (typeof countriesValue === 'string') {
+        serviceAreaCountries = countriesValue.replace(/"/g, '');
+      }
+
+      const parseString = (value: unknown, fallback: string): string => {
+        if (typeof value === 'string') return value.replace(/^"|"$/g, '');
+        return fallback;
+      };
+
       setSettings({
         maintenanceMode: Boolean(settingsMap.get('maintenance_mode')),
         allowNewRegistrations: settingsMap.get('allow_new_registrations') !== false,
         maxRideDistance: Number(settingsMap.get('max_ride_distance') || 50),
         defaultRideFee: Number(settingsMap.get('default_ride_fee') || 2.5),
-        appVersion: String(settingsMap.get('app_version') || "1.0.0").replace(/"/g, ''),
-        supportEmail: String(settingsMap.get('support_email') || "support@rideshare.com").replace(/"/g, ''),
-        emergencyContact: String(settingsMap.get('emergency_contact') || "+1-800-911-HELP").replace(/"/g, ''),
+        appVersion: parseString(settingsMap.get('app_version'), "1.0.0"),
+        supportEmail: parseString(settingsMap.get('support_email'), "support@rideshare.com"),
+        emergencyContact: parseString(settingsMap.get('emergency_contact'), "+1-800-911-HELP"),
         pushNotifications: settingsMap.get('push_notifications') !== false,
         emailNotifications: settingsMap.get('email_notifications') !== false,
         smsNotifications: settingsMap.get('sms_notifications') !== false,
@@ -90,6 +157,14 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
         autoDispatchTimeout: Number(settingsMap.get('auto_dispatch_timeout') || 30),
         driverMatchingRadius: Number(settingsMap.get('driver_matching_radius') || 10),
         minDriverRating: Number(settingsMap.get('min_driver_rating') || 3.5),
+        // Localization
+        countryCode: parseString(settingsMap.get('default_country_code'), 'RW'),
+        currency: parseString(settingsMap.get('default_currency'), 'RWF'),
+        locale: parseString(settingsMap.get('default_locale'), 'rw-RW'),
+        mapCenterLat,
+        mapCenterLng,
+        mapZoom: Number(settingsMap.get('default_map_zoom') || 13),
+        serviceAreaCountries,
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -132,6 +207,13 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
         { key: 'auto_dispatch_timeout', value: settings.autoDispatchTimeout },
         { key: 'driver_matching_radius', value: settings.driverMatchingRadius },
         { key: 'min_driver_rating', value: settings.minDriverRating },
+        // Localization
+        { key: 'default_country_code', value: settings.countryCode },
+        { key: 'default_currency', value: settings.currency },
+        { key: 'default_locale', value: settings.locale },
+        { key: 'default_map_center', value: { lat: settings.mapCenterLat, lng: settings.mapCenterLng } },
+        { key: 'default_map_zoom', value: settings.mapZoom },
+        { key: 'service_area_countries', value: settings.serviceAreaCountries.split(',').map(c => c.trim()) },
       ];
 
       for (const update of updates) {
@@ -194,10 +276,14 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             {t('settings.general')}
+          </TabsTrigger>
+          <TabsTrigger value="localization" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            Localization
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
@@ -212,8 +298,7 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
             {t('settings.system')}
           </TabsTrigger>
           <TabsTrigger value="dispatch" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            {t('settings.autoDispatch')}
+            <Car className="h-4 w-4" />
             Auto-Dispatch
           </TabsTrigger>
         </TabsList>
@@ -304,6 +389,155 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
                     onCheckedChange={(checked) => setSettings(prev => ({ ...prev, allowNewRegistrations: checked }))}
                     disabled={isReadOnly}
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="localization" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Region & Currency</CardTitle>
+              <CardDescription>
+                Configure the default country, currency, and locale for the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="countryCode">Default Country</Label>
+                  <Select
+                    value={settings.countryCode}
+                    onValueChange={(value) => {
+                      const country = COUNTRY_OPTIONS.find(c => c.code === value);
+                      setSettings(prev => ({
+                        ...prev,
+                        countryCode: value,
+                        currency: country?.currency || prev.currency,
+                        locale: country?.locale || prev.locale,
+                      }));
+                    }}
+                    disabled={isReadOnly}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRY_OPTIONS.map(country => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name} ({country.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    value={settings.currency}
+                    onValueChange={(value) => setSettings(prev => ({ ...prev, currency: value }))}
+                    disabled={isReadOnly}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCY_OPTIONS.map(curr => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          {curr.symbol} - {curr.name} ({curr.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="serviceAreaCountries">Service Area Countries</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Comma-separated country codes where the service operates (e.g., RW,KE,UG)
+                </p>
+                <Input
+                  id="serviceAreaCountries"
+                  value={settings.serviceAreaCountries}
+                  onChange={(e) => setSettings(prev => ({ ...prev, serviceAreaCountries: e.target.value }))}
+                  placeholder="RW,KE,UG"
+                  disabled={isReadOnly}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Map Configuration</CardTitle>
+              <CardDescription>
+                Set the default map center and zoom level for the application
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mapCenterLat">Center Latitude</Label>
+                  <Input
+                    id="mapCenterLat"
+                    type="number"
+                    step="0.0001"
+                    value={settings.mapCenterLat}
+                    onChange={(e) => setSettings(prev => ({ ...prev, mapCenterLat: parseFloat(e.target.value) }))}
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mapCenterLng">Center Longitude</Label>
+                  <Input
+                    id="mapCenterLng"
+                    type="number"
+                    step="0.0001"
+                    value={settings.mapCenterLng}
+                    onChange={(e) => setSettings(prev => ({ ...prev, mapCenterLng: parseFloat(e.target.value) }))}
+                    disabled={isReadOnly}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mapZoom">Default Zoom Level</Label>
+                  <Input
+                    id="mapZoom"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={settings.mapZoom}
+                    onChange={(e) => setSettings(prev => ({ ...prev, mapZoom: parseInt(e.target.value) }))}
+                    disabled={isReadOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <h4 className="font-semibold mb-2">Common City Centers</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { name: 'Kigali', lat: -1.9403, lng: 30.0619 },
+                    { name: 'Nairobi', lat: -1.2921, lng: 36.8219 },
+                    { name: 'Kampala', lat: 0.3476, lng: 32.5825 },
+                    { name: 'Dar es Salaam', lat: -6.7924, lng: 39.2083 },
+                    { name: 'Lagos', lat: 6.5244, lng: 3.3792 },
+                  ].map(city => (
+                    <Button
+                      key={city.name}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSettings(prev => ({
+                        ...prev,
+                        mapCenterLat: city.lat,
+                        mapCenterLng: city.lng,
+                      }))}
+                      disabled={isReadOnly}
+                    >
+                      {city.name}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </CardContent>
