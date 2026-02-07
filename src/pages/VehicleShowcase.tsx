@@ -102,38 +102,39 @@ const VehicleShowcase = () => {
     filterVehicles();
   }, [searchQuery, vehicles, showOnlineOnly]);
 
+  // Update online status and distances whenever vehicles load or location changes
   useEffect(() => {
-    if (userLocation) {
-      updateVehicleDistances();
-      
-      // Set up real-time subscription for driver location updates
-      const channel = supabase
-        .channel('driver-locations-updates')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'driver_locations'
-          },
-          (payload) => {
-            console.log('Driver location update:', payload);
-            updateVehicleDistances();
-          }
-        )
-        .subscribe();
+    if (vehicles.length === 0) return;
 
-      // Refresh distances every 30 seconds
-      const interval = setInterval(() => {
-        updateVehicleDistances();
-      }, 30000);
+    updateVehicleStatuses();
+    
+    // Set up real-time subscription for driver location updates
+    const channel = supabase
+      .channel('driver-locations-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'driver_locations'
+        },
+        (payload) => {
+          console.log('Driver location update:', payload);
+          updateVehicleStatuses();
+        }
+      )
+      .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-        clearInterval(interval);
-      };
-    }
-  }, [userLocation, vehicles]);
+    // Refresh every 30 seconds
+    const interval = setInterval(() => {
+      updateVehicleStatuses();
+    }, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+  }, [vehicles.length, userLocation]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -169,9 +170,7 @@ const VehicleShowcase = () => {
     return distance;
   };
 
-  const updateVehicleDistances = async () => {
-    if (!userLocation) return;
-
+  const updateVehicleStatuses = async () => {
     // Fetch current driver locations
     const driverIds = vehicles.map(v => v.id);
     const { data: locations } = await supabase
@@ -185,24 +184,28 @@ const VehicleShowcase = () => {
       const driverLocation = locations?.find(loc => loc.driver_id === vehicle.id);
       
       if (driverLocation && driverLocation.location) {
-        const locPoint = driverLocation.location as any;
-        const driverLat = locPoint.y || locPoint.lat || 0;
-        const driverLng = locPoint.x || locPoint.lng || 0;
-        
-        const distance = calculateDistance(
-          userLocation.lat,
-          userLocation.lng,
-          driverLat,
-          driverLng
-        );
-
-        // Calculate ETA (assuming average speed of 30 km/h in city traffic)
-        const eta = Math.round((distance / 30) * 60);
-
-        // Check if driver is online (last update within 30 seconds)
+        // Check if driver is online (last update within 5 minutes)
         const lastUpdate = new Date(driverLocation.timestamp);
         const now = new Date();
-        const isOnline = (now.getTime() - lastUpdate.getTime()) < 30000;
+        const isOnline = (now.getTime() - lastUpdate.getTime()) < 300000;
+
+        // Calculate distance and ETA only if user location is available
+        let distance: number | undefined;
+        let eta: number | undefined;
+
+        if (userLocation) {
+          const locPoint = driverLocation.location as any;
+          const driverLat = locPoint.y || locPoint.lat || 0;
+          const driverLng = locPoint.x || locPoint.lng || 0;
+          
+          distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            driverLat,
+            driverLng
+          );
+          eta = Math.round((distance / 30) * 60);
+        }
 
         return {
           ...vehicle,
