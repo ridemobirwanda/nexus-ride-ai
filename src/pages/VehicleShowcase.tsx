@@ -549,7 +549,7 @@ const VehicleShowcase = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         if (vehicle.is_online) {
-                          navigate(`/ride-booking?driver_id=${vehicle.id}&driver_name=${encodeURIComponent(vehicle.name)}`);
+                          navigate(`/passenger/book-ride?driver_id=${vehicle.id}&driver_name=${encodeURIComponent(vehicle.name)}`);
                         }
                       }}
                     >
@@ -750,7 +750,7 @@ const VehicleShowcase = () => {
                   disabled={!selectedVehicle.is_online}
                   onClick={() => {
                     if (selectedVehicle.is_online) {
-                      navigate(`/ride-booking?driver_id=${selectedVehicle.id}&driver_name=${encodeURIComponent(selectedVehicle.name)}`);
+                      navigate(`/passenger/book-ride?driver_id=${selectedVehicle.id}&driver_name=${encodeURIComponent(selectedVehicle.name)}`);
                       setIsGalleryOpen(false);
                     }
                   }}
