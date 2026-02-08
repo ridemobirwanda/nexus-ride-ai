@@ -177,7 +177,7 @@ const RideBooking = () => {
     }
   };
 
-  const getPreferredDriverFromUrl = () => {
+  const getPreferredDriverFromUrl = async () => {
     const driverId = searchParams.get('driver_id');
     const driverName = searchParams.get('driver_name');
     
@@ -190,6 +190,32 @@ const RideBooking = () => {
           title: "🚗 Driver Pre-selected",
           description: `Booking with ${decodeURIComponent(driverName)}`
         });
+      }
+
+      // Auto-fetch the driver's car category if no category was provided in URL
+      if (!searchParams.get('category')) {
+        try {
+          const { data: driver } = await supabase
+            .from('drivers')
+            .select('car_category_id')
+            .eq('id', driverId)
+            .maybeSingle();
+
+          if (driver?.car_category_id) {
+            const { data: category } = await supabase
+              .from('car_categories')
+              .select('*')
+              .eq('id', driver.car_category_id)
+              .eq('is_active', true)
+              .maybeSingle();
+
+            if (category) {
+              setSelectedCategory(category);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch driver category:', error);
+        }
       }
     }
   };
@@ -934,11 +960,21 @@ const RideBooking = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-semibold mb-2">No Car Category Selected</h2>
-          <Button onClick={() => navigate('/passenger')} variant="outline">
-            ← Back to Ride Selection
-          </Button>
+          {preferredDriverId ? (
+            <>
+              <Loader2 className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
+              <h2 className="text-2xl font-semibold mb-2">Loading Driver Details...</h2>
+              <p className="text-muted-foreground">Setting up your booking with {preferredDriverName || 'selected driver'}</p>
+            </>
+          ) : (
+            <>
+              <Car className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-2xl font-semibold mb-2">No Car Category Selected</h2>
+              <Button onClick={() => navigate('/passenger')} variant="outline">
+                ← Back to Ride Selection
+              </Button>
+            </>
+          )}
         </div>
       </div>
     );
