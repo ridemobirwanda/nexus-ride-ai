@@ -42,6 +42,8 @@ interface AppSettings {
   mapCenterLng: number;
   mapZoom: number;
   serviceAreaCountries: string;
+  enabledCurrencies: string[];
+  autoConvertCurrency: boolean;
 }
 
 const COUNTRY_OPTIONS = [
@@ -97,6 +99,8 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
     mapCenterLng: 30.0619,
     mapZoom: 13,
     serviceAreaCountries: 'RW',
+    enabledCurrencies: ['RWF'],
+    autoConvertCurrency: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -165,6 +169,10 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
         mapCenterLng,
         mapZoom: Number(settingsMap.get('default_map_zoom') || 13),
         serviceAreaCountries,
+        enabledCurrencies: Array.isArray(settingsMap.get('enabled_currencies'))
+          ? (settingsMap.get('enabled_currencies') as unknown[]).map(String)
+          : ['RWF'],
+        autoConvertCurrency: Boolean(settingsMap.get('auto_convert_currency')),
       });
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -214,16 +222,26 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
         { key: 'default_map_center', value: { lat: settings.mapCenterLat, lng: settings.mapCenterLng } },
         { key: 'default_map_zoom', value: settings.mapZoom },
         { key: 'service_area_countries', value: settings.serviceAreaCountries.split(',').map(c => c.trim()) },
+        { key: 'enabled_currencies', value: Array.from(new Set([settings.currency, ...settings.enabledCurrencies])) },
+        { key: 'auto_convert_currency', value: settings.autoConvertCurrency },
       ];
 
       for (const update of updates) {
-        const { error } = await supabase
+        const { data: updated, error } = await supabase
           .from('system_settings')
           .update({ value: update.value, updated_at: new Date().toISOString() })
-          .eq('key', update.key);
+          .eq('key', update.key)
+          .select('key');
 
         if (error) throw error;
+        if (!updated || updated.length === 0) {
+          const { error: insertError } = await supabase
+            .from('system_settings')
+            .insert({ key: update.key, value: update.value });
+          if (insertError) throw insertError;
+        }
       }
+      initCurrency(true);
       
       toast({
         title: t('settings.settingsUpdated'),
@@ -465,6 +483,58 @@ export function SystemSettings({ userRole }: SystemSettingsProps) {
                   placeholder="RW,KE,UG"
                   disabled={isReadOnly}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Display Currencies & Live Conversion</CardTitle>
+              <CardDescription>
+                Prices are stored in {settings.currency}. Choose which currencies customers can see — they are converted using live exchange rates.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="autoConvert">Auto-detect customer currency</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show prices in the visitor's local currency based on their location (if enabled below)
+                  </p>
+                </div>
+                <Switch
+                  id="autoConvert"
+                  checked={settings.autoConvertCurrency}
+                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoConvertCurrency: checked }))}
+                  disabled={isReadOnly}
+                />
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Allowed display currencies</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {ALL_CURRENCIES.map(c => {
+                    const isBase = c.code === settings.currency;
+                    const checked = isBase || settings.enabledCurrencies.includes(c.code);
+                    return (
+                      <label key={c.code} className="flex items-center gap-2 rounded-md border p-2 text-sm cursor-pointer hover:bg-muted/40">
+                        <Checkbox
+                          checked={checked}
+                          disabled={isReadOnly || isBase}
+                          onCheckedChange={(v) => setSettings(prev => ({
+                            ...prev,
+                            enabledCurrencies: v
+                              ? Array.from(new Set([...prev.enabledCurrencies, c.code]))
+                              : prev.enabledCurrencies.filter(x => x !== c.code),
+                          }))}
+                        />
+                        <span className="font-medium">{c.code}</span>
+                        <span className="text-muted-foreground truncate">{c.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">The base currency is always available. Customers can also switch currency from the top menu.</p>
               </div>
             </CardContent>
           </Card>
