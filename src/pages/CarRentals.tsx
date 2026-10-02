@@ -259,9 +259,9 @@ const CarRentals = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('rentals.allPrices')}</SelectItem>
-                  <SelectItem value="budget">{t('rentals.priceRange')} (≤10,000 RWF)</SelectItem>
-                  <SelectItem value="mid">{t('rentals.priceRange')} (10,001-20,000 RWF)</SelectItem>
-                  <SelectItem value="luxury">{t('rentals.priceRange')} (&gt;20,000 RWF)</SelectItem>
+                  <SelectItem value="budget">{t('rentals.priceRange')} (≤{formatPrice(10000)})</SelectItem>
+                  <SelectItem value="mid">{t('rentals.priceRange')} ({formatPrice(10001)} - {formatPrice(20000)})</SelectItem>
+                  <SelectItem value="luxury">{t('rentals.priceRange')} (&gt;{formatPrice(20000)})</SelectItem>
                 </SelectContent>
               </Select>
             </div>

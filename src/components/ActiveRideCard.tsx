@@ -23,6 +23,7 @@ interface ActiveRideCardProps {
 }
 
 const ActiveRideCard = ({ ride }: ActiveRideCardProps) => {
+  const { format: formatMoney } = useCurrency();
   const navigate = useNavigate();
 
   const getStatusInfo = (status: string) => {

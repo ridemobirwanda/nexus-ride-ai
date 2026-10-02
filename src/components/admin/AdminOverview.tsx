@@ -22,6 +22,7 @@ interface Stats {
 }
 
 export function AdminOverview({ userRole, onNavigate }: AdminOverviewProps) {
+  const { format: formatMoney } = useCurrency();
   const [stats, setStats] = useState<Stats>({
     totalPassengers: 0,
     totalDrivers: 0,

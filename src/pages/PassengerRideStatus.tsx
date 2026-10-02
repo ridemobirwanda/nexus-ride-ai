@@ -50,6 +50,7 @@ interface Ride {
 }
 
 const PassengerRideStatus = () => {
+  const { format: formatMoney } = useCurrency();
   const { rideId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
