@@ -111,7 +111,7 @@ const LocationTracker: React.FC<LocationTrackerProps> = ({ className }) => {
 
   // Track duration timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     
     if (isTracking) {
       interval = setInterval(() => {

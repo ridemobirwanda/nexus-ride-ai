@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ interface Stats {
 }
 
 export function AdminOverview({ userRole, onNavigate }: AdminOverviewProps) {
+  const { format: formatMoney } = useCurrency();
   const [stats, setStats] = useState<Stats>({
     totalPassengers: 0,
     totalDrivers: 0,
@@ -106,7 +108,7 @@ export function AdminOverview({ userRole, onNavigate }: AdminOverviewProps) {
     },
     {
       title: "Total Revenue",
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: formatMoney(stats.totalRevenue),
       icon: DollarSign,
       description: "All-time earnings",
       color: "text-emerald-500",

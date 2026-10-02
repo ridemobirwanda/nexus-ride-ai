@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +50,7 @@ interface Ride {
 }
 
 const PassengerRideStatus = () => {
+  const { format: formatMoney } = useCurrency();
   const { rideId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -413,8 +415,8 @@ const PassengerRideStatus = () => {
               </div>
               <span className="text-lg font-bold text-primary">
                 {ride.final_fare 
-                  ? `${Math.round(ride.final_fare).toLocaleString()} RWF`
-                  : `${Math.round(ride.estimated_fare).toLocaleString()} RWF`
+                  ? formatMoney(ride.final_fare)
+                  : formatMoney(ride.estimated_fare)
                 }
               </span>
             </div>

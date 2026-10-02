@@ -145,7 +145,7 @@ const DriverStatusPanel: React.FC<DriverStatusPanelProps> = ({
 
   // Track online time
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     
     if (driverStatus === 'available') {
       interval = setInterval(() => {

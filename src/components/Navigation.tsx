@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Car, Menu, X, User } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,6 +71,7 @@ const Navigation = () => {
             >
               {t('nav.pricing')}
             </a>
+            <CurrencySwitcher />
             <LanguageSwitcher />
             <Button 
               variant="ghost" 
@@ -151,7 +153,8 @@ const Navigation = () => {
               {t('nav.pricing')}
             </a>
             <div className="flex flex-col gap-2 px-4">
-              <LanguageSwitcher />
+              <CurrencySwitcher />
+            <LanguageSwitcher />
               <Button 
                 variant="ghost" 
                 className="w-full gap-2 justify-start focus:ring-2 focus:ring-offset-2 focus:ring-primary" 

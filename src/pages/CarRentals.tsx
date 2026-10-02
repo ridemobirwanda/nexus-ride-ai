@@ -1,3 +1,5 @@
+import { useCurrency } from '@/hooks/useCurrency';
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -168,9 +170,7 @@ const CarRentals = () => {
     return fuelTypes;
   };
 
-  const formatPrice = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
-  };
+  const { format: formatPrice } = useCurrency();
 
   const getTypeIcon = (type: string) => {
     if (type.toLowerCase().includes('suv')) return '🚙';
@@ -204,6 +204,7 @@ const CarRentals = () => {
           <p className="text-base sm:text-xl text-muted-foreground">
             {t('nav.carRentals')}
           </p>
+          <div className="flex justify-center mt-3"><CurrencySwitcher /></div>
         </div>
 
         {/* Filters */}
@@ -260,9 +261,9 @@ const CarRentals = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('rentals.allPrices')}</SelectItem>
-                  <SelectItem value="budget">{t('rentals.priceRange')} (≤10,000 RWF)</SelectItem>
-                  <SelectItem value="mid">{t('rentals.priceRange')} (10,001-20,000 RWF)</SelectItem>
-                  <SelectItem value="luxury">{t('rentals.priceRange')} (&gt;20,000 RWF)</SelectItem>
+                  <SelectItem value="budget">{t('rentals.priceRange')} (≤{formatPrice(10000)})</SelectItem>
+                  <SelectItem value="mid">{t('rentals.priceRange')} ({formatPrice(10001)} - {formatPrice(20000)})</SelectItem>
+                  <SelectItem value="luxury">{t('rentals.priceRange')} (&gt;{formatPrice(20000)})</SelectItem>
                 </SelectContent>
               </Select>
             </div>
