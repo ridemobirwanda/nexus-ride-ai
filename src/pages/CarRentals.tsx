@@ -1,4 +1,5 @@
 import { useCurrency } from '@/hooks/useCurrency';
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -203,6 +204,7 @@ const CarRentals = () => {
           <p className="text-base sm:text-xl text-muted-foreground">
             {t('nav.carRentals')}
           </p>
+          <div className="flex justify-center mt-3"><CurrencySwitcher /></div>
         </div>
 
         {/* Filters */}
