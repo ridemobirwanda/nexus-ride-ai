@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -153,14 +154,7 @@ export function useSystemSettings() {
   }, [fetchSettings]);
 
   // Currency formatter helper
-  const formatCurrency = useCallback((amount: number): string => {
-    return new Intl.NumberFormat(settings.locale, {
-      style: 'currency',
-      currency: settings.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(Math.round(amount));
-  }, [settings.locale, settings.currency]);
+  const { format: formatCurrency } = useCurrency();
 
   // Build Mapbox geocoding URL with dynamic country
   const buildGeocodingUrl = useCallback((

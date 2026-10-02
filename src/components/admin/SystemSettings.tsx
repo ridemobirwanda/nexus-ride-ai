@@ -12,6 +12,8 @@ import { Settings, Globe, Bell, Shield, Database, RefreshCw, MapPin, Car } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ALL_CURRENCIES, initCurrency } from "@/hooks/useCurrency";
 
 interface SystemSettingsProps {
   userRole: string | null;

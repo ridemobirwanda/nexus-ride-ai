@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useMemo } from 'react';
 
 interface Location {
@@ -50,9 +51,7 @@ export const useFareCalculator = (
     return Math.max(calculatedFare, selectedCarCategory.minimum_fare);
   }, [distance, selectedCarCategory]);
 
-  const formatCurrency = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
-  };
+  const { format: formatCurrency } = useCurrency();
 
   return {
     distance,
