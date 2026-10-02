@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -168,9 +169,7 @@ const CarRentals = () => {
     return fuelTypes;
   };
 
-  const formatPrice = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
-  };
+  const { format: formatPrice } = useCurrency();
 
   const getTypeIcon = (type: string) => {
     if (type.toLowerCase().includes('suv')) return '🚙';

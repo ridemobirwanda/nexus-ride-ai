@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -763,9 +764,7 @@ const RideBooking = () => {
     return Math.max(fare, selectedCategory.minimum_fare);
   };
 
-  const formatCurrency = (amount: number) => {
-    return `${Math.round(amount).toLocaleString()} RWF`;
-  };
+  const { format: formatCurrency } = useCurrency();
 
   const handleBookRide = async () => {
     if (!passenger) {

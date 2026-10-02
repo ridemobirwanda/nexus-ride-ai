@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -135,9 +136,7 @@ const CarCategorySelector = ({
     });
   }, [categories, seatFilter]);
 
-  const formatCurrency = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
-  };
+  const { format: formatCurrency } = useCurrency();
 
   if (isLoading) {
     return (

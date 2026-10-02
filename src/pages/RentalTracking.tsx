@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -161,9 +162,7 @@ const RentalTracking = () => {
     }
   };
 
-  const formatPrice = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
-  };
+  const { format: formatPrice } = useCurrency();
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString();

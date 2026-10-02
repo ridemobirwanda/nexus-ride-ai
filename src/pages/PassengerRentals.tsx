@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -105,9 +106,7 @@ const PassengerRentals = () => {
     }
   };
 
-  const formatPrice = (amount: number) => {
-    return `${amount.toLocaleString()} RWF`;
-  };
+  const { format: formatPrice } = useCurrency();
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString();

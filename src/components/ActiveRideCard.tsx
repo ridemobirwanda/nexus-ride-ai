@@ -1,3 +1,4 @@
+import { useCurrency } from '@/hooks/useCurrency';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,7 @@ const ActiveRideCard = ({ ride }: ActiveRideCardProps) => {
             </Badge>
           </div>
           <span className="text-sm font-semibold text-primary">
-            {Math.round(ride.estimated_fare).toLocaleString()} RWF
+            {formatMoney(ride.estimated_fare)}
           </span>
         </div>
 
